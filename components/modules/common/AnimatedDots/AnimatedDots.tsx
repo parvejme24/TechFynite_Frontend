@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
+import type { StaticImport } from "next/dist/shared/lib/get-img-props";
 
 interface AnimatedDotProps {
-  src: any;
+  src: string | StaticImport;
   alt: string;
   className: string;
 }

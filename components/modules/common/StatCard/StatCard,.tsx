@@ -3,24 +3,21 @@ import { motion } from "framer-motion";
 
 const statData = [
   {
-    count: 12,
-    title: "Projects",
-    style: { className: "bg-blue-100 text-blue-800", animationDelay: 0 },
+    title: "Community user",
+    count: 10,
+    style: {
+      className:
+        "top-24 sm:top-32 lg:top-48 left-12 sm:left-24 lg:left-48 border-[#FFFFFF] bg-[#0F5BBD] text-white p-3 sm:p-4 md:p-5 z-20",
+    },
   },
   {
-    count: 34,
-    title: "Clients",
-    style: { className: "bg-green-100 text-green-800", animationDelay: 0.2 },
-  },
-  {
-    count: 56,
-    title: "Awards",
-    style: { className: "bg-yellow-100 text-yellow-800", animationDelay: 0.4 },
-  },
-  {
-    count: 78,
-    title: "Partners",
-    style: { className: "bg-purple-100 text-purple-800", animationDelay: 0.6 },
+    title: "Active Visitor",
+    count: 6,
+    style: {
+      className:
+        "top-8 sm:top-12 md:top-16 right-4 sm:-right-6 md:-right-10 border-[#126BCF] bg-white text-[#126BCF] px-3 sm:px-4 md:px-5 py-4 sm:py-6 md:py-8 z-20",
+      animationDelay: 1,
+    },
   },
 ];
 
