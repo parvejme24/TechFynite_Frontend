@@ -3,6 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import React from "react";
+import type { UseFormReturn } from "react-hook-form";
+import type { RegisterFormValues } from "./ForgetPasswordForm";
 
 export default function NewPasswordStep({
   form,
@@ -11,7 +13,7 @@ export default function NewPasswordStep({
   showConfirmPassword,
   setShowConfirmPassword,
 }: {
-  form: any;
+  form: UseFormReturn<RegisterFormValues>;
   showPassword: boolean;
   setShowPassword: (v: boolean) => void;
   showConfirmPassword: boolean;

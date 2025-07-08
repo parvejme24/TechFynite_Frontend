@@ -8,7 +8,7 @@ import EmailStep from "./EmailStep";
 import OtpStep from "./OtpStep";
 import NewPasswordStep from "./NewPasswordStep";
 
-interface RegisterFormValues {
+export interface RegisterFormValues {
   name: string;
   email: string;
   password: string;
@@ -35,7 +35,7 @@ export default function ForgetPasswordForm() {
   });
 
   // Simulate sending OTP
-  const handleSendOtp = (data: RegisterFormValues) => {
+  const handleSendOtp = () => {
     setTimeout(() => {
       const generatedOtp = "123456";
       setSentOtp(generatedOtp);
@@ -92,7 +92,7 @@ export default function ForgetPasswordForm() {
             {step === 3 && "Set New Password"}
           </h2>
         </div>
-        {step === 1 && <EmailStep form={form} onSendOtp={handleSendOtp} />}
+        {step === 1 && <EmailStep form={form} />}
         {step === 2 && (
           <OtpStep
             otp={otp}
@@ -111,7 +111,7 @@ export default function ForgetPasswordForm() {
           />
         )}
         <div className="text-center text-[15px] mt-2 text-[#718096]">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <button
             type="button"
             className="text-blue-700 underline cursor-pointer"

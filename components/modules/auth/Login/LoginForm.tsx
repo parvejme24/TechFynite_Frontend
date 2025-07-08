@@ -174,7 +174,7 @@ export default function LoginForm() {
           Continue with Google
         </Button>
         <div className="text-center text-[15px] mt-2 text-[#718096]">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <button
             type="button"
             className="text-blue-700 underline cursor-pointer"

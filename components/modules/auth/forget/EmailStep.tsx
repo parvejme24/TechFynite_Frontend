@@ -2,15 +2,10 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import React from "react";
+import type { UseFormReturn } from "react-hook-form";
+import type { RegisterFormValues } from "./ForgetPasswordForm";
 
-interface RegisterFormValues {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-export default function EmailStep({ form, onSendOtp }: { form: any; onSendOtp: (data: RegisterFormValues) => void }) {
+export default function EmailStep({ form }: { form: UseFormReturn<RegisterFormValues> }) {
   return (
     <>
       <FormField
