@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import React from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { RegisterFormValues } from "./ForgetPasswordForm";
-import GoogleIcon from "@/assets/common/svg/GoogleIcon";
 
 export default function EmailStep({
   form,
