@@ -50,20 +50,6 @@ export default function EmailStep({
       >
         Send OTP
       </Button>
-      <div className="flex items-center gap-2">
-        <div className="flex-1 h-px bg-muted-foreground/20" />
-        <span className="text-xs text-muted-foreground">or</span>
-        <div className="flex-1 h-px bg-muted-foreground/20" />
-      </div>
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full h-[42px] cursor-pointer rounded-full flex items-center justify-center gap-2"
-        onClick={() => alert("Google sign-in not implemented")}
-      >
-        <GoogleIcon />
-        Continue with Google
-      </Button>
     </>
   );
 }

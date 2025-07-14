@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   Form,
@@ -18,29 +18,26 @@ import Image from "next/image";
 import Link from "next/link";
 import GoogleIcon from "@/assets/common/svg/GoogleIcon";
 
-interface RegisterFormValues {
-  name: string;
+import Swal from "sweetalert2";
+
+interface LoginFormValues {
   email: string;
   password: string;
-  confirmPassword: string;
 }
 
 export default function LoginForm() {
-  const form = useForm<RegisterFormValues>({
+  const form = useForm<LoginFormValues>({
     defaultValues: {
-      name: "",
       email: "",
       password: "",
-      confirmPassword: "",
     },
     mode: "onTouched",
   });
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  const onSubmit = (data: RegisterFormValues) => {
-    // Handle registration logic here
-    alert(JSON.stringify(data, null, 2));
+  const onSubmit = (data: LoginFormValues) => {
+    console.log(data);
   };
 
   return (
@@ -56,14 +53,13 @@ export default function LoginForm() {
           </h3>
           <h2 className="text-[32px] md:text-[40px] font-bold">Sign in</h2>
         </div>
-
         <FormField
           control={form.control}
           name="email"
           rules={{
             required: "Email is required",
             pattern: {
-              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              value: /^[^\s@]+@[^\\s@]+\.[^\s@]+$/,
               message: "Invalid email address",
             },
           }}
@@ -117,11 +113,9 @@ export default function LoginForm() {
             </FormItem>
           )}
         />
-
         <div className="flex justify-end text-[#3C5F4F] *:hover:underline">
           <Link href={"/forget"}>Forget Pasword?</Link>
         </div>
-
         <Button
           type="submit"
           className="w-full bg-[#0F5BBD] hover:bg-[#0f5abdda] cursor-pointer text-white h-[42px] text-[16px]"

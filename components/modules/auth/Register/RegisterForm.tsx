@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   Form,
@@ -17,11 +17,12 @@ import LOGO from "@/assets/common/logo.png";
 import Image from "next/image";
 import GoogleIcon from "@/assets/common/svg/GoogleIcon";
 
+import Swal from "sweetalert2";
+
 interface RegisterFormValues {
   name: string;
   email: string;
   password: string;
-  confirmPassword: string;
 }
 
 export default function RegisterForm() {
@@ -30,7 +31,6 @@ export default function RegisterForm() {
       name: "",
       email: "",
       password: "",
-      confirmPassword: "",
     },
     mode: "onTouched",
   });
@@ -38,8 +38,7 @@ export default function RegisterForm() {
   const router = useRouter();
 
   const onSubmit = (data: RegisterFormValues) => {
-    // Handle registration logic here
-    alert(JSON.stringify(data, null, 2));
+    console.log(data);
   };
 
   return (
@@ -131,7 +130,6 @@ export default function RegisterForm() {
             </FormItem>
           )}
         />
-
         <Button
           type="submit"
           className="w-full bg-[#0F5BBD] hover:bg-[#0f5abdda] cursor-pointer text-white h-[42px] text-[16px]"
