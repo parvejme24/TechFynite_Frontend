@@ -17,8 +17,6 @@ import LOGO from "@/assets/common/logo.png";
 import Image from "next/image";
 import GoogleIcon from "@/assets/common/svg/GoogleIcon";
 
-import Swal from "sweetalert2";
-
 interface RegisterFormValues {
   name: string;
   email: string;

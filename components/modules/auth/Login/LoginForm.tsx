@@ -18,8 +18,6 @@ import Image from "next/image";
 import Link from "next/link";
 import GoogleIcon from "@/assets/common/svg/GoogleIcon";
 
-import Swal from "sweetalert2";
-
 interface LoginFormValues {
   email: string;
   password: string;
