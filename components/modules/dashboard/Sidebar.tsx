@@ -22,7 +22,7 @@ import LOGO from "@/assets/common/logo.png";
 import Image from "next/image";
 
 const adminNavigation = [
-  { name: "Overview", href: "/dashboard/overview", icon: FiHome },
+  { name: "Overview", href: "/dashboard", icon: FiHome },
   { name: "Profile", href: "/dashboard/profile", icon: FiUser },
   { name: "Templates", href: "/dashboard/templates", icon: FiFileText },
   { name: "Blogs", href: "/dashboard/blogs", icon: FiFileText },
