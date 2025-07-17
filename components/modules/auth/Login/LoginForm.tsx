@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import {
   Form,
@@ -17,6 +17,8 @@ import LOGO from "@/assets/common/logo.png";
 import Image from "next/image";
 import Link from "next/link";
 import GoogleIcon from "@/assets/common/svg/GoogleIcon";
+import Swal from "sweetalert2";
+import { AuthContext } from "@/Provider/AuthProvider";
 
 interface LoginFormValues {
   email: string;
@@ -32,10 +34,31 @@ export default function LoginForm() {
     mode: "onTouched",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const authContext = useContext(AuthContext);
 
-  const onSubmit = (data: LoginFormValues) => {
-    console.log(data);
+  const onSubmit = async (data: LoginFormValues) => {
+    setLoading(true);
+    try {
+      if (!authContext) throw new Error("Auth context not available");
+      await authContext.signInUser(data.email, data.password);
+      Swal.fire({
+        icon: "success",
+        title: "Login Successful!",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      setTimeout(() => router.push("/"), 1500);
+    } catch (err: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Login Failed",
+        text: err.message || "Unknown error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -57,7 +80,7 @@ export default function LoginForm() {
           rules={{
             required: "Email is required",
             pattern: {
-              value: /^[^\s@]+@[^\\s@]+\.[^\s@]+$/,
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
               message: "Invalid email address",
             },
           }}
@@ -117,8 +140,9 @@ export default function LoginForm() {
         <Button
           type="submit"
           className="w-full bg-[#0F5BBD] hover:bg-[#0f5abdda] cursor-pointer text-white h-[42px] text-[16px]"
+          disabled={loading}
         >
-          Login Now
+          {loading ? "Logging in..." : "Login Now"}
         </Button>
         <div className="flex items-center gap-2">
           <div className="flex-1 h-px bg-muted-foreground/20" />
@@ -129,7 +153,28 @@ export default function LoginForm() {
           type="button"
           variant="outline"
           className="w-full h-[42px] cursor-pointer rounded-full flex items-center justify-center gap-2"
-          onClick={() => alert("Google sign-in not implemented")}
+          onClick={async () => {
+            setLoading(true);
+            try {
+              if (!authContext) throw new Error("Auth context not available");
+              await authContext.googleLogin();
+              Swal.fire({
+                icon: "success",
+                title: "Google Sign-In Successful!",
+                timer: 1500,
+                showConfirmButton: false,
+              });
+              setTimeout(() => router.push("/"), 1500);
+            } catch (err: any) {
+              Swal.fire({
+                icon: "error",
+                title: "Google Sign-In Failed",
+                text: err.message || "Unknown error",
+              });
+            } finally {
+              setLoading(false);
+            }
+          }}
         >
           {" "}
           {/* Replace with real Google sign-in */}

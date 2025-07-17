@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import {
   Form,
@@ -17,8 +17,11 @@ import LOGO from "@/assets/common/logo.png";
 import Image from "next/image";
 import GoogleIcon from "@/assets/common/svg/GoogleIcon";
 
+import Swal from "sweetalert2";
+import { AuthContext } from "@/Provider/AuthProvider";
+
 interface RegisterFormValues {
-  name: string;
+  displayName: string;
   email: string;
   password: string;
 }
@@ -26,7 +29,7 @@ interface RegisterFormValues {
 export default function RegisterForm() {
   const form = useForm<RegisterFormValues>({
     defaultValues: {
-      name: "",
+      displayName: "",
       email: "",
       password: "",
     },
@@ -34,9 +37,35 @@ export default function RegisterForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const authContext = useContext(AuthContext);
 
-  const onSubmit = (data: RegisterFormValues) => {
-    console.log(data);
+  const onSubmit = async (data: RegisterFormValues) => {
+    setLoading(true);
+    try {
+      if (!authContext) throw new Error("Auth context not available");
+      // Create user with email and password
+      const userCredential = await authContext.createUser(data.email, data.password);
+      // Update user profile with display name
+      await authContext.updateUserProfile(data.displayName);
+
+      Swal.fire({
+        icon: "success",
+        title: "Registration Successful!",
+        text: "You can now log in.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      setTimeout(() => router.push("/login"), 2000);
+    } catch (err: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Registration Failed",
+        text: err.message || "Unknown error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,7 +85,7 @@ export default function RegisterForm() {
         </div>
         <FormField
           control={form.control}
-          name="name"
+          name="displayName"
           rules={{ required: "Name is required" }}
           render={({ field }) => (
             <FormItem>
@@ -131,8 +160,9 @@ export default function RegisterForm() {
         <Button
           type="submit"
           className="w-full bg-[#0F5BBD] hover:bg-[#0f5abdda] cursor-pointer text-white h-[42px] text-[16px]"
+          disabled={loading}
         >
-          Register Now
+          {loading ? "Registering..." : "Register Now"}
         </Button>
         <div className="flex items-center gap-2">
           <div className="flex-1 h-px bg-muted-foreground/20" />
@@ -143,10 +173,29 @@ export default function RegisterForm() {
           type="button"
           variant="outline"
           className="w-full h-[42px] cursor-pointer rounded-full flex items-center justify-center gap-2"
-          onClick={() => alert("Google sign-in not implemented")}
+          onClick={async () => {
+            setLoading(true);
+            try {
+              if (!authContext) throw new Error("Auth context not available");
+              await authContext.googleLogin();
+              Swal.fire({
+                icon: "success",
+                title: "Google Sign-In Successful!",
+                timer: 2000,
+                showConfirmButton: false,
+              });
+              setTimeout(() => router.push("/dashboard"), 2000); // or wherever you want to redirect
+            } catch (err: any) {
+              Swal.fire({
+                icon: "error",
+                title: "Google Sign-In Failed",
+                text: err.message || "Unknown error",
+              });
+            } finally {
+              setLoading(false);
+            }
+          }}
         >
-          {" "}
-          {/* Replace with real Google sign-in */}
           <GoogleIcon />
           Continue with Google
         </Button>

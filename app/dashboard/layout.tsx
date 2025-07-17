@@ -10,7 +10,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    // <ProtectedRoute>
     <div className="flex h-screen bg-gray-100 dark:bg-[#1A1D37]">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -20,6 +19,5 @@ export default function DashboardLayout({
         </main>
       </div>
     </div>
-    // </ProtectedRoute>
   );
 }
