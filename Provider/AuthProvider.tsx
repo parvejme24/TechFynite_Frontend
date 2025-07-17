@@ -14,10 +14,25 @@ import { createContext, useEffect, useState, ReactNode } from "react";
 import { app } from "@/firebase.config";
 import useAxiosPublic from "@/hooks/useAxiosPublic";
 
+export interface RegisterRequest {
+  displayName: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  createUser: (email: string, password: string) => Promise<any>;
+  createUser: (
+    email: string,
+    password: string,
+    displayName: string
+  ) => Promise<any>;
   signInUser: (email: string, password: string) => Promise<any>;
   updateUserProfile: (name: string) => Promise<any>;
   googleLogin: () => Promise<any>;
@@ -32,14 +47,49 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const axiosPublic = useAxiosPublic();
 
-  const createUser = (email: string, password: string) => {
+  const createUser = async (
+    email: string,
+    password: string,
+    displayName: string
+  ) => {
     setLoading(true);
-    return createUserWithEmailAndPassword(auth, email, password);
+    try {
+      // 1. Firebase registration
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      await updateProfile(userCredential.user, { displayName });
+
+      // 2. Send to backend
+      const registerPayload: RegisterRequest = { displayName, email, password };
+      await axiosPublic.post("/register", registerPayload);
+
+      return userCredential;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const signInUser = (email: string, password: string) => {
+  const signInUser = async (email: string, password: string) => {
     setLoading(true);
-    return signInWithEmailAndPassword(auth, email, password);
+    try {
+      // 1. Firebase login
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      // 2. Send to backend
+      const loginPayload: LoginRequest = { email, password };
+      await axiosPublic.post("/login", loginPayload);
+
+      return userCredential;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const googleLogin = () => {

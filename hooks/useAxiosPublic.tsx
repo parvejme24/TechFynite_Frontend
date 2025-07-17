@@ -1,12 +1,13 @@
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
 
 const instance = axios.create({
-  baseURL: "https://localhost:5000/api/v1",
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
-const UseAxios = () => {
+const useAxiosPublic = () => {
   return instance;
 };
 
-export default UseAxios;
+export default useAxiosPublic;

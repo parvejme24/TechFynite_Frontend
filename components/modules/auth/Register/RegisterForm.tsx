@@ -44,8 +44,7 @@ export default function RegisterForm() {
     setLoading(true);
     try {
       if (!authContext) throw new Error("Auth context not available");
-      await authContext.createUser(data.email, data.password);
-      await authContext.updateUserProfile(data.displayName);
+      await authContext.createUser(data.email, data.password, data.displayName);
 
       Swal.fire({
         icon: "success",
