@@ -50,11 +50,12 @@ export default function LoginForm() {
         showConfirmButton: false,
       });
       setTimeout(() => router.push("/"), 1500);
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
       Swal.fire({
         icon: "error",
         title: "Login Failed",
-        text: err.message || "Unknown error",
+        text: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -165,11 +166,12 @@ export default function LoginForm() {
                 showConfirmButton: false,
               });
               setTimeout(() => router.push("/"), 1500);
-            } catch (err: any) {
+            } catch (err) {
+              const errorMessage = err instanceof Error ? err.message : "Unknown error";
               Swal.fire({
                 icon: "error",
                 title: "Google Sign-In Failed",
-                text: err.message || "Unknown error",
+                text: errorMessage,
               });
             } finally {
               setLoading(false);

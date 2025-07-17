@@ -44,9 +44,7 @@ export default function RegisterForm() {
     setLoading(true);
     try {
       if (!authContext) throw new Error("Auth context not available");
-      // Create user with email and password
-      const userCredential = await authContext.createUser(data.email, data.password);
-      // Update user profile with display name
+      await authContext.createUser(data.email, data.password);
       await authContext.updateUserProfile(data.displayName);
 
       Swal.fire({
@@ -57,11 +55,12 @@ export default function RegisterForm() {
         showConfirmButton: false,
       });
       setTimeout(() => router.push("/login"), 2000);
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
       Swal.fire({
         icon: "error",
         title: "Registration Failed",
-        text: err.message || "Unknown error",
+        text: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -185,11 +184,12 @@ export default function RegisterForm() {
                 showConfirmButton: false,
               });
               setTimeout(() => router.push("/dashboard"), 2000); // or wherever you want to redirect
-            } catch (err: any) {
+            } catch (err) {
+              const errorMessage = err instanceof Error ? err.message : "Unknown error";
               Swal.fire({
                 icon: "error",
                 title: "Google Sign-In Failed",
-                text: err.message || "Unknown error",
+                text: errorMessage,
               });
             } finally {
               setLoading(false);
