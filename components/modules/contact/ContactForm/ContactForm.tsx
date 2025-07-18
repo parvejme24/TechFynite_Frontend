@@ -20,11 +20,30 @@ export default function ContactForm() {
     formState: { errors },
   } = useForm<FormValues>();
 
+  const [submitting, setSubmitting] = React.useState(false);
+
   const onSubmit = async (data: FormValues) => {
-    toast.success(
-      `Thank you ${data.fullName} for contacting us. We'll get back to you as soon as possible.`
-    );
-    reset();
+    setSubmitting(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/v1/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        toast.success(
+          `Thank you ${data.fullName} for contacting us. We'll get back to you as soon as possible.`
+        );
+        reset();
+      } else {
+        const result = await res.json();
+        toast.error(result?.error || "Failed to send message.");
+      }
+    } catch {
+      toast.error("Failed to send message.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -180,6 +199,7 @@ export default function ContactForm() {
                 type="submit"
                 value="Submit"
                 className="text-center w-full bg-gradient-to-bl from-[#0F35A7] to-[#0F5BBD] rounded-lg px-4 py-3 text-white font-light cursor-pointer hover:bg-[#0F57BA]/90 border border-[#BDD9FE]"
+                disabled={submitting}
               />
             </div>
           </div>
