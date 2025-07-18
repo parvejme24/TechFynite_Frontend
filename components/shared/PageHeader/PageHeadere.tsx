@@ -62,7 +62,6 @@ export default function PageHeader({
       filter: "blur(0px)",
       transition: {
         duration: 0.5,
-        ease: "easeOut",
       },
     },
   };
