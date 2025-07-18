@@ -95,7 +95,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       setDbUser(res.data);
 
       toast.success("Profile updated successfully!");
-    } catch (err) {
+    } catch {
       toast.error("Profile update failed!", {});
     } finally {
       setLoading(false);
