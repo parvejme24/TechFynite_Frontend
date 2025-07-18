@@ -38,7 +38,7 @@ export default function PageHeader({
   title,
   subTitle,
 }: PageHeaderProps) {
-  const count = value ? useCounter(parseInt(value)) : 0;
+  const count = useCounter(value ? parseInt(value) : 0);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -79,7 +79,7 @@ export default function PageHeader({
             variants={textVariants}
             className="text-[#000000] dark:text-white text-center text-2xl md:text-[45px] font-bold leading-tight"
           >
-            {value && `${count.toLocaleString()}+ `}
+            {value ? `${count.toLocaleString()}+ ` : ""}
             {title}
           </motion.h2>
           <motion.p
