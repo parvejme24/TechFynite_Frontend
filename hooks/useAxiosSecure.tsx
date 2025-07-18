@@ -1,29 +1,44 @@
-import axios from "axios";
-import { API_BASE_URL } from "@/lib/config";
+// hooks/useAxiosSecure.ts
 
-const instance = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
+import { useEffect, useContext } from "react";
+import axios from "axios";
+import { AuthContext } from "@/Provider/AuthProvider";
+
+const axiosSecure = axios.create({
+  baseURL: "http://localhost:5050/api/v1",
+  withCredentials: true, // if using cookies (optional)
 });
 
-// Optionally, add an interceptor to attach a token from localStorage or cookies
-instance.interceptors.request.use(
-  (config) => {
-    // Example: get token from localStorage
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("accessToken")
-        : null;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
 const useAxiosSecure = () => {
-  return instance;
+  const user = useContext(AuthContext)?.user;
+
+  useEffect(() => {
+    const requestInterceptor = axiosSecure.interceptors.request.use(
+      async (config) => {
+        const token = await user?.getIdToken?.(); // Firebase JWT
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    const responseInterceptor = axiosSecure.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        console.error("Axios error:", error?.response || error.message);
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axiosSecure.interceptors.request.eject(requestInterceptor);
+      axiosSecure.interceptors.response.eject(responseInterceptor);
+    };
+  }, [user]);
+
+  return axiosSecure;
 };
 
 export default useAxiosSecure;

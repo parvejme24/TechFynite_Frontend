@@ -9,10 +9,11 @@ import {
   signOut,
   updateProfile,
   User,
+  sendEmailVerification,
 } from "firebase/auth";
 import { createContext, useEffect, useState, ReactNode } from "react";
 import { app } from "@/firebase.config";
-import useAxiosPublic from "@/hooks/useAxiosPublic";
+import axios from "axios";
 
 export interface RegisterRequest {
   displayName: string;
@@ -41,11 +42,11 @@ type AuthContextType = {
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 const auth = getAuth(app);
+const API_BASE_URL = "http://localhost:5000/api/v1";
 
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const axiosPublic = useAxiosPublic();
 
   const createUser = async (
     email: string,
@@ -62,9 +63,16 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
       await updateProfile(userCredential.user, { displayName });
 
-      // 2. Send to backend
+      // 2. Send email verification
+      if (userCredential.user) {
+        await sendEmailVerification(userCredential.user);
+      }
+
+      // 3. Save user to PostgreSQL via backend (direct axios)
       const registerPayload: RegisterRequest = { displayName, email, password };
-      await axiosPublic.post("/register", registerPayload);
+      await axios.post(`${API_BASE_URL}/register`, registerPayload, {
+        withCredentials: true,
+      });
 
       return userCredential;
     } finally {
@@ -82,9 +90,19 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
         password
       );
 
-      // 2. Send to backend
+      // 2. Notify backend for login
       const loginPayload: LoginRequest = { email, password };
-      await axiosPublic.post("/login", loginPayload);
+      const res = await axios.post(`${API_BASE_URL}/login`, loginPayload, {
+        withCredentials: true,
+      });
+
+      // 3. Save tokens to localStorage
+      if (res.data.accessToken) {
+        localStorage.setItem("accessToken", res.data.accessToken);
+      }
+      if (res.data.refreshToken) {
+        localStorage.setItem("refreshToken", res.data.refreshToken);
+      }
 
       return userCredential;
     } finally {
@@ -108,31 +126,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(currentUser);
       setLoading(false);
 
-      const handleCreateToken = async () => {
-        const email = { email: userEmail };
-        await axiosPublic.post("/jwt", email, {
-          withCredentials: true,
-        });
-      };
-      handleCreateToken();
 
-      // if (currentUser) {
-      //   axios
-      //     .post("https://localhost:5000/api/v1/access-token", loggedUser, {
-      //       withCredentials: true,
-      //     })
-      //     .then((res) => {
-      //       console.log(res.data);
-      //     });
-      // } else {
-      //   axios
-      //     .post("http://localhost:5000/api/v1/auth/logOut", loggedUser, {
-      //       withCredentials: true,
-      //     })
-      //     .then((res) => {
-      //       console.log(res.data);
-      //     });
-      // }
     });
     return () => {
       unsubscribe();

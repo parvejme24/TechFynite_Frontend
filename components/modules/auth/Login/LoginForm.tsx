@@ -49,7 +49,7 @@ export default function LoginForm() {
         timer: 1500,
         showConfirmButton: false,
       });
-      setTimeout(() => router.push("/"), 1500);
+      setTimeout(() => router.push("/dashboard"), 1500);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       Swal.fire({
@@ -167,7 +167,8 @@ export default function LoginForm() {
               });
               setTimeout(() => router.push("/"), 1500);
             } catch (err) {
-              const errorMessage = err instanceof Error ? err.message : "Unknown error";
+              const errorMessage =
+                err instanceof Error ? err.message : "Unknown error";
               Swal.fire({
                 icon: "error",
                 title: "Google Sign-In Failed",

@@ -49,12 +49,13 @@ export default function RegisterForm() {
       Swal.fire({
         icon: "success",
         title: "Registration Successful!",
-        text: "You can now log in.",
+        text: "A verification email has been sent. Please verify your email.",
         timer: 2000,
         showConfirmButton: false,
       });
       setTimeout(() => router.push("/login"), 2000);
     } catch (err) {
+      console.error("Registration error:", err);
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       Swal.fire({
         icon: "error",
