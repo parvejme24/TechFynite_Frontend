@@ -43,7 +43,7 @@ const userNavigation = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, loading } = useCurrentUser();
+  const { user } = useCurrentUser();
   const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
 
   return (

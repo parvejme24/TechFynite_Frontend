@@ -25,6 +25,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [roleSelections, setRoleSelections] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -43,7 +44,13 @@ export default function UsersPage() {
     fetchUsers();
   }, []);
 
-  const handleRoleChange = async (id: string, newRole: string) => {
+  const handleRoleSelect = (id: string, newRole: string) => {
+    setRoleSelections((prev) => ({ ...prev, [id]: newRole }));
+  };
+
+  const handleRoleUpdate = async (id: string) => {
+    const newRole = roleSelections[id];
+    if (!newRole) return;
     setUpdatingId(id);
     try {
       const token = localStorage.getItem("accessToken");
@@ -56,11 +63,18 @@ export default function UsersPage() {
         prev.map((u) => (u.id === id ? { ...u, role: newRole } : u))
       );
       toast.success("User role updated!");
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.error ||
-        err?.message ||
-        "Failed to update user role";
+      setRoleSelections((prev) => {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      });
+    } catch (err: unknown) {
+      let message = "Failed to update user role";
+      if (err && typeof err === "object" && "response" in err && (err as any).response?.data?.error) {
+        message = (err as any).response.data.error;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
       toast.error(message);
     } finally {
       setUpdatingId(null);
@@ -134,7 +148,7 @@ export default function UsersPage() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
-                          className={`flex items-center gap-2 px-2 py-1 min-w-[110px] text-left bg-transparent ${roleColor(user.role)}`}
+                          className={`flex items-center gap-2 px-2 py-1 min-w-[110px] text-left bg-transparent ${roleColor(roleSelections[user.id] || user.role)}`}
                           disabled={
                             updatingId === user.id ||
                             !currentUser ||
@@ -142,7 +156,7 @@ export default function UsersPage() {
                             currentUser.id === user.id
                           }
                         >
-                          {roleLabels[user.role as keyof typeof roleLabels]}
+                          {roleLabels[(roleSelections[user.id] || user.role) as keyof typeof roleLabels]}
                           <ChevronDown className="w-4 h-4 ml-1" />
                         </button>
                       </DropdownMenuTrigger>
@@ -150,9 +164,9 @@ export default function UsersPage() {
                         {["USER", "ADMIN", "SUPER_ADMIN"].map((role) => (
                           <DropdownMenuItem
                             key={role}
-                            onClick={() => handleRoleChange(user.id, role)}
+                            onClick={() => handleRoleSelect(user.id, role)}
                             disabled={
-                              user.role === role ||
+                              (roleSelections[user.id] || user.role) === role ||
                               updatingId === user.id ||
                               !currentUser ||
                               (currentUser.role !== "ADMIN" && currentUser.role !== "SUPER_ADMIN") ||
@@ -166,9 +180,20 @@ export default function UsersPage() {
                     </DropdownMenu>
                   </TableCell>
                   <TableCell>
-                    {updatingId === user.id && (
-                      <span className="text-xs">Updating...</span>
-                    )}
+                    <button
+                      className="px-3 py-1 bg-blue-600 text-white rounded disabled:opacity-60"
+                      disabled={
+                        updatingId === user.id ||
+                        !roleSelections[user.id] ||
+                        roleSelections[user.id] === user.role ||
+                        !currentUser ||
+                        (currentUser.role !== "ADMIN" && currentUser.role !== "SUPER_ADMIN") ||
+                        currentUser.id === user.id
+                      }
+                      onClick={() => handleRoleUpdate(user.id)}
+                    >
+                      {updatingId === user.id ? "Updating..." : "Update"}
+                    </button>
                   </TableCell>
                 </TableRow>
               ))
