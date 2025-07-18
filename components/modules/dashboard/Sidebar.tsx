@@ -20,6 +20,7 @@ import {
 
 import LOGO from "@/assets/common/logo.png";
 import Image from "next/image";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const adminNavigation = [
   { name: "Overview", href: "/dashboard", icon: FiHome },
@@ -42,7 +43,8 @@ const userNavigation = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const isAdmin = true; // Assuming a default role for now
+  const { user, loading } = useCurrentUser();
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
 
   return (
     <>
