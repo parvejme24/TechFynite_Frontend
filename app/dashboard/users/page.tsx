@@ -70,8 +70,13 @@ export default function UsersPage() {
       });
     } catch (err: unknown) {
       let message = "Failed to update user role";
-      if (err && typeof err === "object" && "response" in err && (err as any).response?.data?.error) {
-        message = (err as any).response.data.error;
+      if (
+        err &&
+        typeof err === "object" &&
+        "response" in err &&
+        typeof (err as { response?: { data?: { error?: string } } }).response?.data?.error === "string"
+      ) {
+        message = (err as { response: { data: { error: string } } }).response.data.error;
       } else if (err instanceof Error) {
         message = err.message;
       }
