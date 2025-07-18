@@ -11,11 +11,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AuthContext } from "@/Provider/AuthProvider";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Topbar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const authContext = React.useContext(AuthContext);
+  const user = authContext?.user;
+  const logOut = authContext?.logOut;
+  const router = useRouter();
 
   // Only show theme toggle after mounting to avoid hydration mismatch
   useEffect(() => {
@@ -94,9 +101,17 @@ export default function Topbar() {
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                <span className="hidden sm:block">John Doe</span>
+              <button className="cursor-pointer flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center">
+                  {user?.photoURL ? (
+                    <Image src={user.photoURL} alt="User" width={32} height={32} className="rounded-full object-cover" />
+                  ) : (
+                    <span className="text-lg font-bold text-gray-700 dark:text-gray-200">
+                      {(user?.displayName?.[0] || user?.email?.[0] || "U").toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                {/* Remove name from topbar, only avatar shown */}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -105,10 +120,22 @@ export default function Topbar() {
             >
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <div className="px-4 py-2">
+                <div className="font-semibold text-base text-gray-900 dark:text-white">
+                  {user?.displayName || "User"}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-300">
+                  {user?.email || "No email"}
+                </div>
+              </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600 dark:text-red-400">
+              <DropdownMenuItem className="text-red-600 dark:text-red-400" onClick={async () => {
+                if (logOut) {
+                  await logOut();
+                  localStorage.clear();
+                  router.push("/login");
+                }
+              }}>
                 <FiLogOut className="w-4 h-4 mr-2" />
                 Logout
               </DropdownMenuItem>
