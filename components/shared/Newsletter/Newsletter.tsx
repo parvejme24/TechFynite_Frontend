@@ -52,13 +52,22 @@ const NewsletterForm = () => {
         });
         setEmail("");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      let message = "Failed to subscribe.";
+      if (
+        err &&
+        typeof err === "object" &&
+        "response" in err &&
+        typeof (err as { response?: { data?: { error?: string } } }).response?.data?.error === "string"
+      ) {
+        message = (err as { response: { data: { error: string } } }).response.data.error;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
       Swal.fire({
         icon: "error",
         title: "Subscription Failed",
-        text:
-          err?.response?.data?.message ||
-          "Something went wrong. Please try again.",
+        text: message,
       });
     }
   };
