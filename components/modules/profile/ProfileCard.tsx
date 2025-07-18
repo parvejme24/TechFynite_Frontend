@@ -4,9 +4,10 @@ import { User as UserIcon, Phone, Globe, DollarSign } from "lucide-react";
 import { FaEnvelopeOpen } from "react-icons/fa";
 import { Clock } from "lucide-react";
 import { IoCheckmarkCircleSharp } from "react-icons/io5";
+import { UserProfile } from "@/types/user"; // create this type
 
 interface ProfileCardProps {
-  dbUser: any;
+  dbUser: { user: UserProfile } | null;
 }
 
 const ProfileCard: React.FC<ProfileCardProps> = ({ dbUser }) => {

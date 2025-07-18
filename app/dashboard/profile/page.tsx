@@ -1,17 +1,17 @@
 "use client";
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "@/Provider/AuthProvider";
 import axios from "axios";
 
 import { useForm } from "react-hook-form";
 import ProfileCard from "@/components/modules/profile/ProfileCard";
 import ProfileEditForm from "@/components/modules/profile/ProfileEditForm";
+import { UserProfile } from "@/types/user";
 
 export default function ProfilePage() {
   const { user } = useContext(AuthContext) || {};
-  const [dbUser, setDbUser] = useState<any>(null);
+  const [dbUser, setDbUser] = useState<{ user: UserProfile } | null>(null);
   const [loading, setLoading] = useState(true);
-  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     const fetchDbUser = async () => {
@@ -60,38 +60,6 @@ export default function ProfilePage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbUser]);
-
-  const handleUpdate = async (values: any) => {
-    if (!dbUser?.user) return;
-    const payload = {
-      displayName: values.fullName,
-      phone: values.phone,
-      city: values.city,
-      country: values.country,
-      designation: values.designation,
-    };
-    try {
-      const token = localStorage.getItem("accessToken");
-      await axios.put(
-        `http://localhost:5000/api/v1/users/${dbUser.user.id}`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      // Optionally, refetch user data
-      setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/v1/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setDbUser(res.data);
-      window.alert("Profile updated successfully!");
-    } catch (err) {
-      // handle error (show toast, etc)
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="container mx-auto max-w-7xl py-8">

@@ -13,11 +13,23 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { toast } from "sonner";
+import { UserProfile } from "@/types/user";
 
 interface ProfileEditFormProps {
-  dbUser: any;
-  setDbUser: (user: any) => void;
+  dbUser: { user: UserProfile } | null;
+  setDbUser: (user: { user: UserProfile }) => void;
   setLoading: (loading: boolean) => void;
+}
+
+interface ProfileFormValues {
+  fullName: string;
+  email: string;
+  phone: string;
+  city: string;
+  country: string;
+  designation: string;
+  stateOrRegion: string;
+  postCode: string;
 }
 
 const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
@@ -25,7 +37,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
   setDbUser,
   setLoading,
 }) => {
-  const form = useForm({
+  const form = useForm<ProfileFormValues>({
     defaultValues: {
       fullName: dbUser?.user?.displayName || "",
       email: dbUser?.user?.email || "",
@@ -55,7 +67,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbUser]);
 
-  const handleUpdate = async (values: any) => {
+  const handleUpdate = async (values: ProfileFormValues) => {
     if (!dbUser?.user) return;
     const payload = {
       displayName: values.fullName,
