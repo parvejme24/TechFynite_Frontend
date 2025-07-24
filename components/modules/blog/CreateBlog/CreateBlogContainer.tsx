@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectItem, SelectContent } from "@/components/ui/select";
 import { FiX } from "react-icons/fi";
+import AddCategoryModal from "./AddCategoryModal";
 
 const API_BASE_URL = "http://localhost:5000/api/v1";
 
@@ -22,14 +23,30 @@ export default function CreateBlogContainer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [catModalLoading, setCatModalLoading] = useState(false);
+  const [catModalError, setCatModalError] = useState("");
 
   // Fetch categories on mount
   React.useEffect(() => {
     fetch(`${API_BASE_URL}/blog-categories`)
       .then((res) => res.json())
-      .then((data) =>
-        setCategories(Array.isArray(data) ? data : data.data || [])
-      )
+      .then((data) => {
+        // Debug log
+        console.log('Fetched categories:', data);
+        // Try to support different response shapes
+        let cats = [];
+        if (Array.isArray(data)) {
+          cats = data;
+        } else if (Array.isArray(data.data)) {
+          cats = data.data;
+        } else if (Array.isArray(data.categories)) {
+          cats = data.categories;
+        } else {
+          cats = [];
+        }
+        setCategories(cats);
+      })
       .catch(() => setCategories([]));
   }, []);
 
@@ -60,6 +77,31 @@ export default function CreateBlogContainer() {
       setError(err.message || "Failed to create category");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddCategoryModal = async (
+    title: string,
+    slug: string,
+    imageUrl: string
+  ) => {
+    setCatModalLoading(true);
+    setCatModalError("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/categories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, slug, imageUrl }),
+      });
+      if (!res.ok) throw new Error("Failed to create category");
+      const data = await res.json();
+      setCategories((prev) => [...prev, data]);
+      setCategory(data.id || data._id || "");
+      setShowCategoryModal(false);
+    } catch (err: any) {
+      setCatModalError(err.message || "Failed to create category");
+    } finally {
+      setCatModalLoading(false);
     }
   };
 
@@ -142,6 +184,7 @@ export default function CreateBlogContainer() {
         </div>
         <div>
           <label className="block mb-1 font-medium">Blog Category</label>
+
           <div className="flex gap-2">
             <Select value={category} onValueChange={setCategory} required>
               <SelectContent>
@@ -152,11 +195,11 @@ export default function CreateBlogContainer() {
                   <SelectItem key={cat.id || cat._id} value={cat.id || cat._id}>
                     <span className="flex items-center gap-2">
                       <img
-                        src={cat.imageUrl || "/assets/common/templates.png"}
+                        src={cat.imageUrl || ""}
                         alt={cat.title}
                         className="w-6 h-6 object-cover rounded-full bg-gray-200"
                         onError={(e) =>
-                          (e.currentTarget.src = "/assets/common/templates.png")
+                          (e.currentTarget.src = "")
                         }
                       />
                       <span>{cat.title}</span>
@@ -165,16 +208,10 @@ export default function CreateBlogContainer() {
                 ))}
               </SelectContent>
             </Select>
-            <Input
-              placeholder="New category"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              className="w-40"
-            />
             <Button
               type="button"
-              onClick={handleAddCategory}
-              disabled={loading || !newCategory.trim()}
+              onClick={() => setShowCategoryModal(true)}
+              disabled={loading}
             >
               Add
             </Button>
@@ -239,6 +276,13 @@ export default function CreateBlogContainer() {
           {loading ? "Creating..." : "Create Blog"}
         </Button>
       </form>
+      <AddCategoryModal
+        open={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        onAdd={handleAddCategoryModal}
+        loading={catModalLoading}
+        error={catModalError}
+      />
     </div>
   );
 }

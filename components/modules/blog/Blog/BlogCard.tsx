@@ -3,9 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   Card,
   CardHeader,
-  CardTitle,
   CardContent,
-  CardDescription,
   CardFooter,
 } from "@/components/ui/card";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";

@@ -2,8 +2,7 @@
 import React, { useEffect, useState } from "react";
 import BlogList from "./BlogList";
 import Link from "next/link";
-// import { API_BASE_URL } from "@/lib/config";
-const API_BASE_URL = "http://localhost:5000/api/v1";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function BlogContainer() {
   const [blogs, setBlogs] = useState([]);
@@ -22,7 +21,7 @@ export default function BlogContainer() {
         const data = await res.json();
         // If the response is an array, use it directly
         setBlogs(Array.isArray(data) ? data : data.data || data.blogs || []);
-      } catch (err) {
+      } catch (err: any) {
         setError(err?.message || "Failed to fetch blogs");
       } finally {
         setLoading(false);
@@ -31,12 +30,12 @@ export default function BlogContainer() {
     fetchBlogs();
   }, []);
 
-  const handleEditBlog = (blog) => {
+  const handleEditBlog = (blog: any) => {
     alert(`Edit blog: ${blog.title}`);
     // Implement edit logic/modal here
   };
 
-  const handleDeleteBlog = (blog) => {
+  const handleDeleteBlog = (blog: any) => {
     if (confirm(`Are you sure you want to delete blog: ${blog.title}?`)) {
       // Implement delete API call here
       alert(`Deleted blog: ${blog.title}`);

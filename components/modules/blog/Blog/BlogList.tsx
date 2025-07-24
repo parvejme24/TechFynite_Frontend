@@ -1,5 +1,5 @@
-import React from 'react';
-import BlogCard from './BlogCard';
+import React from "react";
+import BlogCard from "./BlogCard";
 
 interface BlogListProps {
   blogs: Array<any>;
@@ -8,7 +8,12 @@ interface BlogListProps {
   onDelete?: (blog: any) => void;
 }
 
-const BlogList: React.FC<BlogListProps> = ({ blogs, onBlogClick, onEdit, onDelete }) => {
+const BlogList: React.FC<BlogListProps> = ({
+  blogs,
+  onBlogClick,
+  onEdit,
+  onDelete,
+}) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {blogs.map((blog) => (
@@ -24,4 +29,4 @@ const BlogList: React.FC<BlogListProps> = ({ blogs, onBlogClick, onEdit, onDelet
   );
 };
 
-export default BlogList; 
+export default BlogList;
