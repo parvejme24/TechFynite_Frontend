@@ -17,6 +17,7 @@ import {
   FiBell,
   FiSettings,
 } from "react-icons/fi";
+import { VscGitPullRequestGoToChanges } from "react-icons/vsc";
 
 import LOGO from "@/assets/common/logo.png";
 import Image from "next/image";
@@ -30,6 +31,11 @@ const adminNavigation = [
   { name: "Newsletter", href: "/dashboard/newsletter", icon: FiMail },
   { name: "Users", href: "/dashboard/users", icon: FiUsers },
   { name: "Analytics", href: "/dashboard/analytics", icon: FiBarChart2 },
+  {
+    name: "Service Request",
+    href: "/dashboard/service-request",
+    icon: VscGitPullRequestGoToChanges,
+  },
 ];
 
 const userNavigation = [

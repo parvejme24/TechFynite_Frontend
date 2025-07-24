@@ -58,9 +58,11 @@ const NewsletterForm = () => {
         err &&
         typeof err === "object" &&
         "response" in err &&
-        typeof (err as { response?: { data?: { error?: string } } }).response?.data?.error === "string"
+        typeof (err as { response?: { data?: { error?: string } } }).response
+          ?.data?.error === "string"
       ) {
-        message = (err as { response: { data: { error: string } } }).response.data.error;
+        message = (err as { response: { data: { error: string } } }).response
+          .data.error;
       } else if (err instanceof Error) {
         message = err.message;
       }
