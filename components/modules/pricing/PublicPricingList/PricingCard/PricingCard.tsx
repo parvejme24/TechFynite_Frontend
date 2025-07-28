@@ -14,7 +14,7 @@ export default function PricingCard({ plan }: { plan: Pricing }) {
   return (
     <Card
       key={plan.id}
-      className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow relative"
+      className="bg-white dark:bg-[#1A1D37] border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow relative"
     >
       <CardHeader>
         <div className="flex justify-center items-start">

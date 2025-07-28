@@ -116,7 +116,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
 
   // Handle view details
   const handleViewDetails = () => {
-    router.push(`/dashboard/blogs/${blog.id}`);
+    router.push(`/blogs/${blog.id}`);
   };
 
   return (

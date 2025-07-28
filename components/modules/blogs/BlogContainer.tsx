@@ -40,7 +40,7 @@ export default function BlogContainer() {
     : blogs;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 lg:px-0 py-8">
+    <div className="max-w-7xl mx-auto px-4 lg:px-0 py-14">
              <div className="">
          {error ? (
            <div className="text-red-500">{error}</div>
