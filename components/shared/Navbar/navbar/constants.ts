@@ -6,9 +6,8 @@ export interface NavItem {
 export const navigation: NavItem[] = [
   { name: "Home", href: "/" },
   { name: "Template", href: "/template" },
-  { name: "Support", href: "/support" },
-  // { name: "Pricing", href: "/pricing" },
-  { name: "Blog", href: "/blog" },
+  { name: "Pricing", href: "/pricing" },
+  { name: "Blogs", href: "/blogs" },
   { name: "Contact", href: "/contact" },
 ];
 
@@ -37,4 +36,4 @@ export const menuItemVariants = {
 export const backdropVariants = {
   closed: { opacity: 0, transition: { duration: 0.3 } },
   open: { opacity: 1, transition: { duration: 0.3 } },
-}; 
+};

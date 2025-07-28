@@ -1,4 +1,5 @@
-import CreateBlogContainer from "@/components/modules/blog/CreateBlog/CreateBlogContainer";
+
+import CreateBlogContainer from "@/components/modules/DadhboardModules/Blog/CreateBlog/CreateBlogContainer";
 import React from "react";
 
 export default function CreateBlogPage() {

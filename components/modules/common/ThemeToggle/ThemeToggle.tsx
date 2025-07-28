@@ -15,7 +15,14 @@ export const ThemeToggle = ({ className = "" }: ThemeToggleProps) => {
   // Only show theme toggle after mounting to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Always ensure light mode is the default when component mounts
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme');
+      if (!savedTheme || savedTheme === 'system') {
+        setTheme('light');
+      }
+    }
+  }, [setTheme]);
 
   if (!mounted) {
     return (

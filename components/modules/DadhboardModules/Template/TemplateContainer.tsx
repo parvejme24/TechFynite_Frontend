@@ -1,0 +1,130 @@
+"use client";
+import { useTemplates, useTemplateCategories } from "@/hooks/useTemplateApi";
+import React, { useState } from "react";
+import TemplateCard from "./TemplateCard";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+const TEMPLATES_PER_PAGE = 9;
+
+export default function TemplateContainer() {
+  const { data: templates = [], isLoading, error } = useTemplates();
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useTemplateCategories();
+  const [page, setPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Filter templates by selected category
+  const filteredTemplates =
+    selectedCategory === "all"
+      ? templates
+      : templates.filter((t: any) => t.categoryId === selectedCategory);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredTemplates.length / TEMPLATES_PER_PAGE);
+  const paginatedTemplates = filteredTemplates.slice(
+    (page - 1) * TEMPLATES_PER_PAGE,
+    page * TEMPLATES_PER_PAGE
+  );
+
+  // Reset to page 1 when category changes
+  React.useEffect(() => {
+    setPage(1);
+  }, [selectedCategory]);
+
+  if (isLoading || categoriesLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  if (categoriesError) return <div>Error: {categoriesError.message}</div>;
+
+  return (
+    <div>
+      <div className="container mx-auto max-w-7xl px-4 lg:px-0 py-10">
+        <div className="flex justify-end mb-6">
+          <span className="w-[150px] bg-gradient-to-r from-[#BDD9FE] to-[#8AACDA] rounded-lg p-[2px]">
+            <Link
+              href={"/dashboard/templates/create"}
+              target="_blank"
+              className="bg-gradient-to-r text-white from-[#0F59BC] to-[#0F35A7] w-[150px] h-full py-3 flex justify-center items-center rounded-lg"
+            >
+              Create Template
+            </Link>
+          </span>
+        </div>
+        <h3 className="text-2xl font-bold text-center mb-6">
+          New Arrival Product
+        </h3>
+
+        {/* Category Tabs */}
+        <div className="flex flex-wrap gap-2 justify-center mb-8">
+          <button
+            className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors duration-150 ${
+              selectedCategory === "all"
+                ? "bg-blue-500 text-white border-blue-500"
+                : "bg-white dark:bg-blue-900 text-gray-700 dark:text-white border-gray-300 dark:border-blue-800"
+            }`}
+            onClick={() => setSelectedCategory("all")}
+          >
+            All
+          </button>
+          {categories.map((cat: any) => (
+            <button
+              key={cat.id || cat._id}
+              className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors duration-150 ${
+                selectedCategory === (cat.id || cat._id)
+                  ? "bg-blue-500 text-white border-blue-500"
+                  : "bg-white dark:bg-blue-900 text-gray-700 dark:text-white border-gray-300 dark:border-blue-800"
+              }`}
+              onClick={() => setSelectedCategory(cat.id || cat._id)}
+            >
+              {cat.title}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {paginatedTemplates.map((template: any) => (
+            <TemplateCard key={template.id} template={template} />
+          ))}
+        </div>
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-8 gap-2">
+            <button
+              className="cursor-pointer p-2 rounded-full border border-gray-300 dark:border-blue-800 bg-white dark:bg-blue-800 text-gray-700 dark:text-white disabled:opacity-50 flex items-center justify-center"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              aria-label="Previous page"
+            >
+              <FiChevronLeft size={20} />
+            </button>
+            {[...Array(totalPages)].map((_, idx) => (
+              <button
+                key={idx}
+                className={`px-3 py-1 rounded-full border cursor-pointer transition-colors duration-150 ${
+                  page === idx + 1
+                    ? "bg-blue-500 text-white border-blue-500"
+                    : "bg-white dark:bg-blue-900 text-gray-700 dark:text-white border-gray-300 dark:border-blue-800"
+                }`}
+                onClick={() => setPage(idx + 1)}
+                aria-label={`Go to page ${idx + 1}`}
+              >
+                {idx + 1}
+              </button>
+            ))}
+            <button
+              className="cursor-pointer p-2 rounded-full border border-gray-300 dark:border-blue-800 bg-white dark:bg-blue-800 text-gray-700 dark:text-white disabled:opacity-50 flex items-center justify-center"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              aria-label="Next page"
+            >
+              <FiChevronRight size={20} />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

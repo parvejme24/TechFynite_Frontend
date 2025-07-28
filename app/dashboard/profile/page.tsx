@@ -1,50 +1,29 @@
 "use client";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext } from "react";
 import { AuthContext } from "@/Provider/AuthProvider";
-import axios from "axios";
+import { UserDataProvider } from "@/Provider/UserDataProvider";
 
 import ProfileCard from "@/components/modules/profile/ProfileCard";
 import ProfileEditForm from "@/components/modules/profile/ProfileEditForm";
-import { UserProfile } from "@/types/user";
 
 export default function ProfilePage() {
   const { user } = useContext(AuthContext) || {};
-  const [dbUser, setDbUser] = useState<{ user: UserProfile } | null>(null);
-
-  useEffect(() => {
-    const fetchDbUser = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const res = await axios.get("http://localhost:5000/api/v1/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setDbUser(res.data);
-      } catch {
-        setDbUser(null);
-      }
-    };
-    fetchDbUser();
-  }, []);
 
   if (!user) {
     return <div>Please login to view your profile.</div>;
   }
 
   return (
-    <div className="container mx-auto max-w-7xl py-8">
-      <h2 className="text-2xl font-bold mb-4">Profile Page</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Profile Card */}
-        <ProfileCard dbUser={dbUser} />
-        {/* Editable Form */}
-        <ProfileEditForm
-          dbUser={dbUser}
-          setDbUser={setDbUser}
-          setLoading={() => {}}
-        />
+    <UserDataProvider>
+      <div className="container mx-auto max-w-7xl py-8">
+        <h2 className="text-2xl font-bold mb-6">Profile Page</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* Profile Card */}
+          <ProfileCard />
+          {/* Editable Form */}
+          <ProfileEditForm />
+        </div>
       </div>
-    </div>
+    </UserDataProvider>
   );
 }

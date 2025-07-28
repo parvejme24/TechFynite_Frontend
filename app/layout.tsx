@@ -3,7 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import AuthProvider from "@/Provider/AuthProvider";
+import { UserDataProvider } from "@/Provider/UserDataProvider";
 import { Toaster } from "sonner";
+import QueryProvider from "@/components/QueryProvider";
+import ThemeInitializer from "@/components/ThemeInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,17 +33,25 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem={false}
-            disableTransitionOnChange
-          >
-            <Toaster richColors position="top-right" />
-            {children}
-          </ThemeProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <UserDataProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="light"
+                enableSystem={false}
+                disableTransitionOnChange
+                storageKey="theme"
+                themes={["light", "dark"]}
+                forcedTheme={undefined}
+              >
+                <ThemeInitializer />
+                <Toaster richColors position="top-right" />
+                {children}
+              </ThemeProvider>
+            </UserDataProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

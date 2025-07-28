@@ -125,3 +125,57 @@
 * {
   scroll-behavior: smooth;
 }
+
+/* Pricing Swiper Styles */
+.pricing-swiper {
+  padding: 20px 0 60px 0;
+}
+
+.pricing-swiper .swiper-button-next,
+.pricing-swiper .swiper-button-prev {
+  color: #0F5BBD;
+  background: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.pricing-swiper .swiper-button-next:hover,
+.pricing-swiper .swiper-button-prev:hover {
+  background: #0F5BBD;
+  color: white;
+  transform: scale(1.1);
+}
+
+.pricing-swiper .swiper-button-next::after,
+.pricing-swiper .swiper-button-prev::after {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.pricing-swiper .swiper-pagination-bullet {
+  background: #0F5BBD;
+  opacity: 0.3;
+  transition: all 0.3s ease;
+}
+
+.pricing-swiper .swiper-pagination-bullet-active {
+  opacity: 1;
+  background: #0F5BBD;
+  transform: scale(1.2);
+}
+
+/* Dark mode support */
+.dark .pricing-swiper .swiper-button-next,
+.dark .pricing-swiper .swiper-button-prev {
+  background: #1f2937;
+  color: #0F5BBD;
+}
+
+.dark .pricing-swiper .swiper-button-next:hover,
+.dark .pricing-swiper .swiper-button-prev:hover {
+  background: #0F5BBD;
+  color: white;
+}

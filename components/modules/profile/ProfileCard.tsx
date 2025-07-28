@@ -1,74 +1,111 @@
 import React from "react";
 import Image from "next/image";
-import { User as UserIcon, Phone, Globe, DollarSign } from "lucide-react";
+import { User as UserIcon, Phone, Globe, DollarSign, Edit } from "lucide-react";
 import { FaEnvelopeOpen } from "react-icons/fa";
 import { Clock } from "lucide-react";
 import { IoCheckmarkCircleSharp } from "react-icons/io5";
-import { UserProfile } from "@/types/user"; // create this type
+import { Button } from "@/components/ui/button";
+import { useUserData } from "@/Provider/UserDataProvider";
 
-interface ProfileCardProps {
-  dbUser: { user: UserProfile } | null;
-}
 
-const ProfileCard: React.FC<ProfileCardProps> = ({ dbUser }) => {
+
+const ProfileCard: React.FC = () => {
+  const { user, loading, error, refreshUser } = useUserData();
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-[#1A1D37] rounded-lg shadow p-6">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse mb-2"></div>
+          <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          <div className="mt-4 space-y-2 w-full">
+            {[...Array(7)].map((_, index) => (
+              <div key={index}>
+                <div className="flex items-center gap-2 py-1">
+                  <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  <div className="h-4 flex-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                </div>
+                <hr className="w-full border-dashed border-gray-400 mt-2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white dark:bg-[#1A1D37] rounded-lg shadow p-6">
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-red-500">Error loading profile: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white dark:bg-[#1A1D37] rounded-lg shadow p-6">
       <div className="flex flex-col items-center gap-2">
-        <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center mb-2">
-          {dbUser?.user?.photoUrl ? (
-            <Image
-              src={dbUser.user.photoUrl}
-              alt="user profile"
-              width={96}
-              height={96}
-            />
-          ) : (
-            <UserIcon size={64} className="text-gray-400" />
-          )}
-        </div>
+                 <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center mb-2">
+           {user?.photoUrl ? (
+             <Image
+               src={user.photoUrl}
+               alt="user profile"
+               width={96}
+               height={96}
+               className="w-full h-full object-cover"
+             />
+           ) : (
+             <UserIcon size={64} className="text-gray-400" />
+           )}
+         </div>
         <h3 className="text-xl font-semibold">
-          {dbUser?.user?.displayName || "N/A"}
+          {user?.displayName || "N/A"}
         </h3>
         <p className="text-gray-500">
-          {dbUser?.user?.designation || "No designation"}
+          {user?.designation || "No designation"}
         </p>
 
         <div className="mt-4 space-y-2 w-full">
           <div className="flex items-center gap-2 py-1">
             <FaEnvelopeOpen className="text-2xl" />{" "}
-            {dbUser?.user?.email || "N/A"}
+            {user?.email || "N/A"}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
-            <Phone className="text-2xl" /> {dbUser?.user?.phone || "N/A"}
+            <Phone className="text-2xl" /> {user?.phone || "N/A"}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
-            <Globe className="text-2xl" /> {dbUser?.user?.country || "N/A"}
+            <Globe className="text-2xl" /> {user?.country || "N/A"}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
             <DollarSign className="text-2xl" /> Balance:{" "}
-            {dbUser?.user?.balance ?? 0}
+            {user?.balance ?? 0}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
             <UserIcon className="text-2xl" /> Role:{" "}
-            {dbUser?.user?.role || "N/A"}
+            {user?.role || "N/A"}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
             <IoCheckmarkCircleSharp className="text-green-500 text-2xl" />{" "}
-            Verified: {dbUser?.user?.isVerified ? "Yes" : "No"}
+            Verified: {user?.isVerified ? "Yes" : "No"}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
             <Clock className="text-2xl" /> Member since:{" "}
-            {dbUser?.user?.createdAt
-              ? new Date(dbUser.user.createdAt).toLocaleDateString()
+            {user?.createdAt
+              ? new Date(user.createdAt).toLocaleDateString()
               : "N/A"}
           </div>
         </div>
+
+
       </div>
     </div>
   );

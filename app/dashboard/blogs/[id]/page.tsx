@@ -1,4 +1,4 @@
-import BlogDetailsContainer from "@/components/modules/blog/BlogDetails/BlogDetailsContainer";
+import BlogDetailsContainer from "@/components/modules/DadhboardModules/Blog/BlogDetails/BlogDetailsContainer";
 import React from "react";
 
 export default function BlogDetailsPage({

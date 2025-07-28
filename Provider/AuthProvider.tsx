@@ -14,6 +14,9 @@ import {
 import { createContext, useEffect, useState, ReactNode } from "react";
 import { app } from "@/firebase.config";
 import axios from "axios";
+import useApiBaseUrl from "@/hooks/useApiBaseUrl";
+
+const API_BASE_URL = useApiBaseUrl();
 
 export interface RegisterRequest {
   displayName: string;
@@ -42,7 +45,6 @@ type AuthContextType = {
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 const auth = getAuth(app);
-const API_BASE_URL = "http://localhost:5000/api/v1";
 
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -125,8 +127,6 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userEmail = currentUser?.email || user?.email;
       setUser(currentUser);
       setLoading(false);
-
-
     });
     return () => {
       unsubscribe();

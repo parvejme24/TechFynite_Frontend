@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import axios from "axios";
+import useApiBaseUrl from "@/hooks/useApiBaseUrl";
+
+const API_BASE_URL = useApiBaseUrl();
 
 const NewsletterHeader = () => (
   <motion.div
@@ -38,7 +41,7 @@ const NewsletterForm = () => {
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/api/v1/newsletter", {
+      const res = await axios.post(`${API_BASE_URL}/newsletter`, {
         email,
       });
 

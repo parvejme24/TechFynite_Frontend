@@ -1,7 +1,10 @@
 "use client";
+import useApiBaseUrl from "@/hooks/useApiBaseUrl";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+
+const API_BASE_URL = useApiBaseUrl();
 
 type FormValues = {
   projectDetails: string;
@@ -25,7 +28,7 @@ export default function ContactForm() {
   const onSubmit = async (data: FormValues) => {
     setSubmitting(true);
     try {
-      const res = await fetch("http://localhost:5000/api/v1/contact", {
+      const res = await fetch(`${API_BASE_URL}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

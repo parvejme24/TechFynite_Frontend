@@ -1,7 +1,7 @@
 import ContactForm from "@/components/modules/contact/ContactForm/ContactForm";
-import Services from "@/components/modules/contact/Services/Services";
+import ContactOptions from "@/components/modules/contact/ContactOptions/SupportOptions";
 import Newsletter from "@/components/shared/Newsletter/Newsletter";
-import PageHeader from "@/components/shared/PageHeader/PageHeadere";
+import PageHeader from "@/components/shared/PageHeader/PageHeader";
 import React from "react";
 
 export default function page() {
@@ -13,7 +13,7 @@ export default function page() {
       />
 
       <div className="container mx-auto max-w-7xl px-5 lg:px-0 space-y-16">
-        <Services />
+        <ContactOptions />
         <ContactForm />
       </div>
 
