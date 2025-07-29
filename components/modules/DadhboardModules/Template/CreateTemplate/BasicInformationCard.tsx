@@ -64,7 +64,6 @@ interface BasicInformationCardProps {
   categories: Category[];
   onInputChange: (field: keyof TemplateFormData, value: unknown) => void;
   onCoverImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  showCoverPreview: boolean;
   setShowCoverPreview: (show: boolean) => void;
   onCreateCategory: (categoryData: { title: string; slug: string; imageFile?: File | null }) => void;
   onUpdateCategory: (id: string, categoryData: { title: string; slug: string; imageFile?: File | null }) => void;
@@ -79,7 +78,6 @@ export default function BasicInformationCard({
   categories,
   onInputChange,
   onCoverImageChange,
-  showCoverPreview,
   setShowCoverPreview,
   onCreateCategory,
   onUpdateCategory,

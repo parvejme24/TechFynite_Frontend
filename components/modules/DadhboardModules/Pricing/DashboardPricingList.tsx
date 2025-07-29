@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { usePricing, useDeletePricing } from "@/hooks/usePricingApi";
+import { usePricing } from "@/hooks/usePricingApi";
 import { Button } from "@/components/ui/button";
 
 import { FiPlus, FiDollarSign } from "react-icons/fi";
