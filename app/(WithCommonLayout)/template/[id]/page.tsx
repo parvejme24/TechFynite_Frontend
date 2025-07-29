@@ -2,7 +2,8 @@ import TemplateDetailsContainer from "@/components/modules/DadhboardModules/Temp
 // import PageHeader from "@/components/shared/PageHeader/PageHeader";
 import React from "react";
 
-export default function TemplateDetailsPage({ params }: { params: { id: string } }) {
+export default async function TemplateDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   return (
     <div>
       {/* <PageHeader
@@ -10,7 +11,7 @@ export default function TemplateDetailsPage({ params }: { params: { id: string }
         subTitle="Explore the best premium themes and plugins available for sale. Our unique collection is hand-curated by experts. Find and buy the perfect premium theme."
         value="58000"
       /> */}
-      <TemplateDetailsContainer id={params.id} />
+      <TemplateDetailsContainer id={id} />
     </div>
   );
 }
