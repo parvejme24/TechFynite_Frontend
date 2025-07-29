@@ -1,10 +1,7 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import useApiBaseUrl from "@/hooks/useApiBaseUrl";
+import { getApiBaseUrl } from "@/hooks/useApiBaseUrl";
 
 type BlogContentItem = {
   index: number;
@@ -18,7 +15,7 @@ export default async function BlogDetailsContainer({
 }: {
   params: { id: string };
 }) {
-  const API_BASE_URL = useApiBaseUrl();
+  const API_BASE_URL = getApiBaseUrl();
   const res = await fetch(`${API_BASE_URL}/blogs/${params.id}`, {
     cache: "no-store",
   });
@@ -68,21 +65,21 @@ export default async function BlogDetailsContainer({
           Your email address will not be published. Required fields are marked *
         </p>
         <form className="space-y-4 mt-5">
-          <Textarea
+          <textarea
             placeholder="Add a comment"
             className="bg-white dark:bg-[#1A1D37] rounded-md border-none"
           />
-          <Input
+          <input
             placeholder="Full Name"
             type="text"
             className="bg-white dark:bg-[#1A1D37] rounded-md border-none"
           />
-          <Input
+          <input
             placeholder="Email"
             type="email"
             className="bg-white dark:bg-[#1A1D37] rounded-md border-none"
           />
-          <Button className="cursor-pointer">Post Comment</Button>
+          <button className="cursor-pointer">Post Comment</button>
         </form>
       </div>
     </div>

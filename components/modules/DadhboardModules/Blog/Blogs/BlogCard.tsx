@@ -28,14 +28,12 @@ interface BlogCardProps {
     reviews?: unknown[];
     content?: unknown[];
   };
-  onClick?: () => void;
   onEdit?: (blog: unknown) => void;
   onDelete?: (blog: unknown) => void;
 }
 
 const BlogCard: React.FC<BlogCardProps> = ({
   blog,
-  onClick,
   onEdit,
   onDelete,
 }) => {
@@ -95,8 +93,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
   };
 
   // Handle edit
-  const handleEdit = (blog: unknown) => {
-    e.stopPropagation();
+  const handleEdit = () => {
     setShowActions(false);
     if (onEdit) {
       onEdit(blog);
@@ -104,8 +101,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
   };
 
   // Handle delete
-  const handleDelete = (blog: unknown) => {
-    e.stopPropagation();
+  const handleDelete = () => {
     setShowActions(false);
     if (onDelete) {
       onDelete(blog);
@@ -185,7 +181,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="w-full justify-start text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={handleDelete}
                 >
                   <FiTrash2 className="w-4 h-4 mr-2" />

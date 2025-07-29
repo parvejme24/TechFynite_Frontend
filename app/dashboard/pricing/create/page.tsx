@@ -96,7 +96,7 @@ export default function CreatePricingPage() {
       toast.success("Pricing plan created successfully!");
     } catch (error: unknown) {
       console.error("Error creating pricing plan:", error);
-      const errorMessage = (error as any)?.message || "Failed to create pricing plan. Please try again.";
+      const errorMessage = typeof error === "object" && error && "message" in error ? (error as { message: string }).message : "Failed to create pricing plan. Please try again.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);

@@ -121,7 +121,7 @@ export default function EditPricingPage() {
       router.push("/dashboard/pricing");
     } catch (error: unknown) {
       console.error("Error updating pricing plan:", error);
-      const errorMessage = (error as any)?.message || "Failed to update pricing plan. Please try again.";
+      const errorMessage = typeof error === "object" && error && "message" in error ? (error as { message: string }).message : "Failed to update pricing plan. Please try again.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
