@@ -6,7 +6,7 @@ import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-interface BlogCardProps {
+export interface BlogCardProps {
   blog: {
     id: string;
     title: string;

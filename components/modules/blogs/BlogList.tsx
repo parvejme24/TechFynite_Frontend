@@ -1,10 +1,11 @@
 import React from "react";
 import BlogCard from "./BlogCard";
+import type { BlogCardProps } from "./BlogCard";
 import BlogCardSkeleton from "./BlogCardSkeleton";
 
 interface BlogListProps {
-  blogs: Array<unknown>;
-  onBlogClick?: (blog: unknown) => void;
+  blogs: Array<BlogCardProps['blog']>;
+  onBlogClick?: (blog: BlogCardProps['blog']) => void;
   loading?: boolean;
 }
 

@@ -39,8 +39,20 @@ export default function BlogDetailsContainer({ id }: { id: string }) {
               {/* blog content */}
               <div>
                 {blog.content && Array.isArray(blog.content) ? (
-                  blog.content.map((item: unknown, index: number) => (
-                    <div key={index}>{item}</div>
+                  blog.content.map((item: { heading?: string; description?: string; imageUrl?: string }, index: number) => (
+                    <div key={index} className="mb-6">
+                      {item.heading && <h4 className="font-bold text-xl mb-2">{item.heading}</h4>}
+                      {item.description && <p className="mb-2">{item.description}</p>}
+                      {item.imageUrl && (
+                        <Image
+                          src={item.imageUrl}
+                          alt={item.heading || ''}
+                          width={800}
+                          height={400}
+                          className="rounded-md my-2"
+                        />
+                      )}
+                    </div>
                   ))
                 ) : (
                   <p>{blog.description}</p>
@@ -53,7 +65,7 @@ export default function BlogDetailsContainer({ id }: { id: string }) {
           </div>
 
           {/* comment form */}
-          <BlogReviewForm />
+          <BlogReviewForm blogId={id} />
         </div>
 
         {/* Sidebar */}

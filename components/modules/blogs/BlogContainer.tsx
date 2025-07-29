@@ -2,13 +2,14 @@
 import React, { useEffect, useState } from "react";
 import useApiBaseUrl from "@/hooks/useApiBaseUrl";
 import BlogList from "./BlogList";
+import type { BlogCardProps } from "./BlogCard";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 const BLOGS_PER_PAGE = 8;
 
 export default function BlogContainer() {
   const API_BASE_URL = useApiBaseUrl();
-  const [blogs, setBlogs] = useState<unknown[]>([]);
+  const [blogs, setBlogs] = useState<BlogCardProps['blog'][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -35,7 +36,7 @@ export default function BlogContainer() {
 
   // Pagination logic - only if blogs > BLOGS_PER_PAGE
   const totalPages = Math.ceil(blogs.length / BLOGS_PER_PAGE);
-  const paginatedBlogs = blogs.length > BLOGS_PER_PAGE 
+  const paginatedBlogs: BlogCardProps['blog'][] = blogs.length > BLOGS_PER_PAGE 
     ? blogs.slice((page - 1) * BLOGS_PER_PAGE, page * BLOGS_PER_PAGE)
     : blogs;
 
