@@ -5,7 +5,6 @@ import { useCreatePricing } from "@/hooks/usePricingApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,7 +26,7 @@ export default function CreatePricingPage() {
     recommended: false,
   });
 
-  const handleInputChange = (field: keyof CreatePricingData, value: any) => {
+  const handleInputChange = (field: keyof CreatePricingData, value: unknown) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -95,9 +94,9 @@ export default function CreatePricingPage() {
 
       resetForm();
       toast.success("Pricing plan created successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating pricing plan:", error);
-      const errorMessage = error?.message || "Failed to create pricing plan. Please try again.";
+      const errorMessage = (error as any)?.message || "Failed to create pricing plan. Please try again.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);

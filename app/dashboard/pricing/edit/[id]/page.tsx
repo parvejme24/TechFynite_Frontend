@@ -48,7 +48,7 @@ export default function EditPricingPage() {
     }
   }, [pricingPlan]);
 
-  const handleInputChange = (field: keyof UpdatePricingData, value: any) => {
+  const handleInputChange = (field: keyof UpdatePricingData, value: unknown) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -119,9 +119,9 @@ export default function EditPricingPage() {
 
       toast.success("Pricing plan updated successfully!");
       router.push("/dashboard/pricing");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating pricing plan:", error);
-      const errorMessage = error?.message || "Failed to update pricing plan. Please try again.";
+      const errorMessage = (error as any)?.message || "Failed to update pricing plan. Please try again.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);

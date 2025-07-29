@@ -6,13 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useApiBaseUrl from "@/hooks/useApiBaseUrl";
 
-const API_BASE_URL = useApiBaseUrl();
+type BlogContentItem = {
+  index: number;
+  heading: string;
+  description: string;
+  imageUrl: string;
+};
 
 export default async function BlogDetailsContainer({
   params,
 }: {
   params: { id: string };
 }) {
+  const API_BASE_URL = useApiBaseUrl();
   const res = await fetch(`${API_BASE_URL}/blogs/${params.id}`, {
     cache: "no-store",
   });
@@ -37,7 +43,7 @@ export default async function BlogDetailsContainer({
         </div>
 
         <div className="flex flex-col gap-5 mt-10">
-          {blog.content.map((item: any) => (
+          {blog.content.map((item: BlogContentItem) => (
             <div key={item.index}>
               <h4 className="font-bold text-xl">{item.heading}</h4>
               <p>{item.description}</p>

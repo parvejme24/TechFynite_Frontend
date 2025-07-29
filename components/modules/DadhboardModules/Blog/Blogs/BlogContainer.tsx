@@ -22,11 +22,11 @@ export default function BlogContainer() {
       ? blogs.slice((page - 1) * BLOGS_PER_PAGE, page * BLOGS_PER_PAGE)
       : blogs;
 
-  const handleEditBlog = (blog: any) => {
+  const handleEditBlog = (blog: unknown) => {
     router.push(`/dashboard/blogs/edit/${blog.id}`);
   };
 
-  const handleDeleteBlog = (blog: any) => {
+  const handleDeleteBlog = (blog: unknown) => {
     deleteBlog(blog.id);
   };
 

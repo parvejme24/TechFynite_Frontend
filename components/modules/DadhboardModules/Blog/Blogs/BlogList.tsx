@@ -3,10 +3,10 @@ import BlogCard from "./BlogCard";
 import BlogCardSkeleton from "./BlogCardSkeleton";
 
 interface BlogListProps {
-  blogs: Array<any>;
-  onBlogClick?: (blog: any) => void;
-  onEdit?: (blog: any) => void;
-  onDelete?: (blog: any) => void;
+  blogs: Array<unknown>;
+  onBlogClick?: (blog: unknown) => void;
+  onEdit?: (blog: unknown) => void;
+  onDelete?: (blog: unknown) => void;
   loading?: boolean;
 }
 

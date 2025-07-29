@@ -1,5 +1,5 @@
 import TemplateDetailsContainer from "@/components/modules/DadhboardModules/Template/TemplateDetails/TemplateDetailsContainer";
-import PageHeader from "@/components/shared/PageHeader/PageHeader";
+// import PageHeader from "@/components/shared/PageHeader/PageHeader";
 import React from "react";
 
 export default function TemplateDetailsPage({

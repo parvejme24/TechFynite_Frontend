@@ -7,12 +7,10 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { FiEdit2, FiTrash2, FiMoreVertical } from "react-icons/fi";
-import { BsThreeDots } from "react-icons/bs";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FaRegComment, FaRegHeart, FaHeart, FaClock, FaUser, FaEye } from "react-icons/fa";
-import { IoEyeOutline } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -27,12 +25,12 @@ interface BlogCardProps {
     createdAt?: string;
     readingTime?: number;
     likes?: number;
-    reviews?: any[];
-    content?: any[];
+    reviews?: unknown[];
+    content?: unknown[];
   };
   onClick?: () => void;
-  onEdit?: (blog: any) => void;
-  onDelete?: (blog: any) => void;
+  onEdit?: (blog: unknown) => void;
+  onDelete?: (blog: unknown) => void;
 }
 
 const BlogCard: React.FC<BlogCardProps> = ({
@@ -97,7 +95,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
   };
 
   // Handle edit
-  const handleEdit = (e: React.MouseEvent) => {
+  const handleEdit = (blog: unknown) => {
     e.stopPropagation();
     setShowActions(false);
     if (onEdit) {
@@ -106,7 +104,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
   };
 
   // Handle delete
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (blog: unknown) => {
     e.stopPropagation();
     setShowActions(false);
     if (onDelete) {
