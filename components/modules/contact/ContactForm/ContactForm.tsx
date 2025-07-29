@@ -4,8 +4,6 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-const API_BASE_URL = useApiBaseUrl();
-
 type FormValues = {
   projectDetails: string;
   budget: string;
@@ -16,6 +14,7 @@ type FormValues = {
 };
 
 export default function ContactForm() {
+  const API_BASE_URL = useApiBaseUrl();
   const {
     register,
     handleSubmit: submitForm,

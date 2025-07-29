@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FiMail, FiUsers, FiSearch, FiDownload, FiRefreshCw } from 'react-icons/fi';
 import { toast } from 'sonner';
+import Image from "next/image";
 
 // Skeleton Components
 const StatsCardSkeleton = () => (
@@ -303,9 +304,11 @@ export default function NewsletterContainer() {
                         <td className="py-3 px-4">
                           <div className="flex items-center">
                             {subscriber.avatar_url ? (
-                              <img 
-                                src={subscriber.avatar_url} 
-                                alt={subscriber.name || 'User'} 
+                              <Image
+                                src={subscriber.avatar_url}
+                                alt={subscriber.name || 'User'}
+                                width={32}
+                                height={32}
                                 className="w-8 h-8 rounded-full mr-3"
                               />
                             ) : (

@@ -99,17 +99,17 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
       });
 
       toast.success("Comment posted successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("=== ERROR DEBUG ===");
       console.error("Error submitting comment:", error);
-      console.error("Error message:", error?.message);
-      console.error("Error status:", error?.status);
-      console.error("Full error object:", error);
-      
-      if (error?.message?.includes("401")) {
+      let message = "Failed to post comment. Please try again.";
+      if (error && typeof error === "object" && "message" in error && typeof (error as { message?: string }).message === "string") {
+        message = (error as { message: string }).message;
+      }
+      if (message.includes("401")) {
         toast.error("Please log in to post a comment");
       } else {
-        toast.error(error?.message || "Failed to post comment. Please try again.");
+        toast.error(message);
       }
     }
   };

@@ -4,9 +4,29 @@ import React, { useState } from "react";
 import TemplateCard from "./TemplateCard";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 const TEMPLATES_PER_PAGE = 9;
+
+interface KeyFeature {
+  feature: string;
+  featureDescription: string;
+}
+interface Template {
+  id: string;
+  title: string;
+  category: string;
+  author: string;
+  publishedDate: string;
+  price: string;
+  imageUrl: string;
+  mainImage: string;
+  shortDescription: string;
+  description: string;
+  previewLink: string;
+  weIncludes: string[];
+  keyFeatures: KeyFeature[]; // Now uses featureDescription
+  demos: string[];
+}
 
 export default function TemplateContainer() {
   const { data: templates = [], isLoading, error } = useTemplates();
@@ -22,7 +42,7 @@ export default function TemplateContainer() {
   const filteredTemplates =
     selectedCategory === "all"
       ? templates
-      : templates.filter((t: any) => t.categoryId === selectedCategory);
+      : templates.filter((t: unknown) => (t as { categoryId: string }).categoryId === selectedCategory);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredTemplates.length / TEMPLATES_PER_PAGE);
@@ -70,24 +90,27 @@ export default function TemplateContainer() {
           >
             All
           </button>
-          {categories.map((cat: any) => (
-            <button
-              key={cat.id || cat._id}
-              className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors duration-150 ${
-                selectedCategory === (cat.id || cat._id)
-                  ? "bg-blue-500 text-white border-blue-500"
-                  : "bg-white dark:bg-blue-900 text-gray-700 dark:text-white border-gray-300 dark:border-blue-800"
-              }`}
-              onClick={() => setSelectedCategory(cat.id || cat._id)}
-            >
-              {cat.title}
-            </button>
-          ))}
+          {categories.map((cat: unknown) => {
+            const category = cat as { id?: string; _id?: string; title: string };
+            return (
+              <button
+                key={category.id || category._id}
+                className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors duration-150 ${
+                  selectedCategory === (category.id || category._id)
+                    ? "bg-blue-500 text-white border-blue-500"
+                    : "bg-white dark:bg-blue-900 text-gray-700 dark:text-white border-gray-300 dark:border-blue-800"
+                }`}
+                onClick={() => setSelectedCategory(category.id || category._id || "")}
+              >
+                {category.title}
+              </button>
+            );
+          })}
         </div>
 
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {paginatedTemplates.map((template: any) => (
-            <TemplateCard key={template.id} template={template} />
+          {paginatedTemplates.map((template: unknown) => (
+            <TemplateCard key={(template as Template).id} template={template as Template} />
           ))}
         </div>
         {totalPages > 1 && (

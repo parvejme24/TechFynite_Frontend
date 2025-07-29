@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FiMail, FiX, FiSend, FiUser, FiMessageSquare } from 'react-icons/fi';
+import { FiMail, FiX, FiSend, FiUser } from 'react-icons/fi';
 import { useSendEmail } from '@/hooks/useEmailApi';
 import { toast } from 'sonner';
 
@@ -59,8 +59,12 @@ export default function EmailModal({ isOpen, onClose, clientEmail, clientName, r
       toast.success('Email sent successfully!');
       onClose();
       setEmailData({ to: clientEmail, subject: '', message: '' });
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to send email');
+    } catch (error: unknown) {
+      let message = 'Failed to send email';
+      if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+        message = (error as { message: string }).message;
+      }
+      toast.error(message);
     }
   };
 

@@ -3,9 +3,6 @@ import React from "react";
 import Image from "next/image";
 import BlogSidebar from "./BlogSidebar/BlogSidebar";
 import { useBlog } from "@/hooks/useBlogApi";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import BlogReviewForm from "./BlogReviewForm/BlogReviewForm";
 
 export default function BlogDetailsContainer({ id }: { id: string }) {
@@ -42,7 +39,7 @@ export default function BlogDetailsContainer({ id }: { id: string }) {
               {/* blog content */}
               <div>
                 {blog.content && Array.isArray(blog.content) ? (
-                  blog.content.map((item: any, index: number) => (
+                  blog.content.map((item: unknown, index: number) => (
                     <div key={index}>{item}</div>
                   ))
                 ) : (

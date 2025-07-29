@@ -6,8 +6,6 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import useApiBaseUrl from "@/hooks/useApiBaseUrl";
 
-const API_BASE_URL = useApiBaseUrl();
-
 const NewsletterHeader = () => (
   <motion.div
     className="space-y-1"
@@ -27,6 +25,7 @@ const NewsletterHeader = () => (
 
 const NewsletterForm = () => {
   const [email, setEmail] = useState("");
+  const API_BASE_URL = useApiBaseUrl();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

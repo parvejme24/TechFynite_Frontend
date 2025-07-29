@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FiSearch, FiRefreshCw, FiFilter, FiEye, FiCalendar, FiUser, FiMail, FiHome, FiSend } from 'react-icons/fi';
+import { FiSearch, FiRefreshCw, FiFilter, FiCalendar, FiUser, FiMail, FiHome, FiSend } from 'react-icons/fi';
 import { toast } from 'sonner';
 import EmailModal from './EmailModal';
 

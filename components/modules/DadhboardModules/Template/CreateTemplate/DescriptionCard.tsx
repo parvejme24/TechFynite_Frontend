@@ -11,6 +11,11 @@ import {
 } from "@/components/ui/card";
 import { FiEdit3 } from "react-icons/fi";
 
+// Use the unified KeyFeature interface from CreateTemplateContainer
+interface KeyFeature {
+  feature: string;
+  featureDescription: string;
+}
 interface TemplateFormData {
   title: string;
   price: number;
@@ -21,14 +26,14 @@ interface TemplateFormData {
   shortDescription: string;
   description: string[];
   whatsIncluded: string[];
-  keyFeatures: any[];
+  keyFeatures: KeyFeature[];
   screenshots: File[];
   coverImage: File | null;
 }
 
 interface DescriptionCardProps {
   formData: TemplateFormData;
-  onInputChange: (field: keyof TemplateFormData, value: any) => void;
+  onInputChange: (field: keyof TemplateFormData, value: unknown) => void;
 }
 
 export default function DescriptionCard({

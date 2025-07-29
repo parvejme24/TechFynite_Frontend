@@ -3,8 +3,8 @@ import BlogCard from "./BlogCard";
 import BlogCardSkeleton from "./BlogCardSkeleton";
 
 interface BlogListProps {
-  blogs: Array<any>;
-  onBlogClick?: (blog: any) => void;
+  blogs: Array<unknown>;
+  onBlogClick?: (blog: unknown) => void;
   loading?: boolean;
 }
 

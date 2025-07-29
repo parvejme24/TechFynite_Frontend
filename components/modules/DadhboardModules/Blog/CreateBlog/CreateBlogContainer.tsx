@@ -153,7 +153,14 @@ export default function CreateBlogContainer() {
     }));
     
     // Prepare payload
-    const payload: any = {
+    const payload: {
+      title: string;
+      description: string;
+      categoryId: string;
+      readingTime: number;
+      content: { heading: string; description: string; image: File | null }[];
+      image: File;
+    } = {
       title: title.trim(),
       description: description.trim(),
       categoryId: selectedCategory,

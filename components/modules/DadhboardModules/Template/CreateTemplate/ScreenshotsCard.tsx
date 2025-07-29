@@ -13,6 +13,11 @@ import {
 import { FiMonitor, FiImage, FiX } from "react-icons/fi";
 import Image from "next/image";
 
+// Use the unified KeyFeature interface from CreateTemplateContainer
+interface KeyFeature {
+  feature: string;
+  featureDescription: string;
+}
 interface TemplateFormData {
   title: string;
   price: number;
@@ -23,21 +28,19 @@ interface TemplateFormData {
   shortDescription: string;
   description: string[];
   whatsIncluded: string[];
-  keyFeatures: any[];
+  keyFeatures: KeyFeature[];
   screenshots: File[];
   coverImage: File | null;
 }
 
 interface ScreenshotsCardProps {
   formData: TemplateFormData;
-  onInputChange: (field: keyof TemplateFormData, value: any) => void;
   handleScreenshotChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   removeScreenshot: (index: number) => void;
 }
 
 export default function ScreenshotsCard({
   formData,
-  onInputChange,
   handleScreenshotChange,
   removeScreenshot,
 }: ScreenshotsCardProps) {

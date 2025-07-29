@@ -1,16 +1,14 @@
 import React from "react";
 import Image from "next/image";
-import { User as UserIcon, Phone, Globe, DollarSign, Edit } from "lucide-react";
+import { User as UserIcon, Phone, Globe, DollarSign } from "lucide-react";
 import { FaEnvelopeOpen } from "react-icons/fa";
 import { Clock } from "lucide-react";
 import { IoCheckmarkCircleSharp } from "react-icons/io5";
-import { Button } from "@/components/ui/button";
 import { useUserData } from "@/Provider/UserDataProvider";
 
 
-
 const ProfileCard: React.FC = () => {
-  const { user, loading, error, refreshUser } = useUserData();
+  const { user, loading, error } = useUserData();
 
   if (loading) {
     return (

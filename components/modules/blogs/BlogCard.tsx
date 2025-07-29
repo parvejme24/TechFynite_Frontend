@@ -2,17 +2,7 @@
 import React, { useState } from "react";
 
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  FaRegComment,
-  FaRegHeart,
-  FaHeart,
-  FaClock,
-  FaUser,
-} from "react-icons/fa";
-import { IoEyeOutline } from "react-icons/io5";
-import { FiExternalLink } from "react-icons/fi";
+import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -27,8 +17,8 @@ interface BlogCardProps {
     createdAt?: string;
     readingTime?: number;
     likes?: number;
-    reviews?: any[];
-    content?: any[];
+    reviews?: unknown[];
+    content?: unknown[];
   };
   onClick?: () => void;
 }
@@ -38,17 +28,7 @@ import placeholderImage from "@/assets/common/placeholder.png";
 const BlogCard: React.FC<BlogCardProps> = ({ blog }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(blog.likes || 0);
-  const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
-
-  // Format description
-  const formatDescription = (description: string | string[] | undefined) => {
-    if (!description) return "No description available";
-    if (Array.isArray(description)) {
-      return description.join(" ");
-    }
-    return description;
-  };
 
   // Truncate text function
   const truncateText = (text: string, maxLength: number = 45) => {

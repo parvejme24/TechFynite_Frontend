@@ -12,6 +12,11 @@ import {
 } from "@/components/ui/card";
 import { FiList, FiPlus, FiX } from "react-icons/fi";
 
+// Use the unified KeyFeature interface from CreateTemplateContainer
+interface KeyFeature {
+  feature: string;
+  featureDescription: string;
+}
 interface TemplateFormData {
   title: string;
   price: number;
@@ -22,14 +27,13 @@ interface TemplateFormData {
   shortDescription: string;
   description: string[];
   whatsIncluded: string[];
-  keyFeatures: any[];
+  keyFeatures: KeyFeature[];
   screenshots: File[];
   coverImage: File | null;
 }
 
 interface WhatsIncludedCardProps {
   formData: TemplateFormData;
-  onInputChange: (field: keyof TemplateFormData, value: any) => void;
   addWhatsIncluded: () => void;
   removeWhatsIncluded: (index: number) => void;
   updateWhatsIncluded: (index: number, value: string) => void;
@@ -37,7 +41,6 @@ interface WhatsIncludedCardProps {
 
 export default function WhatsIncludedCard({
   formData,
-  onInputChange,
   addWhatsIncluded,
   removeWhatsIncluded,
   updateWhatsIncluded,
@@ -47,7 +50,7 @@ export default function WhatsIncludedCard({
       <CardHeader className="border-b border-gray-200 dark:border-gray-700">
         <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
           <FiList className="w-5 h-5 text-gray-600" />
-          What's Included
+          What&apos;s Included
         </CardTitle>
         <CardDescription className="text-gray-600 dark:text-gray-400">
           Add multiple items that are included with this template

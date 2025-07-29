@@ -15,22 +15,16 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
 
   const {
     title,
-    price,
     imageUrl,
     categoryId,
-    version,
-    publishedDate,
-    downloads,
     pages,
     views,
-    totalPurchase,
     previewLink,
     shortDescription,
     description,
     whatsIncluded,
     keyFeatures,
     screenshots,
-    createdAt,
     updatedAt,
   } = template;
 
@@ -95,7 +89,7 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
               {description}
             </p>
 
-            <h4 className="text-xl font-semibold mb-2">What's Included</h4>
+            <h4 className="text-xl font-semibold mb-2">What&apos;s Included</h4>
             <ul className="list-disc list-inside mb-6">
               {whatsIncluded.map((item: string, idx: number) => (
                 <li key={idx} className="text-gray-700 dark:text-gray-300">
@@ -108,14 +102,17 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
           <div>
             <h4 className="text-xl font-semibold mb-2">Key Features</h4>
             <ul className="space-y-2">
-              {keyFeatures.map((item: any, idx: number) => (
-                <li
-                  key={item.feature + idx}
-                  className="bg-white dark:bg-[#1A1D37] text-gray-700 dark:text-gray-300 px-4 py-3 rounded"
-                >
-                  {item.feature}
-                </li>
-              ))}
+              {keyFeatures.map((item: unknown, idx: number) => {
+                const feature = (item as { feature: string }).feature;
+                return (
+                  <li
+                    key={feature + idx}
+                    className="bg-white dark:bg-[#1A1D37] text-gray-700 dark:text-gray-300 px-4 py-3 rounded"
+                  >
+                    {feature}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FiSave, FiRotateCcw, FiArrowLeft } from "react-icons/fi";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import KeyFeaturesCard from "./KeyFeaturesCard";
 import ScreenshotsCard from "./ScreenshotsCard";
 import CoverImagePreviewModal from "./CoverImagePreviewModal";
 
+// Unified KeyFeature interface for all create/edit template components
 interface KeyFeature {
   feature: string;
   featureDescription: string;
@@ -126,7 +127,7 @@ export default function CreateTemplateContainer() {
     }
   };
 
-  const handleInputChange = (field: keyof TemplateFormData, value: any) => {
+  const handleInputChange = (field: keyof TemplateFormData, value: unknown) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -280,12 +281,12 @@ export default function CreateTemplateContainer() {
         formDataToSend.append("image", formData.coverImage);
       }
 
-      formData.screenshots.forEach((screenshot, index) => {
+      formData.screenshots.forEach((screenshot) => {
         formDataToSend.append("screenshots", screenshot);
       });
 
       console.log("FormData contents:");
-      for (let [key, value] of formDataToSend.entries()) {
+      for (const [key, value] of formDataToSend.entries()) {
         console.log(`${key}:`, value);
       }
 
@@ -298,9 +299,12 @@ export default function CreateTemplateContainer() {
 
       // Success notification
       toast.success("Template created successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating template:", error);
-      const errorMessage = error?.message || "Failed to create template. Please try again.";
+      const errorMessage =
+        typeof error === "object" && error && "message" in error
+          ? (error as { message: string }).message
+          : "Failed to create template. Please try again.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -363,7 +367,6 @@ export default function CreateTemplateContainer() {
 
           <WhatsIncludedCard
             formData={formData}
-            onInputChange={handleInputChange}
             addWhatsIncluded={addWhatsIncluded}
             removeWhatsIncluded={removeWhatsIncluded}
             updateWhatsIncluded={updateWhatsIncluded}
@@ -432,7 +435,6 @@ export default function CreateTemplateContainer() {
 
           <ScreenshotsCard
             formData={formData}
-            onInputChange={handleInputChange}
             handleScreenshotChange={handleScreenshotChange}
             removeScreenshot={removeScreenshot}
           />

@@ -14,22 +14,6 @@ export default function DashboardPricingList() {
   const { data: pricingPlans = [], isLoading, error } = usePricing();
   const deletePricingMutation = useDeletePricing();
 
-  const handleDeletePricing = async (id: string, title: string) => {
-    if (
-      confirm(
-        `Are you sure you want to delete "${title}"? This action cannot be undone.`
-      )
-    ) {
-      try {
-        await deletePricingMutation.mutateAsync(id);
-        toast.success("Pricing plan deleted successfully!");
-      } catch (error) {
-        console.error("Error deleting pricing plan:", error);
-        toast.error("Failed to delete pricing plan. Please try again.");
-      }
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen py-8">

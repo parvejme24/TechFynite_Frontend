@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { UserProfile } from "@/types/user";
 import { useUserApi } from "@/hooks/useUserApi";
 import { useUserData } from "@/Provider/UserDataProvider";
 import { Camera, X } from "lucide-react";
@@ -120,7 +119,7 @@ const ProfileEditForm: React.FC = () => {
       } else {
         toast.error(error || "Profile update failed!");
       }
-    } catch (err) {
+    } catch {
       toast.error("Profile update failed!");
     }
   };

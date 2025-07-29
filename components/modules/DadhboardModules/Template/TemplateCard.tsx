@@ -4,7 +4,7 @@ import Image from "next/image";
 
 interface KeyFeature {
   feature: string;
-  description: string;
+  featureDescription: string;
 }
 
 interface Template {

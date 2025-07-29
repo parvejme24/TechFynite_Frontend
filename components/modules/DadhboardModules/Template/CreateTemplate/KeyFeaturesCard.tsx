@@ -35,7 +35,7 @@ interface TemplateFormData {
 
 interface KeyFeaturesCardProps {
   formData: TemplateFormData;
-  onInputChange: (field: keyof TemplateFormData, value: any) => void;
+  onInputChange: (field: keyof TemplateFormData, value: unknown) => void;
   addKeyFeature: () => void;
   removeKeyFeature: (index: number) => void;
   newKeyFeature: string;
