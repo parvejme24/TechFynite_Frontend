@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useUserData } from "@/Provider/UserDataProvider";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -99,7 +99,7 @@ export default function UsersPage() {
   };
   // Usage: roleLabels[user.role]
 
-  const { user: currentUser } = useCurrentUser();
+  const { user: currentUser } = useUserData();
 
   return (
     <div className="max-w-7xl mx-auto py-8">

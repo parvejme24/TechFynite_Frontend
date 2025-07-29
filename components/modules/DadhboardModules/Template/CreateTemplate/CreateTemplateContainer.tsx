@@ -389,7 +389,7 @@ export default function CreateTemplateContainer() {
               <p className="text-gray-600 dark:text-gray-400 text-sm">
                 Add links to source files (GitHub, ZIP files, etc.)
               </p>
-            </div>
+                  </div>
             <div className="p-6">
               <div className="space-y-4">
                 {formData.sourceFiles.map((file, index) => (
@@ -397,7 +397,7 @@ export default function CreateTemplateContainer() {
                     <input
                       type="text"
                       value={file}
-                      onChange={(e) => {
+                              onChange={(e) => {
                         const newSourceFiles = [...formData.sourceFiles];
                         newSourceFiles[index] = e.target.value;
                         handleInputChange("sourceFiles", newSourceFiles);
@@ -415,10 +415,10 @@ export default function CreateTemplateContainer() {
                     >
                       Remove
                     </button>
-                  </div>
-                ))}
+                    </div>
+                  ))}
                 <button
-                  type="button"
+                      type="button"
                   onClick={() => {
                     handleInputChange("sourceFiles", [...formData.sourceFiles, ""]);
                   }}
@@ -426,9 +426,9 @@ export default function CreateTemplateContainer() {
                 >
                   + Add Source File Link
                 </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
           <ScreenshotsCard
             formData={formData}

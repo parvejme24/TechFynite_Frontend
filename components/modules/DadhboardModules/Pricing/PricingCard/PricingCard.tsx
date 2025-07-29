@@ -1,20 +1,37 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardTitle,
+  CardHeader,
   CardContent,
   CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
+import { useDeletePricing } from "@/hooks/usePricingApi";
 import { Pricing } from "@/types/pricing";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import React from "react";
-import { FiCalendar, FiDollarSign } from "react-icons/fi";
+import { FiCalendar, FiDollarSign, FiEdit, FiTrash2 } from "react-icons/fi";
+import { toast } from "sonner";
 
 export default function PricingCard({ plan }: { plan: Pricing }) {
+  const deletePricingMutation = useDeletePricing();
+
+  const handleDeletePricing = async (id: string, title: string) => {
+    if (
+      confirm(
+        `Are you sure you want to delete "${title}"? This action cannot be undone.`
+      )
+    ) {
+      await deletePricingMutation.mutateAsync(id);
+      toast.success(`${title} has been deleted successfully.`);
+    }
+  };
+
   return (
     <Card
       key={plan.id}
-      className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow relative"
+      className="bg-white dark:bg-[#1A1D37] border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow"
     >
       <CardHeader className="pb-4">
         <div className="flex justify-between items-start">
@@ -25,6 +42,26 @@ export default function PricingCard({ plan }: { plan: Pricing }) {
             <CardDescription className="text-gray-600 dark:text-gray-400 mt-1">
               License: {plan.license} • Duration: {plan.duration}
             </CardDescription>
+          </div>
+          <div className="flex gap-2">
+            <Link href={`/dashboard/pricing/edit/${plan.id}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer text-blue-600 border-blue-300 hover:bg-blue-50"
+              >
+                <FiEdit className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDeletePricing(plan.id, plan.title)}
+              disabled={deletePricingMutation.isPending}
+              className="cursor-pointer text-red-600 border-red-300 hover:bg-red-50"
+            >
+              <FiTrash2 className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </CardHeader>
@@ -45,10 +82,6 @@ export default function PricingCard({ plan }: { plan: Pricing }) {
           {/* Status */}
           <div className="flex items-center gap-2">
             <Badge variant="default">{plan.license}</Badge>
-          </div>
-
-          {/* Recommended */}
-          <div className="flex items-center gap-2 absolute top-0">
             {plan.recommended && (
               <Badge variant="destructive">Recommended</Badge>
             )}
