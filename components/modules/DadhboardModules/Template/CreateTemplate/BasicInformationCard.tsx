@@ -52,10 +52,17 @@ interface TemplateFormData {
   coverImage: File | null;
 }
 
+type Category = {
+  id: string;
+  title: string;
+  imageUrl?: string;
+  slug?: string;
+};
+
 interface BasicInformationCardProps {
   formData: TemplateFormData;
-  categories: any[];
-  onInputChange: (field: keyof TemplateFormData, value: any) => void;
+  categories: Category[];
+  onInputChange: (field: keyof TemplateFormData, value: unknown) => void;
   onCoverImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   showCoverPreview: boolean;
   setShowCoverPreview: (show: boolean) => void;
@@ -102,27 +109,27 @@ export default function BasicInformationCard({
 
   // Debug: Log categories to see what we're getting
   console.log("Categories received:", categories);
-  console.log("Categories with images:", categories?.filter((cat: unknown) => (cat as any).imageUrl));
-  console.log("Full category data:", categories?.map((cat: unknown) => ({
-    id: (cat as any).id,
-    title: (cat as any).title,
-    imageUrl: (cat as any).imageUrl,
-    processedImageUrl: (cat as any).imageUrl ? getImageUrl((cat as any).imageUrl) : null,
-    slug: (cat as any).slug
+  console.log("Categories with images:", categories?.filter((cat: Category) => cat.imageUrl));
+  console.log("Full category data:", categories?.map((cat: Category) => ({
+    id: cat.id,
+    title: cat.title,
+    imageUrl: cat.imageUrl,
+    processedImageUrl: cat.imageUrl ? getImageUrl(cat.imageUrl) : null,
+    slug: cat.slug
   })));
   
   // Debug: Log selected category
-  const selectedCategory = categories.find((cat: unknown) => (cat as any).id === formData.categoryId);
+  const selectedCategory = categories.find((cat) => cat.id === formData.categoryId);
   if (selectedCategory) {
     console.log("Selected category:", {
-      id: (selectedCategory as any).id,
-      title: (selectedCategory as any).title,
-      imageUrl: (selectedCategory as any).imageUrl,
-      processedImageUrl: getImageUrl((selectedCategory as any).imageUrl)
+      id: selectedCategory.id,
+      title: selectedCategory.title,
+      imageUrl: selectedCategory.imageUrl,
+      processedImageUrl: getImageUrl(selectedCategory.imageUrl || "")
     });
   }
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [newCategoryTitle, setNewCategoryTitle] = useState("");
   const [newCategorySlug, setNewCategorySlug] = useState("");
   const [newCategoryImage, setNewCategoryImage] = useState<File | null>(null);
@@ -166,10 +173,10 @@ export default function BasicInformationCard({
     }
   };
 
-  const openEditModal = (category: any) => {
+  const openEditModal = (category: Category) => {
     setEditingCategory(category);
     setNewCategoryTitle(category.title);
-    setNewCategorySlug(category.slug);
+    setNewCategorySlug(category.slug || "");
     setNewCategoryImage(null); // Reset new image selection
     setShowCategoryModal(true);
   };
@@ -266,24 +273,24 @@ export default function BasicInformationCard({
                   <SelectTrigger className="w-full border-gray-300 dark:border-gray-600 focus:border-gray-500 focus:ring-gray-500">
                     <SelectValue placeholder="Select a category">
                       {(() => {
-                        const selectedCategory = categories.find((cat: unknown) => (cat as any).id === formData.categoryId);
+                        const selectedCategory = categories.find((cat) => cat.id === formData.categoryId);
                         return selectedCategory ? (
                           <div className="flex items-center gap-3">
-                                                         {selectedCategory.imageUrl && (
+                                                         {selectedCategory && selectedCategory.imageUrl && (
                                <div className="relative w-5 h-5 rounded overflow-hidden bg-gray-100 dark:bg-gray-700">
                                  <Image
-                                   src={getImageUrl((selectedCategory as any).imageUrl) || (selectedCategory as any).imageUrl}
-                                   alt={(selectedCategory as any).title}
+                                   src={getImageUrl(selectedCategory.imageUrl) || selectedCategory.imageUrl}
+                                   alt={selectedCategory.title}
                                    fill
                                    className="object-cover"
                                    onError={(e) => {
-                                     console.error("Failed to load selected image:", (selectedCategory as any).imageUrl);
+                                     console.error("Failed to load selected image:", selectedCategory.imageUrl);
                                      e.currentTarget.style.display = 'none';
                                    }}
                                  />
                                </div>
                              )}
-                            <span>{(selectedCategory as any).title}</span>
+                            <span>{selectedCategory?.title}</span>
                           </div>
                         ) : null;
                       })()}
@@ -291,24 +298,24 @@ export default function BasicInformationCard({
                   </SelectTrigger>
                                    <SelectContent>
                     {categories && categories.length > 0 ? (
-                      categories.map((category: unknown) => (
-                        <SelectItem key={(category as any).id} value={(category as any).id}>
+                      categories.map((category: Category) => (
+                        <SelectItem key={category.id} value={category.id}>
                           <div className="flex items-center gap-3">
-                                                         {((category as any).imageUrl && (
+                                                         {category.imageUrl && (
                                <div className="relative w-6 h-6 rounded overflow-hidden bg-gray-100 dark:bg-gray-700">
                                  <Image
-                                   src={getImageUrl((category as any).imageUrl) || (category as any).imageUrl}
-                                   alt={(category as any).title}
+                                   src={getImageUrl(category.imageUrl) || category.imageUrl}
+                                   alt={category.title}
                                    fill
                                    className="object-cover"
                                    onError={(e) => {
-                                     console.error("Failed to load image:", (category as any).imageUrl);
+                                     console.error("Failed to load image:", category.imageUrl);
                                      e.currentTarget.style.display = 'none';
                                    }}
                                  />
                                </div>
-                             ))}
-                            <span className="font-medium">{(category as any).title}</span>
+                             )}
+                            <span className="font-medium">{category.title}</span>
                           </div>
                         </SelectItem>
                       ))
@@ -337,7 +344,7 @@ export default function BasicInformationCard({
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          const selectedCategory = categories.find((cat: unknown) => (cat as any).id === formData.categoryId);
+                          const selectedCategory = categories.find((cat) => cat.id === formData.categoryId);
                           if (selectedCategory) {
                             openEditModal(selectedCategory);
                           }
@@ -351,12 +358,14 @@ export default function BasicInformationCard({
                          variant="outline"
                          size="sm"
                          onClick={async () => {
-                           const selectedCategory = categories.find((cat: unknown) => (cat as any).id === formData.categoryId);
-                           const categoryName = (selectedCategory as any)?.title || 'this category';
+                           const selectedCategory = categories.find((cat) => cat.id === formData.categoryId);
+                           const categoryName = selectedCategory?.title || 'this category';
                            if (confirm(`Are you sure you want to delete "${categoryName}"? This action cannot be undone.`)) {
                              try {
                                console.log("Deleting category:", selectedCategory);
-                               await onDeleteCategory((selectedCategory as any).id);
+                               if (selectedCategory) {
+                                 await onDeleteCategory(selectedCategory.id);
+                               }
                              } catch (error) {
                                console.error("Error deleting category:", error);
                              }

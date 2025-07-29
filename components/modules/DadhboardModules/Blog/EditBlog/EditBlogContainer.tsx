@@ -16,7 +16,7 @@ interface EditBlogContainerProps {
 }
 
 export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
-  const { data: categories = [], isLoading: categoriesLoading } = useBlogCategories();
+  const { data: categories = [] } = useBlogCategories();
   const { data: blog, isLoading: blogLoading, error: blogError } = useBlog(blogId);
   const { mutate: createCategory, isPending: createCategoryLoading } = useCreateBlogCategory();
   const { mutate: updateCategory, isPending: updateCategoryLoading } = useUpdateBlogCategory();
@@ -55,7 +55,7 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
       setMainImagePreview(blog.imageUrl || "");
       
       if (blog.content && Array.isArray(blog.content)) {
-        setContentBlocks(blog.content.map((block: any) => ({
+        setContentBlocks(blog.content.map((block: { heading?: string; description?: string; imageUrl?: string }) => ({
           heading: block.heading || "",
           description: block.description || "",
           image: null,
@@ -222,7 +222,14 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
     }));
     
     // Prepare payload
-    const payload: any = {
+    const payload: {
+      title: string;
+      description: string;
+      categoryId: string;
+      readingTime: number;
+      content: { heading: string; description: string; image: File | null }[];
+      image?: File;
+    } = {
       title: title.trim(),
       description: description.trim(),
       categoryId: selectedCategory,

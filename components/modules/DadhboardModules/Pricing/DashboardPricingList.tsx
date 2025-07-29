@@ -6,13 +6,11 @@ import { Button } from "@/components/ui/button";
 
 import { FiPlus, FiDollarSign } from "react-icons/fi";
 import Link from "next/link";
-import { toast } from "sonner";
 import PricingCard from "./PricingCard/PricingCard";
 import DashboardPricingCardSkeleton from "../../pricing/pricingList/DashboardPricingCardSkeleton";
 
 export default function DashboardPricingList() {
   const { data: pricingPlans = [], isLoading, error } = usePricing();
-  const deletePricingMutation = useDeletePricing();
 
   if (isLoading) {
     return (
