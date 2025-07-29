@@ -8,7 +8,7 @@ import Image from "next/image";
 import React, { useState } from "react";
 import ContentBlocksEditor from "./ContentBlocksEditor";
 import { toast } from "sonner";
-import { FaPlus, FaImage, FaTrash, FaSave, FaEye, FaEdit, FaTimes } from "react-icons/fa";
+import { FaPlus, FaImage, FaTrash, FaSave, FaEdit } from "react-icons/fa";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function CreateBlogContainer() {
@@ -28,7 +28,7 @@ export default function CreateBlogContainer() {
 
   // Category management state
   const [showCategoryForm, setShowCategoryForm] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editingCategory, setEditingCategory] = useState<unknown>(null);
   const [categoryForm, setCategoryForm] = useState({
     title: "",
     slug: "",
@@ -77,7 +77,7 @@ export default function CreateBlogContainer() {
     };
 
     if (editingCategory) {
-      updateCategory({ id: editingCategory.id, ...payload });
+      updateCategory({ id: (editingCategory as any).id, ...payload });
     } else {
       createCategory(payload);
     }
@@ -88,19 +88,19 @@ export default function CreateBlogContainer() {
     setShowCategoryForm(false);
   };
 
-  const handleEditCategory = (category: any) => {
+  const handleEditCategory = (category: unknown) => {
     setEditingCategory(category);
     setCategoryForm({
-      title: category.title,
-      slug: category.slug,
+      title: (category as any).title,
+      slug: (category as any).slug,
       imageFile: null,
-      imagePreview: category.imageUrl || ""
+      imagePreview: (category as any).imageUrl || ""
     });
     setShowCategoryForm(true);
   };
 
-  const handleDeleteCategory = (category: any) => {
-    deleteCategory(category.id);
+  const handleDeleteCategory = (category: unknown) => {
+    deleteCategory((category as any).id);
   };
 
   const handleCancelCategoryForm = () => {
@@ -334,20 +334,20 @@ export default function CreateBlogContainer() {
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {categories.map((category: any) => (
-                    <div key={category.id} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  {categories.map((category: unknown) => (
+                    <div key={(category as any).id} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div className="flex items-center gap-3">
-                        {category.imageUrl && (
+                        {(category as any).imageUrl && (
                           <Image
-                            src={category.imageUrl}
-                            alt={category.title}
+                            src={(category as any).imageUrl}
+                            alt={(category as any).title}
                             width={32}
                             height={32}
                             className="w-8 h-8 rounded-full object-cover"
                           />
                         )}
                         <span className="font-medium text-gray-900 dark:text-white">
-                          {category.title}
+                          {(category as any).title}
                         </span>
                       </div>
                       <div className="flex gap-1">
@@ -428,9 +428,9 @@ export default function CreateBlogContainer() {
                     required
                   >
                     <option value="">Select a category</option>
-                    {categories.map((cat: any) => (
-                      <option key={cat.id || cat._id} value={cat.id || cat._id}>
-                        {cat.title}
+                    {categories.map((cat: unknown) => (
+                      <option key={(cat as any).id || (cat as any)._id} value={(cat as any).id || (cat as any)._id}>
+                        {(cat as any).title}
                       </option>
                     ))}
                   </select>

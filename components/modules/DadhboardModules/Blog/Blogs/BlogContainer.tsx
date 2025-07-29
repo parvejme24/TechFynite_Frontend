@@ -5,14 +5,13 @@ import Link from "next/link";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useBlogs, useDeleteBlog } from "@/hooks/useBlogApi";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 
 const BLOGS_PER_PAGE = 8;
 
 export default function BlogContainer() {
   const { data: blogs = [], isLoading, error } = useBlogs();
   const [page, setPage] = useState(1);
-  const { mutate: deleteBlog, isPending: deleteLoading } = useDeleteBlog();
+  const { mutate: deleteBlog } = useDeleteBlog();
   const router = useRouter();
 
   // Pagination logic - only if blogs > BLOGS_PER_PAGE
@@ -23,11 +22,11 @@ export default function BlogContainer() {
       : blogs;
 
   const handleEditBlog = (blog: unknown) => {
-    router.push(`/dashboard/blogs/edit/${blog.id}`);
+    router.push(`/dashboard/blogs/edit/${(blog as any).id}`);
   };
 
   const handleDeleteBlog = (blog: unknown) => {
-    deleteBlog(blog.id);
+    deleteBlog((blog as any).id);
   };
 
   return (

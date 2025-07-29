@@ -8,9 +8,9 @@ const BLOGS_PER_PAGE = 8;
 
 export default function BlogContainer() {
   const API_BASE_URL = useApiBaseUrl();
-  const [blogs, setBlogs] = useState([]);
+  const [blogs, setBlogs] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -24,8 +24,8 @@ export default function BlogContainer() {
         if (!res.ok) throw new Error("Failed to fetch blogs");
         const data = await res.json();
         setBlogs(Array.isArray(data) ? data : data.data || data.blogs || []);
-      } catch (err: any) {
-        setError(err?.message || "Failed to fetch blogs");
+      } catch (err: unknown) {
+        setError((err as Error)?.message || "Failed to fetch blogs");
       } finally {
         setLoading(false);
       }

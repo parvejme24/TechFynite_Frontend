@@ -7,7 +7,7 @@ import { Label } from "@radix-ui/react-label";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FaPlus, FaImage, FaTrash, FaSave, FaEye, FaEdit, FaTimes } from "react-icons/fa";
+import { FaPlus, FaImage, FaTrash, FaSave, FaEdit, FaTimes } from "react-icons/fa";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -37,7 +37,7 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
 
   // Category management states
   const [showCategoryForm, setShowCategoryForm] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editingCategory, setEditingCategory] = useState<unknown>(null);
   const [categoryForm, setCategoryForm] = useState({
     title: "",
     slug: "",
@@ -102,7 +102,7 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
     };
 
     if (editingCategory) {
-      updateCategory({ id: editingCategory.id, ...payload });
+      updateCategory({ id: (editingCategory as any).id, ...payload });
     } else {
       createCategory(payload);
     }
@@ -114,19 +114,19 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
   };
 
   // Category management handlers
-  const handleEditCategory = (category: any) => {
+  const handleEditCategory = (category: unknown) => {
     setEditingCategory(category);
     setCategoryForm({
-      title: category.title,
-      slug: category.slug,
+      title: (category as any).title,
+      slug: (category as any).slug,
       imageFile: null,
-      imagePreview: category.imageUrl || ""
+      imagePreview: (category as any).imageUrl || ""
     });
     setShowCategoryForm(true);
   };
 
-  const handleDeleteCategory = (category: any) => {
-    deleteCategory(category.id);
+  const handleDeleteCategory = (category: unknown) => {
+    deleteCategory((category as any).id);
   };
 
   const handleCancelCategoryForm = () => {
@@ -394,19 +394,19 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
               </form>
             ) : (
               <div className="space-y-2">
-                {categories.map((category: any) => (
-                  <div key={category.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                {categories.map((category: unknown) => (
+                  <div key={(category as any).id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="flex items-center space-x-3">
-                      {category.imageUrl && (
+                      {(category as any).imageUrl && (
                         <Image
-                          src={category.imageUrl}
-                          alt={category.title}
+                          src={(category as any).imageUrl}
+                          alt={(category as any).title}
                           width={40}
                           height={40}
                           className="rounded object-cover"
                         />
                       )}
-                      <span className="font-medium text-gray-900 dark:text-white">{category.title}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{(category as any).title}</span>
                     </div>
                     <div className="flex space-x-2">
                       <Button
@@ -485,9 +485,9 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   >
                     <option value="">Select a category</option>
-                    {categories.map((category: any) => (
-                      <option key={category.id} value={category.id}>
-                        {category.title}
+                    {categories.map((category: unknown) => (
+                      <option key={(category as any).id} value={(category as any).id}>
+                        {(category as any).title}
                       </option>
                     ))}
                   </select>
