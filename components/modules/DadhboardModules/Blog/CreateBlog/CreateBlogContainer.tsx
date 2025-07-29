@@ -12,7 +12,7 @@ import { FaPlus, FaImage, FaTrash, FaSave, FaEdit } from "react-icons/fa";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function CreateBlogContainer() {
-  const { data: categories = [], isLoading, error } = useBlogCategories();
+  const { data: categories = [] } = useBlogCategories();
   const { mutate: createBlog, isPending: blogLoading, error: blogError } = useCreateBlog();
   const { mutate: createCategory, isPending: createCategoryLoading } = useCreateBlogCategory();
   const { mutate: updateCategory, isPending: updateCategoryLoading } = useUpdateBlogCategory();
@@ -77,7 +77,7 @@ export default function CreateBlogContainer() {
     };
 
     if (editingCategory) {
-      updateCategory({ id: (editingCategory as any).id, ...payload });
+      updateCategory({ id: (editingCategory as { id: string }).id, ...payload });
     } else {
       createCategory(payload);
     }
@@ -91,16 +91,16 @@ export default function CreateBlogContainer() {
   const handleEditCategory = (category: unknown) => {
     setEditingCategory(category);
     setCategoryForm({
-      title: (category as any).title,
-      slug: (category as any).slug,
+      title: (category as { title: string }).title,
+      slug: (category as { slug: string }).slug,
       imageFile: null,
-      imagePreview: (category as any).imageUrl || ""
+      imagePreview: (category as { imageUrl?: string }).imageUrl || ""
     });
     setShowCategoryForm(true);
   };
 
   const handleDeleteCategory = (category: unknown) => {
-    deleteCategory((category as any).id);
+    deleteCategory((category as { id: string }).id);
   };
 
   const handleCancelCategoryForm = () => {
@@ -334,20 +334,20 @@ export default function CreateBlogContainer() {
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {categories.map((category: unknown) => (
-                    <div key={(category as any).id} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  {categories.map((category: { id: string, title: string, imageUrl?: string }) => (
+                    <div key={category.id} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div className="flex items-center gap-3">
-                        {(category as any).imageUrl && (
+                        {category.imageUrl && (
                           <Image
-                            src={(category as any).imageUrl}
-                            alt={(category as any).title}
+                            src={category.imageUrl}
+                            alt={category.title}
                             width={32}
                             height={32}
                             className="w-8 h-8 rounded-full object-cover"
                           />
                         )}
                         <span className="font-medium text-gray-900 dark:text-white">
-                          {(category as any).title}
+                          {category.title}
                         </span>
                       </div>
                       <div className="flex gap-1">
@@ -428,9 +428,9 @@ export default function CreateBlogContainer() {
                     required
                   >
                     <option value="">Select a category</option>
-                    {categories.map((cat: unknown) => (
-                      <option key={(cat as any).id || (cat as any)._id} value={(cat as any).id || (cat as any)._id}>
-                        {(cat as any).title}
+                    {categories.map((cat: { id: string, title: string }) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.title}
                       </option>
                     ))}
                   </select>

@@ -102,7 +102,7 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
     };
 
     if (editingCategory) {
-      updateCategory({ id: (editingCategory as any).id, ...payload });
+      updateCategory({ id: (editingCategory as { id: string }).id, ...payload });
     } else {
       createCategory(payload);
     }
@@ -117,16 +117,16 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
   const handleEditCategory = (category: unknown) => {
     setEditingCategory(category);
     setCategoryForm({
-      title: (category as any).title,
-      slug: (category as any).slug,
+      title: (category as { title: string }).title,
+      slug: (category as { slug: string }).slug,
       imageFile: null,
-      imagePreview: (category as any).imageUrl || ""
+      imagePreview: (category as { imageUrl: string }).imageUrl || ""
     });
     setShowCategoryForm(true);
   };
 
   const handleDeleteCategory = (category: unknown) => {
-    deleteCategory((category as any).id);
+    deleteCategory((category as { id: string }).id);
   };
 
   const handleCancelCategoryForm = () => {
@@ -394,19 +394,19 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
               </form>
             ) : (
               <div className="space-y-2">
-                {categories.map((category: unknown) => (
-                  <div key={(category as any).id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                {categories.map((category: { id: string; title: string; imageUrl?: string }) => (
+                  <div key={category.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="flex items-center space-x-3">
-                      {(category as any).imageUrl && (
+                      {category.imageUrl && (
                         <Image
-                          src={(category as any).imageUrl}
-                          alt={(category as any).title}
+                          src={category.imageUrl}
+                          alt={category.title}
                           width={40}
                           height={40}
                           className="rounded object-cover"
                         />
                       )}
-                      <span className="font-medium text-gray-900 dark:text-white">{(category as any).title}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{category.title}</span>
                     </div>
                     <div className="flex space-x-2">
                       <Button
@@ -485,9 +485,9 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   >
                     <option value="">Select a category</option>
-                    {categories.map((category: unknown) => (
-                      <option key={(category as any).id} value={(category as any).id}>
-                        {(category as any).title}
+                    {categories.map((category: { id: string; title: string }) => (
+                      <option key={category.id} value={category.id}>
+                        {category.title}
                       </option>
                     ))}
                   </select>
