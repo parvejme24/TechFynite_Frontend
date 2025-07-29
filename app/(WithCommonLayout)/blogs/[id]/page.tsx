@@ -6,7 +6,7 @@ interface BlogDetailsPageProps {
   params: { id: string };
 }
 
-export default function BlogDetailsPage({ params }: BlogDetailsPageProps) {
+export default function BlogDetailsPage({ params }: { params: { id: string } }) {
   return (
     <div>
       <BlogDetailsContainer id={params.id} />

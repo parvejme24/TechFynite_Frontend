@@ -2,11 +2,7 @@ import TemplateDetailsContainer from "@/components/modules/DadhboardModules/Temp
 // import PageHeader from "@/components/shared/PageHeader/PageHeader";
 import React from "react";
 
-export default function TemplateDetailsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function TemplateDetailsPage({ params }: { params: { id: string } }) {
   return (
     <div>
       {/* <PageHeader
