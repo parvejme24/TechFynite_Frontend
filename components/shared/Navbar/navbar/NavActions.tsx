@@ -3,7 +3,7 @@ import { Menu, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "@/Provider/AuthProvider";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import placeholderImage from "@/assets/common/placeholder.png";
+import useApiBaseUrl from "@/hooks/useApiBaseUrl";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NavActionsProps {
   isOpen: boolean;
@@ -22,10 +25,38 @@ interface NavActionsProps {
 
 export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
   const authContext = useContext(AuthContext);
-  const user = authContext?.user;
+  const { getCurrentUser } = useAuth();
+  const authContextUser = authContext?.user;
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    getCurrentUser().then((user) => {
+      setCurrentUser(user);
+    });
+  }, [getCurrentUser]);
+
+  const user = currentUser || authContextUser;
+  const getPhotoUrl = () => {
+    if (user && user.photoUrl) return user.photoUrl;
+    if (user && user.photoURL) return user.photoURL;
+    return undefined;
+  };
+  const getDisplayName = () => {
+    if (user && user.displayName) return user.displayName;
+    return 'User';
+  };
   const logOut = authContext?.logOut;
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const API_BASE_URL = useApiBaseUrl();
+  function getImageUrl(imageUrl?: string) {
+    if (!imageUrl) return placeholderImage;
+    if (imageUrl.startsWith('/uploads/')) {
+      const baseUrl = API_BASE_URL.replace('/api/v1', '');
+      return `${baseUrl}${imageUrl}`;
+    }
+    return imageUrl;
+  }
 
   return (
     <div className="flex items-center space-x-4">
@@ -41,23 +72,13 @@ export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
         <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <button className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center cursor-pointer">
-              {user.photoURL ? (
-                <Image
-                  src={user.photoURL}
-                  alt="User"
-                  width={36}
-                  height={36}
-                  className="rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-lg font-bold text-gray-700 dark:text-gray-200">
-                  {(
-                    user.displayName?.[0] ||
-                    user.email?.[0] ||
-                    "U"
-                  ).toUpperCase()}
-                </span>
-              )}
+              <Image
+                src={getImageUrl(getPhotoUrl())}
+                alt="User"
+                width={36}
+                height={36}
+                className="rounded-full object-cover aspect-square min-h-[36px] min-w-[36px]"
+              />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -65,37 +86,29 @@ export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
             className="w-56 bg-white dark:bg-[#1A1D37] border border-gray-200 dark:border-gray-800"
           >
             <div className="flex flex-col items-center justify-center py-4">
-              {user.photoURL ? (
-                <Image
-                  src={user.photoURL}
-                  alt="User"
-                  width={56}
-                  height={56}
-                  className="rounded-full object-cover mb-2"
-                />
-              ) : (
-                <span className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-2xl font-bold text-gray-700 dark:text-gray-200 mb-2">
-                  {(
-                    user.displayName?.[0] ||
-                    user.email?.[0] ||
-                    "U"
-                  ).toUpperCase()}
-                </span>
-              )}
+              <Image
+                src={getImageUrl(getPhotoUrl())}
+                alt="User"
+                width={56}
+                height={56}
+                className="rounded-full object-cover aspect-square min-h-[56px] min-w-[56px] mb-2"
+              />
               <div className="font-semibold text-base text-gray-900 dark:text-white text-center">
-                {user.displayName || "User"}
+                {getDisplayName()}
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-300 text-center">
                 {user.email || "No email"}
               </div>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>
+            <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}
+              className="cursor-pointer"
+            >
               Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="text-red-600 dark:text-red-400"
+              className="text-red-600 dark:text-red-400 cursor-pointer"
               onClick={async () => {
                 if (logOut) {
                   await logOut();
@@ -146,7 +159,7 @@ export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
           variant="ghost"
           size="icon"
           onClick={() => setIsOpen(!isOpen)}
-          className="hover:bg-[#0F5BBD]/10"
+          className="hover:bg-[#0F5BBD]/10 cursor-pointer"
         >
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </Button>

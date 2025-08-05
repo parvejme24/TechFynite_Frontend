@@ -1,13 +1,19 @@
+export enum Duration {
+  MONTHLY = 'MONTHLY',
+  YEARLY = 'YEARLY',
+  HALFYEARLY = 'HALFYEARLY',
+}
+
 export interface Pricing {
   id: string;
   title: string;
   price: number;
   license: string;
   recommended: boolean;
-  duration: string; // Duration enum from Prisma
+  duration: Duration;
   features: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreatePricingData {

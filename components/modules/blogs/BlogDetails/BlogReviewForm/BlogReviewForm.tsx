@@ -125,7 +125,13 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
       <div className="p-4 mt-10">
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="mt-4 space-y-3">
+            <div className="h-4 w-32 bg-gray-300 dark:bg-gray-700 rounded mx-auto animate-pulse"></div>
+            <div className="h-20 w-full bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+            <div className="h-10 w-full bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+            <div className="h-10 w-full bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+            <div className="h-10 w-32 bg-gray-300 dark:bg-gray-700 rounded mx-auto animate-pulse"></div>
+          </div>
         </div>
       </div>
     );

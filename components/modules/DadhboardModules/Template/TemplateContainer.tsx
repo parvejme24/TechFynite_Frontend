@@ -1,11 +1,12 @@
 "use client";
-import { useTemplates, useTemplateCategories } from "@/hooks/useTemplateApi";
 import React, { useState } from "react";
-import TemplateCard from "./TemplateCard";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import Link from "next/link";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { useTemplates, useTemplateCategories } from "@/hooks/useTemplateApi";
+import TemplateCard from "./TemplateCard";
+import DashboardPricingCardSkeleton from "@/components/modules/pricing/pricingList/DashboardPricingCardSkeleton";
 
-const TEMPLATES_PER_PAGE = 9;
+const TEMPLATES_PER_PAGE = 6;
 
 interface KeyFeature {
   feature: string;
@@ -56,7 +57,6 @@ export default function TemplateContainer() {
     setPage(1);
   }, [selectedCategory]);
 
-  if (isLoading || categoriesLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
   if (categoriesError) return <div>Error: {categoriesError.message}</div>;
 
@@ -109,11 +109,15 @@ export default function TemplateContainer() {
         </div>
 
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {paginatedTemplates.map((template: unknown) => (
-            <TemplateCard key={(template as Template).id} template={template as Template} />
-          ))}
+          {(isLoading || categoriesLoading)
+            ? Array.from({ length: 6 }).map((_, idx) => (
+                <DashboardPricingCardSkeleton key={idx} />
+              ))
+            : paginatedTemplates.map((template: unknown) => (
+                <TemplateCard key={(template as Template).id} template={template as Template} />
+              ))}
         </div>
-        {totalPages > 1 && (
+        {totalPages > 1 && !isLoading && !categoriesLoading && (
           <div className="flex justify-center mt-8 gap-2">
             <button
               className="cursor-pointer p-2 rounded-full border border-gray-300 dark:border-blue-800 bg-white dark:bg-blue-800 text-gray-700 dark:text-white disabled:opacity-50 flex items-center justify-center"
@@ -132,7 +136,6 @@ export default function TemplateContainer() {
                     : "bg-white dark:bg-blue-900 text-gray-700 dark:text-white border-gray-300 dark:border-blue-800"
                 }`}
                 onClick={() => setPage(idx + 1)}
-                aria-label={`Go to page ${idx + 1}`}
               >
                 {idx + 1}
               </button>

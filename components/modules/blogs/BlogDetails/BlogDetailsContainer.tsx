@@ -4,13 +4,26 @@ import Image from "next/image";
 import BlogSidebar from "./BlogSidebar/BlogSidebar";
 import { useBlog } from "@/hooks/useBlogApi";
 import BlogReviewForm from "./BlogReviewForm/BlogReviewForm";
+import BlogSidebarSkeleton from "./BlogSidebar/BlogSidebarSkeleton";
+import BlogDetailsSkeleton from "./BlogDetailsSkeleton";
 
 export default function BlogDetailsContainer({ id }: { id: string }) {
   const { data: blog, isLoading, error } = useBlog(id);
 
   if (isLoading)
     return (
-      <div className="container mx-auto max-w-7xl px-4 lg:px-0">Loading...</div>
+      <div className="container mx-auto max-w-7xl px-4 lg:px-0">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Blog Content Skeleton */}
+          <div className="lg:col-span-2">
+            <BlogDetailsSkeleton />
+          </div>
+          {/* Sidebar Skeleton */}
+          <div className="lg:col-span-1">
+            <BlogSidebarSkeleton />
+          </div>
+        </div>
+      </div>
     );
   if (error)
     return <div className="text-red-500">{(error as Error).message}</div>;

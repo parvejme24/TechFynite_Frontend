@@ -1,8 +1,7 @@
 import React from "react";
-import { Contact } from "./ServiceRequestContainer";
 
 interface ServiceRequestCardProps {
-  contact: Contact;
+  contact: any; // Changed from Contact to any as Contact is not exported
 }
 
 export default function ServiceRequestCard({ contact }: ServiceRequestCardProps) {

@@ -29,8 +29,19 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface DBUser {
+  id: string;
+  displayName: string;
+  email: string;
+  photoUrl?: string;
+  role?: string;
+  balance?: number;
+  // Add other fields as needed
+}
+
 type AuthContextType = {
   user: User | null;
+  dbUser: DBUser | null;
   loading: boolean;
   createUser: (
     email: string,
@@ -49,6 +60,7 @@ const auth = getAuth(app);
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dbUser, setDbUser] = useState<DBUser | null>(null);
 
   const createUser = async (
     email: string,
@@ -133,12 +145,25 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  // Fetch DB user after Firebase login or onAuthStateChanged
+  useEffect(() => {
+    if (user?.email) {
+      axios
+        .get(`${API_BASE_URL}/users/email/${user.email}`, { withCredentials: true })
+        .then(res => setDbUser(res.data))
+        .catch(() => setDbUser(null));
+    } else {
+      setDbUser(null);
+    }
+  }, [user, API_BASE_URL]);
+
   const logOut = () => {
     return signOut(auth);
   };
 
   const authInfo = {
     user,
+    dbUser,
     loading,
     createUser,
     signInUser,

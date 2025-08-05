@@ -1,12 +1,13 @@
 import React from "react";
 import BlogCard from "./BlogCard";
+import type { Blog } from "./BlogCard";
 import BlogCardSkeleton from "./BlogCardSkeleton";
 
 interface BlogListProps {
-  blogs: Array<unknown>;
-  onBlogClick?: (blog: unknown) => void;
-  onEdit?: (blog: unknown) => void;
-  onDelete?: (blog: unknown) => void;
+  blogs: Blog[];
+  onBlogClick?: (blog: Blog) => void;
+  onEdit?: (blog: Blog) => void;
+  onDelete?: (blog: Blog) => void;
   loading?: boolean;
 }
 
@@ -38,13 +39,13 @@ const BlogList: React.FC<BlogListProps> = ({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {blogs.map((blog) => (
-        <BlogCard
-          key={blog.id}
-          blog={blog}
-          onClick={() => onBlogClick?.(blog)}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
+        <div key={blog.id} onClick={() => onBlogClick?.(blog)}>
+          <BlogCard
+            blog={blog}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        </div>
       ))}
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserProfile } from "@/types/user";
+import { User } from "@/types/user";
 import useApiBaseUrl from "./useApiBaseUrl";
 
 const API_BASE_URL = useApiBaseUrl();
@@ -47,7 +47,7 @@ interface ResetPasswordData {
 }
 
 interface AuthResponse {
-  user: UserProfile;
+  user: User;
   accessToken: string;
   refreshToken: string;
   message?: string;
@@ -73,7 +73,7 @@ interface UseAuthReturn {
   // Logout user
   logout: () => Promise<{ message: string } | null>;
   // Get current user
-  getCurrentUser: () => Promise<UserProfile | null>;
+  getCurrentUser: () => Promise<User | null>;
   // Loading states
   loading: boolean;
   // Error state
@@ -376,7 +376,7 @@ export const useAuth = (): UseAuthReturn => {
   };
 
   // Get current user
-  const getCurrentUser = async (): Promise<UserProfile | null> => {
+  const getCurrentUser = async (): Promise<User | null> => {
     setLoading(true);
     setError(null);
 

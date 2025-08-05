@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useBlogs } from "@/hooks/useBlogApi";
+import BlogSidebarSkeleton from "./BlogSidebarSkeleton";
 
 export default function BlogSidebar() {
   const { data: blogs = [], isLoading, error } = useBlogs();
@@ -17,7 +18,7 @@ export default function BlogSidebar() {
     <div>
       <h2 className="text-lg font-bold mb-4">Latest Blogs</h2>
       {isLoading ? (
-        <div>Loading...</div>
+        <BlogSidebarSkeleton />
       ) : error ? (
         <div className="text-red-500">{(error as Error).message}</div>
       ) : latestBlogs.length === 0 ? (

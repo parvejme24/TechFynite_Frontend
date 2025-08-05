@@ -4,11 +4,12 @@ import Image from "next/image";
 import { useTemplate } from "@/hooks/useTemplateApi";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import TemplateDetailsSkeleton from "./TemplateDetailsSkeleton";
 
 export default function TemplateDetailsContainer({ id }: { id: string }) {
   const { data: template, isLoading, error } = useTemplate(id);
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <TemplateDetailsSkeleton />;
   if (error)
     return <div className="text-red-500">{(error as Error).message}</div>;
   if (!template) return <div>No template found.</div>;

@@ -1,6 +1,13 @@
 import React from "react";
-import { Contact } from "./ServiceRequestContainer";
 import ServiceRequestCard from "./ServiceRequestCard";
+
+// Define a minimal Contact type for this component
+type Contact = {
+  id: string;
+  name: string;
+  email: string;
+  // Add other fields as needed
+};
 
 interface ServiceRequestCardGridProps {
   contacts: Contact[];

@@ -14,22 +14,24 @@ import { FaRegComment, FaRegHeart, FaHeart, FaClock, FaUser, FaEye } from "react
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+export type Blog = {
+  id: string;
+  title: string;
+  imageUrl?: string | null;
+  description?: string | string[];
+  author?: { displayName: string; photoUrl?: string | null };
+  category?: { title: string; imageUrl?: string };
+  createdAt?: string;
+  readingTime?: number;
+  likes?: number;
+  reviews?: unknown[];
+  content?: unknown[];
+};
+
 interface BlogCardProps {
-  blog: {
-    id: string;
-    title: string;
-    imageUrl?: string | null;
-    description?: string | string[];
-    author?: { displayName: string; photoUrl?: string | null };
-    category?: { title: string; imageUrl?: string };
-    createdAt?: string;
-    readingTime?: number;
-    likes?: number;
-    reviews?: unknown[];
-    content?: unknown[];
-  };
-  onEdit?: (blog: unknown) => void;
-  onDelete?: (blog: unknown) => void;
+  blog: Blog;
+  onEdit?: (blog: Blog) => void;
+  onDelete?: (blog: Blog) => void;
 }
 
 const BlogCard: React.FC<BlogCardProps> = ({

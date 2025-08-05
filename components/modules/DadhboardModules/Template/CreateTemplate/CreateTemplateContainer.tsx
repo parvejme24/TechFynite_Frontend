@@ -350,7 +350,6 @@ export default function CreateTemplateContainer() {
             categories={categories}
             onInputChange={handleInputChange}
             onCoverImageChange={handleCoverImageChange}
-            showCoverPreview={showCoverPreview}
             setShowCoverPreview={setShowCoverPreview}
             onCreateCategory={handleCreateCategory}
             onUpdateCategory={handleUpdateCategory}
