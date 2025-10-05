@@ -133,7 +133,7 @@
 
 .pricing-swiper .swiper-button-next,
 .pricing-swiper .swiper-button-prev {
-  color: #0F5BBD;
+  color: #0f5bbd;
   background: white;
   width: 40px;
   height: 40px;
@@ -144,7 +144,7 @@
 
 .pricing-swiper .swiper-button-next:hover,
 .pricing-swiper .swiper-button-prev:hover {
-  background: #0F5BBD;
+  background: #0f5bbd;
   color: white;
   transform: scale(1.1);
 }
@@ -156,14 +156,14 @@
 }
 
 .pricing-swiper .swiper-pagination-bullet {
-  background: #0F5BBD;
+  background: #0f5bbd;
   opacity: 0.3;
   transition: all 0.3s ease;
 }
 
 .pricing-swiper .swiper-pagination-bullet-active {
   opacity: 1;
-  background: #0F5BBD;
+  background: #0f5bbd;
   transform: scale(1.2);
 }
 
@@ -171,12 +171,12 @@
 .dark .pricing-swiper .swiper-button-next,
 .dark .pricing-swiper .swiper-button-prev {
   background: #1f2937;
-  color: #0F5BBD;
+  color: #0f5bbd;
 }
 
 .dark .pricing-swiper .swiper-button-next:hover,
 .dark .pricing-swiper .swiper-button-prev:hover {
-  background: #0F5BBD;
+  background: #0f5bbd;
   color: white;
 }
 
@@ -187,6 +187,7 @@ html {
 
 body {
   overflow-y: scroll;
+  scroll-behavior: smooth;
 }
 
 /* Fix dropdown menu positioning to prevent layout shift */
