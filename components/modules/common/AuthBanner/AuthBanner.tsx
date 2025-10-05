@@ -1,5 +1,15 @@
-import { useTheme } from "next-themes";
+// Mock theme hook - in real app, this would be imported from your hooks
 import React from "react";
+import { useTheme } from "next-themes";
+
+// Mock useThemeSafe hook implementation
+const useThemeSafe = () => {
+  const { theme, resolvedTheme } = useTheme();
+  return {
+    isDark: resolvedTheme === 'dark',
+    mounted: true, // Assume mounted for simplicity
+  };
+};
 import Image from "next/image";
 import BannerImage from "@/assets/common/templates.png";
 import Dot from "@/assets/common/dots.png";
@@ -8,20 +18,15 @@ import { StatCard } from "../StatCard/StatCard,";
 import { AnimatedDots } from "../AnimatedDots/AnimatedDots";
 
 export const AuthBanner = () => {
-  const { theme } = useTheme();
-
-  const gradientStyle = {
-    backgroundImage:
-      theme === "dark"
-        ? "linear-gradient(to top left, #010102, #111A39, #010102)"
-        : "linear-gradient(to top left, #FDFEFF, #D4E3FF, #FDFEFF)",
-    backgroundRepeat: "repeat",
-  };
+  const { isDark, mounted } = useThemeSafe();
 
   return (
     <div
-      style={gradientStyle}
-      className="hidden lg:flex h-full relative before:content-[''] before:absolute before:inset-0 before:bg-[linear-gradient(to_right,#0F5BBD_1px,transparent_1px),linear-gradient(to_bottom,#0F5BBD_1px,transparent_1px)] before:bg-[size:60px_60px] before:opacity-10"
+      className={`hidden lg:flex h-full relative before:content-[''] before:absolute before:inset-0 before:bg-[linear-gradient(to_right,#0F5BBD_1px,transparent_1px),linear-gradient(to_bottom,#0F5BBD_1px,transparent_1px)] before:bg-[size:60px_60px] before:opacity-10 transition-all duration-300 ${
+        mounted && isDark
+          ? 'bg-gradient-to-tl from-[#010102] via-[#111A39] to-[#010102]'
+          : 'bg-gradient-to-tl from-[#FDFEFF] via-[#D4E3FF] to-[#FDFEFF]'
+      }`}
     >
       <div className="flex flex-col items-center justify-center w-full relative z-10">
         <div className="max-w-[430px] mb-5">

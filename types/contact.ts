@@ -5,6 +5,21 @@ export enum ContactStatus {
   CANCELLED = 'CANCELLED',
 }
 
+export interface ContactReply {
+  id: string;
+  subject: string;
+  message: string;
+  contactId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
 export interface Contact {
   id: string;
   projectDetails: string;
@@ -16,4 +31,5 @@ export interface Contact {
   status: ContactStatus;
   createdAt: string;
   updatedAt: string;
+  replies?: ContactReply[];
 }

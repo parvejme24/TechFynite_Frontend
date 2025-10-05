@@ -3,8 +3,10 @@ import { Menu, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
-import { useContext, useState, useEffect } from "react";
+import React, { useContext, useState } from "react";
 import { AuthContext } from "@/Provider/AuthProvider";
+import { useAuth } from "@/hooks/useAuth";
+import { signOut } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -15,8 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import placeholderImage from "@/assets/common/placeholder.png";
-import useApiBaseUrl from "@/hooks/useApiBaseUrl";
-import { useAuth } from "@/hooks/useAuth";
 
 interface NavActionsProps {
   isOpen: boolean;
@@ -25,37 +25,86 @@ interface NavActionsProps {
 
 export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
   const authContext = useContext(AuthContext);
-  const { getCurrentUser } = useAuth();
-  const authContextUser = authContext?.user;
-  const [currentUser, setCurrentUser] = useState<any>(null);
-
-  useEffect(() => {
-    getCurrentUser().then((user) => {
-      setCurrentUser(user);
-    });
-  }, [getCurrentUser]);
-
-  const user = currentUser || authContextUser;
-  const getPhotoUrl = () => {
-    if (user && user.photoUrl) return user.photoUrl;
-    if (user && user.photoURL) return user.photoURL;
-    return undefined;
-  };
-  const getDisplayName = () => {
-    if (user && user.displayName) return user.displayName;
-    return 'User';
-  };
-  const logOut = authContext?.logOut;
+  const { user: nextAuthUser, isAuthenticated } = useAuth();
+  const user = nextAuthUser || authContext?.user;
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const API_BASE_URL = useApiBaseUrl();
+
+  // Console log user data when user changes
+  React.useEffect(() => {
+    if (user) {
+      console.log("🔐 NavActions - User Data:", {
+        id: user.id,
+        fullName: user.fullName,
+        name: user.name,
+        displayName: user.displayName,
+        email: user.email,
+        role: user.role,
+        provider: user.provider,
+        image: user.image,
+        photoUrl: user.photoUrl,
+        isAuthenticated,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt
+      });
+    } else {
+      console.log("🔐 NavActions - No user data");
+    }
+  }, [user, isAuthenticated]);
+
+  const getPhotoUrl = () => {
+    if (user && user.photoUrl) {
+      console.log("🔐 NavActions - Using photoUrl:", user.photoUrl);
+      return user.photoUrl;
+    }
+    if (user && user.photoURL) {
+      console.log("🔐 NavActions - Using photoURL:", user.photoURL);
+      return user.photoURL;
+    }
+    if (user && user.image) {
+      console.log("🔐 NavActions - Using Google image:", user.image);
+      return user.image; // NextAuth image field (Google avatar)
+    }
+    console.log("🔐 NavActions - No profile picture found");
+    return undefined;
+  };
+
+  const getDisplayName = () => {
+    if (user && user.fullName) return user.fullName;
+    if (user && user.displayName) return user.displayName;
+    if (user && user.name) return user.name; // NextAuth name field
+    return 'User';
+  };
+
+  const getInitials = () => {
+    const displayName = getDisplayName();
+    if (displayName && displayName !== 'User') {
+      const names = displayName.trim().split(' ');
+      if (names.length >= 2) {
+        return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+      }
+      return displayName[0].toUpperCase();
+    }
+    return 'U';
+  };
+
+  const hasProfilePicture = () => {
+    const hasPhoto = !!(user && (user.photoUrl || user.photoURL || user.image));
+    console.log("🔐 NavActions - Has profile picture:", hasPhoto);
+    if (hasPhoto) {
+      console.log("🔐 NavActions - Profile picture source:", {
+        photoUrl: user?.photoUrl,
+        photoURL: user?.photoURL,
+        image: user?.image
+      });
+    }
+    return hasPhoto;
+  };
+
   function getImageUrl(imageUrl?: string) {
     if (!imageUrl) return placeholderImage;
-    if (imageUrl.startsWith('/uploads/')) {
-      const baseUrl = API_BASE_URL.replace('/api/v1', '');
-      return `${baseUrl}${imageUrl}`;
-    }
-    return imageUrl;
+    // For now, return the image URL as-is or use placeholder
+    return imageUrl || placeholderImage;
   }
 
   return (
@@ -68,36 +117,50 @@ export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
         <ModeToggle />
       </motion.div>
 
-      {user ? (
-        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+      {(user || isAuthenticated) ? (
+                   <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen} modal={false}>
           <DropdownMenuTrigger asChild>
             <button className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center cursor-pointer">
-              <Image
-                src={getImageUrl(getPhotoUrl())}
-                alt="User"
-                width={36}
-                height={36}
-                className="rounded-full object-cover aspect-square min-h-[36px] min-w-[36px]"
-              />
+              {hasProfilePicture() ? (
+                <Image
+                  src={getImageUrl(getPhotoUrl())}
+                  alt="User"
+                  width={36}
+                  height={36}
+                  className="rounded-full object-cover aspect-square min-h-[36px] min-w-[36px]"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                  {getInitials()}
+                </div>
+              )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-56 bg-white dark:bg-[#1A1D37] border border-gray-200 dark:border-gray-800"
-          >
+                     <DropdownMenuContent
+             align="end"
+             className="w-56 bg-white dark:bg-[#1A1D37] border border-gray-200 dark:border-gray-800"
+             sideOffset={8}
+             avoidCollisions={true}
+           >
             <div className="flex flex-col items-center justify-center py-4">
-              <Image
-                src={getImageUrl(getPhotoUrl())}
-                alt="User"
-                width={56}
-                height={56}
-                className="rounded-full object-cover aspect-square min-h-[56px] min-w-[56px] mb-2"
-              />
+              {hasProfilePicture() ? (
+                <Image
+                  src={getImageUrl(getPhotoUrl())}
+                  alt="User"
+                  width={56}
+                  height={56}
+                  className="rounded-full object-cover aspect-square min-h-[56px] min-w-[56px] mb-2"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg mb-2">
+                  {getInitials()}
+                </div>
+              )}
               <div className="font-semibold text-base text-gray-900 dark:text-white text-center">
                 {getDisplayName()}
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-300 text-center">
-                {user.email || "No email"}
+                {user?.email || "No email"}
               </div>
             </div>
             <DropdownMenuSeparator />
@@ -110,11 +173,7 @@ export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
             <DropdownMenuItem
               className="text-red-600 dark:text-red-400 cursor-pointer"
               onClick={async () => {
-                if (logOut) {
-                  await logOut();
-                  localStorage.clear();
-                  router.push("/login");
-                }
+                await signOut({ callbackUrl: "/" });
               }}
             >
               Logout

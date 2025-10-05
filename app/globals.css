@@ -179,3 +179,34 @@
   background: #0F5BBD;
   color: white;
 }
+
+/* Prevent scrollbar from disappearing when modals/dropdowns open */
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  overflow-y: scroll;
+}
+
+/* Fix dropdown menu positioning to prevent layout shift */
+[data-radix-popper-content-wrapper] {
+  position: fixed !important;
+}
+
+/* Ensure dropdown doesn't affect page layout */
+[data-radix-popper-content-wrapper] > * {
+  position: relative;
+  z-index: 50;
+}
+
+/* Prevent layout shift when dropdown opens */
+.no-layout-shift {
+  overflow: hidden;
+}
+
+/* Ensure body maintains scrollbar */
+body.dropdown-open {
+  padding-right: 0 !important;
+  overflow-y: scroll !important;
+}

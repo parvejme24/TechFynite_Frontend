@@ -3,7 +3,7 @@
 import React from "react";
 import { ThemeToggle } from "@/components/modules/common/ThemeToggle/ThemeToggle";
 import { AuthBanner } from "@/components/modules/common/AuthBanner/AuthBanner";
-import ForgetPasswordForm from "@/components/modules/auth/forget/ForgetPasswordForm";
+import ForgetPasswordForm from "@/components/modules/CommonModules/auth/forget/ForgetPasswordForm";
 
 export default function ForgetPasswordPage() {
   return (

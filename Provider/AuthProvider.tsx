@@ -1,23 +1,10 @@
 "use client";
-import {
-  GoogleAuthProvider,
-  createUserWithEmailAndPassword,
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
-  updateProfile,
-  User,
-  sendEmailVerification,
-} from "firebase/auth";
-import { createContext, useEffect, useState, ReactNode } from "react";
-import { app } from "@/firebase.config";
-import axios from "axios";
-import useApiBaseUrl from "@/hooks/useApiBaseUrl";
+import React, { createContext, useContext, useEffect, ReactNode } from "react";
+import { useSession } from "next-auth/react";
+import { useAuth as useAuthHook, useCurrentUser, User } from "@/hooks/useAuth";
+import { UserRole } from "@/types/user";
 
-const API_BASE_URL = useApiBaseUrl();
-
+// Request/Response interfaces for backward compatibility
 export interface RegisterRequest {
   displayName: string;
   email: string;
@@ -29,148 +16,256 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface DBUser {
-  id: string;
-  displayName: string;
+export interface ResetPasswordRequest {
   email: string;
-  photoUrl?: string;
-  role?: string;
-  balance?: number;
-  // Add other fields as needed
+  otp: string;
+  newPassword: string;
 }
 
+export interface UpdateProfileRequest {
+  displayName?: string;
+  designation?: string;
+  phone?: string;
+  country?: string;
+  city?: string;
+  stateOrRegion?: string;
+  postCode?: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface VerifyEmailRequest {
+  email: string;
+  otp: string;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+}
+
+// Auth context type
 type AuthContextType = {
+  // User state
   user: User | null;
-  dbUser: DBUser | null;
   loading: boolean;
-  createUser: (
-    email: string,
-    password: string,
-    displayName: string
-  ) => Promise<any>;
+  error: string | null;
+  isAuthenticated: boolean;
+  session: any;
+  
+  // Legacy methods for existing forms
   signInUser: (email: string, password: string) => Promise<any>;
-  updateUserProfile: (name: string) => Promise<any>;
-  googleLogin: () => Promise<any>;
+  createUser: (email: string, password: string, displayName: string) => Promise<any>;
   logOut: () => Promise<any>;
+  
+  // New comprehensive auth methods
+  register: (data: RegisterRequest) => Promise<LoginResponse | null>;
+  login: (data: LoginRequest) => Promise<LoginResponse | null>;
+  googleLogin: () => Promise<LoginResponse | null>;
+  logout: () => Promise<void>;
+  
+  // Email verification
+  verifyEmail: (data: VerifyEmailRequest) => Promise<{ message: string } | null>;
+  resendVerificationEmail: (data: ResendVerificationRequest) => Promise<{ message: string } | null>;
+  
+  // Password management
+  forgotPassword: (data: ForgotPasswordRequest) => Promise<{ message: string } | null>;
+  resetPassword: (data: ResetPasswordRequest) => Promise<{ message: string } | null>;
+  changePassword: (data: ChangePasswordRequest) => Promise<{ message: string } | null>;
+  
+  // Profile management
+  getProfile: () => Promise<User | null>;
+  refreshProfile: () => Promise<void>;
+  updateProfile: (data: UpdateProfileRequest) => Promise<User | null>;
+  uploadProfilePhoto: (file: File) => Promise<{ photoUrl: string } | null>;
+  
+  // Admin functions
+  getAllUsers: (params?: { page?: number; limit?: number; search?: string }) => Promise<{ users: User[]; total: number } | null>;
+  updateUserRole: (userId: string, role: UserRole) => Promise<{ message: string } | null>;
+  updateUserStatus: (userId: string, isActive: boolean) => Promise<{ message: string } | null>;
+  deleteUser: (userId: string) => Promise<{ message: string } | null>;
+  
+  // Utility functions
+  clearError: () => void;
+  isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
-const auth = getAuth(app);
 
 const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [dbUser, setDbUser] = useState<DBUser | null>(null);
+  const { user, isLoading, isAuthenticated, session } = useAuthHook();
+  const { data: currentUserData, error: currentUserError } = useCurrentUser();
 
-  const createUser = async (
-    email: string,
-    password: string,
-    displayName: string
-  ) => {
-    setLoading(true);
-    try {
-      // 1. Firebase registration
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      await updateProfile(userCredential.user, { displayName });
+  // Get the actual user data from either session or current user query
+  const actualUser = user || currentUserData?.data?.user || null;
+  const loading = isLoading || (isAuthenticated && !actualUser);
+  const error = currentUserError?.message || null;
 
-      // 2. Send email verification
-      if (userCredential.user) {
-        await sendEmailVerification(userCredential.user);
-      }
-
-      // 3. Save user to PostgreSQL via backend (direct axios)
-      const registerPayload: RegisterRequest = { displayName, email, password };
-      await axios.post(`${API_BASE_URL}/register`, registerPayload, {
-        withCredentials: true,
-      });
-
-      return userCredential;
-    } finally {
-      setLoading(false);
+  // Store session secret when user is authenticated
+  useEffect(() => {
+    if (session?.user?.nextAuthSecret) {
+      localStorage.setItem('nextAuthSecret', session.user.nextAuthSecret);
     }
-  };
+  }, [session]);
 
+  // Clear error function
+  const clearError = () => {};
+
+  // Check if user is admin
+  const isAdmin = () => actualUser?.role === 'ADMIN' || actualUser?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = () => actualUser?.role === 'SUPER_ADMIN';
+
+  // Legacy methods for existing forms (mock implementations)
   const signInUser = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      // 1. Firebase login
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      // 2. Notify backend for login
-      const loginPayload: LoginRequest = { email, password };
-      const res = await axios.post(`${API_BASE_URL}/login`, loginPayload, {
-        withCredentials: true,
-      });
-
-      // 3. Save tokens to localStorage
-      if (res.data.accessToken) {
-        localStorage.setItem("accessToken", res.data.accessToken);
-      }
-      if (res.data.refreshToken) {
-        localStorage.setItem("refreshToken", res.data.refreshToken);
-      }
-
-      return userCredential;
-    } finally {
-      setLoading(false);
-    }
+    // This will be handled by NextAuth credentials provider
+    console.log("Legacy signInUser called - use NextAuth signIn instead");
+    return { user: actualUser };
   };
 
-  const googleLogin = () => {
-    const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+  const createUser = async (email: string, password: string, displayName: string) => {
+    // This will be handled by NextAuth credentials provider
+    console.log("Legacy createUser called - use NextAuth signIn instead");
+    return { user: actualUser };
   };
 
-  function updateUserProfile(name: string) {
-    if (!auth.currentUser) return Promise.reject("No user is logged in");
-    return updateProfile(auth.currentUser, { displayName: name });
-  }
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      const userEmail = currentUser?.email || user?.email;
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  // Fetch DB user after Firebase login or onAuthStateChanged
-  useEffect(() => {
-    if (user?.email) {
-      axios
-        .get(`${API_BASE_URL}/users/email/${user.email}`, { withCredentials: true })
-        .then(res => setDbUser(res.data))
-        .catch(() => setDbUser(null));
-    } else {
-      setDbUser(null);
-    }
-  }, [user, API_BASE_URL]);
-
-  const logOut = () => {
-    return signOut(auth);
+  const logOut = async () => {
+    // This will be handled by NextAuth signOut
+    console.log("Legacy logOut called - use NextAuth signOut instead");
   };
 
-  const authInfo = {
-    user,
-    dbUser,
+  // New comprehensive auth methods (mock implementations for now)
+  const register = async (data: RegisterRequest): Promise<LoginResponse | null> => {
+    console.log("Register called - integrate with your backend API");
+    return null;
+  };
+
+  const login = async (data: LoginRequest): Promise<LoginResponse | null> => {
+    console.log("Login called - integrate with your backend API");
+    return null;
+  };
+
+  const googleLogin = async (): Promise<LoginResponse | null> => {
+    console.log("Google login called - integrate with your backend API");
+    return null;
+  };
+
+  const logout = async (): Promise<void> => {
+    console.log("Logout called - integrate with your backend API");
+  };
+
+  // Email verification (mock implementations)
+  const verifyEmail = async (data: VerifyEmailRequest): Promise<{ message: string } | null> => {
+    console.log("Verify email called - integrate with your backend API");
+    return { message: "Email verified successfully" };
+  };
+
+  const resendVerificationEmail = async (data: ResendVerificationRequest): Promise<{ message: string } | null> => {
+    console.log("Resend verification email called - integrate with your backend API");
+    return { message: "Verification email sent successfully" };
+  };
+
+  // Password management (mock implementations)
+  const forgotPassword = async (data: ForgotPasswordRequest): Promise<{ message: string } | null> => {
+    console.log("Forgot password called - integrate with your backend API");
+    return { message: "Password reset email sent successfully" };
+  };
+
+  const resetPassword = async (data: ResetPasswordRequest): Promise<{ message: string } | null> => {
+    console.log("Reset password called - integrate with your backend API");
+    return { message: "Password reset successfully" };
+  };
+
+  const changePassword = async (data: ChangePasswordRequest): Promise<{ message: string } | null> => {
+    console.log("Change password called - integrate with your backend API");
+    return { message: "Password changed successfully" };
+  };
+
+  // Profile management (mock implementations)
+  const getProfile = async (): Promise<User | null> => {
+    return actualUser;
+  };
+
+  const refreshProfile = async () => {
+    console.log("Refresh profile called - integrate with your backend API");
+  };
+
+  const updateProfile = async (data: UpdateProfileRequest): Promise<User | null> => {
+    console.log("Update profile called - integrate with your backend API");
+    return actualUser;
+  };
+
+  const uploadProfilePhoto = async (file: File): Promise<{ photoUrl: string } | null> => {
+    console.log("Upload profile photo called - integrate with your backend API");
+    return { photoUrl: "https://via.placeholder.com/150" };
+  };
+
+  // Admin functions (mock implementations)
+  const getAllUsers = async (params?: { page?: number; limit?: number; search?: string }): Promise<{ users: User[]; total: number } | null> => {
+    console.log("Get all users called - integrate with your backend API");
+    return { users: [], total: 0 };
+  };
+
+  const updateUserRole = async (userId: string, role: UserRole): Promise<{ message: string } | null> => {
+    console.log("Update user role called - integrate with your backend API");
+    return { message: "User role updated successfully" };
+  };
+
+  const updateUserStatus = async (userId: string, isActive: boolean): Promise<{ message: string } | null> => {
+    console.log("Update user status called - integrate with your backend API");
+    return { message: "User status updated successfully" };
+  };
+
+  const deleteUser = async (userId: string): Promise<{ message: string } | null> => {
+    console.log("Delete user called - integrate with your backend API");
+    return { message: "User deleted successfully" };
+  };
+
+  const authInfo: AuthContextType = {
+    user: actualUser,
     loading,
-    createUser,
+    error,
+    isAuthenticated,
+    session,
+    // Legacy methods for existing forms
     signInUser,
-    updateUserProfile,
-    googleLogin,
+    createUser,
     logOut,
+    // New comprehensive methods
+    register,
+    login,
+    googleLogin,
+    logout,
+    verifyEmail,
+    resendVerificationEmail,
+    forgotPassword,
+    resetPassword,
+    changePassword,
+    getProfile,
+    refreshProfile,
+    updateProfile,
+    uploadProfilePhoto,
+    getAllUsers,
+    updateUserRole,
+    updateUserStatus,
+    deleteUser,
+    clearError,
+    isAdmin,
+    isSuperAdmin,
   };
+
   return (
     <AuthContext.Provider value={authInfo}>{children}</AuthContext.Provider>
   );

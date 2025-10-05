@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ThemeToggle } from "@/components/modules/common/ThemeToggle/ThemeToggle";
-import RegisterForm from "@/components/modules/auth/Register/RegisterForm";
+import RegisterForm from "@/components/modules/CommonModules/auth/Register/RegisterForm";
 import { AuthBanner } from "@/components/modules/common/AuthBanner/AuthBanner";
 
 export default function RegisterPage() {

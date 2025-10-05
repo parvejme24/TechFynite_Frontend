@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Logo from "@/assets/common/logo.png";
@@ -8,6 +8,20 @@ import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+// Mock newsletter hook - in real app, this would be imported from your API hooks
+import { toast } from "sonner";
+
+// Mock newsletter subscription hook
+const useSubscribeNewsletter = () => {
+  return {
+    mutateAsync: async ({ email }: { email: string }) => {
+      // Mock implementation - in real app, this would call your backend API
+      console.log("Mock newsletter subscription for:", email);
+      return Promise.resolve({ success: true });
+    },
+    isPending: false,
+  };
+};
 
 const socialLinks = [
   { icon: Twitter, label: "Twitter", href: "#" },
@@ -18,8 +32,8 @@ const socialLinks = [
 
 const companyLinks = [
   { label: "Template", href: "/template" },
-  { label: "Support", href: "/support" },
-  { label: "Blog", href: "/blog" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "Blogs", href: "/blogs" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -76,23 +90,60 @@ const FooterLinks = ({
   </div>
 );
 
-const NewsletterSection = () => (
-  <div className="space-y-4">
-    <h4 className="text-lg font-semibold uppercase tracking-widest">
-      Subscribe to Newsletter
-    </h4>
-    <div className="space-y-2">
-      <Input
-        type="email"
-        placeholder="Enter your email"
-        className="w-[70%] bg-[#0A0D20] border-[#E4E4E7] border-[2px] text-white placeholder:text-gray-400 h-11 px-4"
-      />
-      <Button className="bg-[#2563EB] hover:bg-[#2564ebc0] h-10 cursor-pointer">
-        Subscribe
-      </Button>
+const NewsletterSection = () => {
+  const [email, setEmail] = useState("");
+  const subscribeMutation = useSubscribeNewsletter();
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    try {
+      await subscribeMutation.mutateAsync({ email: email.trim() });
+      toast.success("Successfully subscribed to newsletter!");
+      setEmail(""); // Clear the input after successful subscription
+    } catch (error) {
+      console.error("Newsletter subscription error:", error);
+      toast.error("Failed to subscribe. Please try again.");
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <h4 className="text-lg font-semibold uppercase tracking-widest">
+        Subscribe to Newsletter
+      </h4>
+      <form onSubmit={handleSubscribe} className="space-y-2">
+        <Input
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-[70%] bg-[#0A0D20] border-[#E4E4E7] border-[2px] text-white placeholder:text-gray-400 h-11 px-4"
+          disabled={subscribeMutation.isPending}
+        />
+        <Button 
+          type="submit"
+          className="bg-[#2563EB] hover:bg-[#2564ebc0] h-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={subscribeMutation.isPending}
+        >
+          {subscribeMutation.isPending ? "Subscribing..." : "Subscribe"}
+        </Button>
+      </form>
     </div>
-  </div>
-);
+  );
+};
 
 const GradientBackground = () => (
   <div className="absolute inset-0 pointer-events-none">

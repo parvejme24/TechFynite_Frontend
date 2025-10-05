@@ -1,4 +1,4 @@
-import TemplateContainer from "@/components/modules/DadhboardModules/Template/TemplateContainer";
+import TemplateContainer from "@/components/modules/DadhboardModules/ADMIN/Template/TemplateContainer";
 import PageHeader from "@/components/shared/PageHeader/PageHeader";
 import React from "react";
 

@@ -1,5 +1,5 @@
-import ContactForm from "@/components/modules/contact/ContactForm/ContactForm";
-import ContactOptions from "@/components/modules/contact/ContactOptions/SupportOptions";
+import ContactForm from "@/components/modules/CommonModules/contact/ContactForm/ContactForm";
+import ContactOptions from "@/components/modules/CommonModules/contact/ContactOptions/SupportOptions";
 import Newsletter from "@/components/shared/Newsletter/Newsletter";
 import PageHeader from "@/components/shared/PageHeader/PageHeader";
 import React from "react";

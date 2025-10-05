@@ -1,434 +1,241 @@
-import { useState } from "react";
-import { User } from "@/types/user";
-import useApiBaseUrl from "./useApiBaseUrl";
+import React from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSession, signIn, signOut } from 'next-auth/react';
+import apiClient from '@/lib/api-client';
 
-const API_BASE_URL = useApiBaseUrl();
+// Types
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  role: 'ADMIN' | 'USER';
+  isBanned: boolean;
+  isTrashed: boolean;
+  isDeletedPermanently: boolean;
+  isLoggedIn: boolean;
+  lastLoginAt: string;
+  provider: string;
+  providerId?: string;
+  createdAt: string;
+  updatedAt: string;
+  // NextAuth fields
+  name?: string;
+  image?: string;
+  // Legacy fields for backward compatibility
+  displayName?: string;
+  photoUrl?: string;
+  photoURL?: string;
+  profile?: {
+    id: string;
+    userId: string;
+    avatarUrl?: string;
+    coverImageUrl?: string;
+    designation?: string;
+    phone?: string;
+    country?: string;
+    city?: string;
+    stateOrRegion?: string;
+    postCode?: string;
+    balance: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
 
-// Helper function to construct full image URL
-const constructImageUrl = (photoUrl: string | null | undefined): string | null => {
-  if (!photoUrl) return null;
-  
-  // If already a full URL, return as is
-  if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
-    return photoUrl;
-  }
-  
-  // If relative path, construct full URL
-  const baseUrl = API_BASE_URL.replace('/api/v1', '');
-  return `${baseUrl}${photoUrl}`;
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface UpdateProfileRequest {
+  avatarUrl?: string;
+  coverImageUrl?: string;
+  designation?: string;
+  phone?: string;
+  country?: string;
+  city?: string;
+  stateOrRegion?: string;
+  postCode?: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    user: User;
+    nextAuthSecret?: string;
+    expiresAt?: string;
+  };
+  error?: string;
+}
+
+// API functions
+const authApi = {
+  // Register user
+  register: async (data: RegisterRequest): Promise<AuthResponse> => {
+    const response = await apiClient.post('/auth/register', data);
+    return response.data;
+  },
+
+  // Login user
+  login: async (data: LoginRequest): Promise<AuthResponse> => {
+    const response = await apiClient.post('/auth/login', data);
+    return response.data;
+  },
+
+  // Validate session
+  validateSession: async (nextAuthSecret: string): Promise<AuthResponse> => {
+    const response = await apiClient.post('/auth/validate-session', { nextAuthSecret });
+    return response.data;
+  },
+
+  // Logout user
+  logout: async (nextAuthSecret: string): Promise<AuthResponse> => {
+    const response = await apiClient.post('/auth/logout', { nextAuthSecret });
+    return response.data;
+  },
+
+  // Get current user
+  getCurrentUser: async (): Promise<AuthResponse> => {
+    const response = await apiClient.get('/auth/me');
+    return response.data;
+  },
+
+  // Change password
+  changePassword: async (data: ChangePasswordRequest): Promise<AuthResponse> => {
+    const response = await apiClient.post('/auth/change-password', data);
+    return response.data;
+  },
+
+  // Update profile
+  updateProfile: async (data: UpdateProfileRequest): Promise<AuthResponse> => {
+    const response = await apiClient.put('/auth/profile', data);
+    return response.data;
+  },
 };
 
-interface RegisterData {
-  displayName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
+// React Query hooks
+export const useAuth = () => {
+  const { data: session, status } = useSession();
+  const queryClient = useQueryClient();
 
-interface LoginData {
-  email: string;
-  password: string;
-}
-
-interface VerifyOtpData {
-  email: string;
-  otp: string;
-}
-
-interface ResetPasswordRequestData {
-  email: string;
-}
-
-interface ResetPasswordData {
-  email: string;
-  otp: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-interface AuthResponse {
-  user: User;
-  accessToken: string;
-  refreshToken: string;
-  message?: string;
-}
-
-interface UseAuthReturn {
-  // Register new user
-  register: (data: RegisterData) => Promise<AuthResponse | null>;
-  // Login user
-  login: (data: LoginData) => Promise<AuthResponse | null>;
-  // Verify OTP
-  verifyOtp: (data: VerifyOtpData) => Promise<AuthResponse | null>;
-  // Refresh access token
-  refreshToken: () => Promise<AuthResponse | null>;
-  // Request password reset
-  resetPasswordRequest: (
-    data: ResetPasswordRequestData
-  ) => Promise<{ message: string } | null>;
-  // Reset password with OTP
-  resetPassword: (
-    data: ResetPasswordData
-  ) => Promise<{ message: string } | null>;
-  // Logout user
-  logout: () => Promise<{ message: string } | null>;
-  // Get current user
-  getCurrentUser: () => Promise<User | null>;
-  // Loading states
-  loading: boolean;
-  // Error state
-  error: string | null;
-}
-
-export const useAuth = (): UseAuthReturn => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Register new user
-  const register = async (data: RegisterData): Promise<AuthResponse | null> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      const result = await response.json();
-      return result;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Registration failed";
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
+  // Console log session data when it changes
+  React.useEffect(() => {
+    console.log("🔐 useAuth - Session Status:", status);
+    console.log("🔐 useAuth - Session Data:", session);
+    if (session?.user) {
+      console.log("🔐 useAuth - User from Session:", session.user);
     }
-  };
-
-  // Login user
-  const login = async (data: LoginData): Promise<AuthResponse | null> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      const result = await response.json();
-
-      // Construct full image URL if user data exists
-      if (result.user) {
-        result.user.photoUrl = constructImageUrl(result.user.photoUrl);
-      }
-
-      // Store tokens in localStorage
-      if (result.accessToken) {
-        localStorage.setItem("accessToken", result.accessToken);
-      }
-      if (result.refreshToken) {
-        localStorage.setItem("refreshToken", result.refreshToken);
-      }
-
-      return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Login failed";
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Verify OTP
-  const verifyOtp = async (
-    data: VerifyOtpData
-  ): Promise<AuthResponse | null> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/verify-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      const result = await response.json();
-
-      // Construct full image URL if user data exists
-      if (result.user) {
-        result.user.photoUrl = constructImageUrl(result.user.photoUrl);
-      }
-
-      // Store tokens in localStorage
-      if (result.accessToken) {
-        localStorage.setItem("accessToken", result.accessToken);
-      }
-      if (result.refreshToken) {
-        localStorage.setItem("refreshToken", result.refreshToken);
-      }
-
-      return result;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "OTP verification failed";
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Refresh access token
-  const refreshToken = async (): Promise<AuthResponse | null> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const refreshTokenValue = localStorage.getItem("refreshToken");
-      if (!refreshTokenValue) {
-        throw new Error("No refresh token found");
-      }
-
-      const response = await fetch(`${API_BASE_URL}/refresh-token`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken: refreshTokenValue }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      const result = await response.json();
-
-      // Construct full image URL if user data exists
-      if (result.user) {
-        result.user.photoUrl = constructImageUrl(result.user.photoUrl);
-      }
-
-      // Update tokens in localStorage
-      if (result.accessToken) {
-        localStorage.setItem("accessToken", result.accessToken);
-      }
-      if (result.refreshToken) {
-        localStorage.setItem("refreshToken", result.refreshToken);
-      }
-
-      return result;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Token refresh failed";
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Request password reset
-  const resetPasswordRequest = async (
-    data: ResetPasswordRequestData
-  ): Promise<{ message: string } | null> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/reset-password-request`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      const result = await response.json();
-      return result;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Password reset request failed";
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Reset password with OTP
-  const resetPassword = async (
-    data: ResetPasswordData
-  ): Promise<{ message: string } | null> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/reset-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      const result = await response.json();
-      return result;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Password reset failed";
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Logout user
-  const logout = async (): Promise<{ message: string } | null> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const token = localStorage.getItem("accessToken");
-
-      const response = await fetch(`${API_BASE_URL}/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      // Clear tokens from localStorage
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-
-      const result = await response.json();
-      return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Logout failed";
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Get current user
-  const getCurrentUser = async (): Promise<User | null> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        throw new Error("No access token found");
-      }
-
-      const response = await fetch(`${API_BASE_URL}/me`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      const result = await response.json();
-      
-      // Construct full image URL if user data exists
-      if (result.user) {
-        result.user.photoUrl = constructImageUrl(result.user.photoUrl);
-      }
-      
-      return result.user || result;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to get current user";
-      setError(errorMessage);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [session, status]);
 
   return {
-    register,
-    login,
-    verifyOtp,
-    refreshToken,
-    resetPasswordRequest,
-    resetPassword,
-    logout,
-    getCurrentUser,
-    loading,
-    error,
+    user: session?.user as User | undefined,
+    isLoading: status === 'loading',
+    isAuthenticated: !!session?.user,
+    session,
   };
 };
+
+export const useCurrentUser = () => {
+  return useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => authApi.getCurrentUser(),
+    enabled: false, // We'll manually trigger this
+    retry: false,
+  });
+};
+
+export const useRegister = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authApi.register,
+    onSuccess: (data) => {
+      if (data.success && data.data?.nextAuthSecret) {
+        // Store the session secret
+        localStorage.setItem('nextAuthSecret', data.data.nextAuthSecret);
+        // Invalidate and refetch user data
+        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      }
+    },
+  });
+};
+
+export const useLogin = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authApi.login,
+    onSuccess: (data) => {
+      if (data.success && data.data?.nextAuthSecret) {
+        // Store the session secret
+        localStorage.setItem('nextAuthSecret', data.data.nextAuthSecret);
+        // Invalidate and refetch user data
+        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      }
+    },
+  });
+};
+
+export const useLogout = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (nextAuthSecret: string) => authApi.logout(nextAuthSecret),
+    onSuccess: () => {
+      // Clear stored session
+      localStorage.removeItem('nextAuthSecret');
+      // Clear all queries
+      queryClient.clear();
+      // Sign out from NextAuth
+      signOut();
+    },
+  });
+};
+
+export const useChangePassword = () => {
+  return useMutation({
+    mutationFn: authApi.changePassword,
+  });
+};
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authApi.updateProfile,
+    onSuccess: () => {
+      // Invalidate and refetch user data
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+    },
+  });
+};
+
+// Google OAuth functions
+export const useGoogleSignIn = () => {
+  return () => {
+    signIn('google', { callbackUrl: '/' });
+  };
+};
+
+export const useCredentialsSignIn = () => {
+  return (credentials: LoginRequest) => {
+    return signIn('credentials', {
+      email: credentials.email,
+      password: credentials.password,
+      redirect: false,
+    });
+  };
+};
+

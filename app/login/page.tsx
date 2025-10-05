@@ -3,7 +3,7 @@
 import React from "react";
 import { ThemeToggle } from "@/components/modules/common/ThemeToggle/ThemeToggle";
 import { AuthBanner } from "@/components/modules/common/AuthBanner/AuthBanner";
-import LoginForm from "@/components/modules/auth/Login/LoginForm";
+import LoginForm from "@/components/modules/CommonModules/auth/Login/LoginForm";
 
 export default function LoginPage() {
   return (

@@ -1,4 +1,4 @@
-import BlogDetailsContainer from "@/components/modules/blogs/BlogDetails/BlogDetailsContainer";
+import BlogDetailsContainer from "@/components/modules/CommonModules/blogs/BlogDetails/BlogDetailsContainer";
 import Newsletter from "@/components/shared/Newsletter/Newsletter";
 
 export default function BlogDetailsPage({

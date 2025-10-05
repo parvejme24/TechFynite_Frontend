@@ -1,6 +1,6 @@
-import FAQSection from "@/components/modules/pricing/FAQSection/FAQSection";
-import GuaranteesAndPayments from "@/components/modules/pricing/GuaranteesAndPayments/GuaranteesAndPayments";
-import PublicPricingList from "@/components/modules/pricing/PublicPricingList/PublicPricingList";
+import FAQSection from "@/components/modules/CommonModules/pricing/FAQSection/FAQSection";
+import GuaranteesAndPayments from "@/components/modules/CommonModules/pricing/GuaranteesAndPayments/GuaranteesAndPayments";
+import PublicPricingList from "@/components/modules/CommonModules/pricing/PublicPricingList/PublicPricingList";
 
 import PageHeader from "@/components/shared/PageHeader/PageHeader";
 import React from "react";

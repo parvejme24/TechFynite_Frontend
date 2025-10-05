@@ -8,6 +8,23 @@ export interface EmailTemplate {
   admin?: User;
 }
 
+export interface CreateEmailTemplateData {
+  subject: string;
+  body: string;
+}
+
+export interface UpdateEmailTemplateData {
+  id: string;
+  subject?: string;
+  body?: string;
+}
+
+export interface EmailTemplateResponse {
+  success: boolean;
+  message: string;
+  data?: EmailTemplate | EmailTemplate[];
+}
+
 export interface User {
   id: string;
 }

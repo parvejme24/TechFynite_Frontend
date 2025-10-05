@@ -1,4 +1,4 @@
-import BlogContainer from "@/components/modules/blogs/BlogContainer";
+import BlogContainer from "@/components/modules/CommonModules/blogs/BlogContainer";
 import Newsletter from "@/components/shared/Newsletter/Newsletter";
 import PageHeader from "@/components/shared/PageHeader/PageHeader";
 import React from "react";

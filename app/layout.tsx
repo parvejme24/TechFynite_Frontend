@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import AuthProvider from "@/Provider/AuthProvider";
-import { UserDataProvider } from "@/Provider/UserDataProvider";
+import SessionProvider from "@/components/providers/SessionProvider";
 import { Toaster } from "sonner";
 import QueryProvider from "@/components/QueryProvider";
 import ThemeInitializer from "@/components/ThemeInitializer";
@@ -34,8 +34,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
-          <AuthProvider>
-            <UserDataProvider>
+          <SessionProvider>
+            <AuthProvider>
               <ThemeProvider
                 attribute="class"
                 defaultTheme="light"
@@ -49,8 +49,8 @@ export default function RootLayout({
                 <Toaster richColors position="top-right" />
                 {children}
               </ThemeProvider>
-            </UserDataProvider>
-          </AuthProvider>
+            </AuthProvider>
+          </SessionProvider>
         </QueryProvider>
       </body>
     </html>

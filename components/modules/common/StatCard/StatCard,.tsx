@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
@@ -58,6 +59,8 @@ interface StatCardProps {
   animationDelay?: number;
   width?: string;
   height?: string;
+  count?: string;
+  title?: string;
 }
 
 export const StatCard = ({

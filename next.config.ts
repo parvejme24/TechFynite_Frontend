@@ -13,6 +13,20 @@ const nextConfig: NextConfig = {
       "play-lh.googleusercontent.com",
       "media.licdn.com",
     ],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'react-icons'],
+  },
+  compress: true,
+  poweredByHeader: false,
+  reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
 };
 

@@ -1,3 +1,5 @@
+import { User } from './user';
+
 export interface Blog {
   id: string;
   title: string;
@@ -19,5 +21,9 @@ export interface Blog {
 export interface BlogContent { id: string; }
 export interface BlogLike { id: string; }
 export interface BlogReview { id: string; }
-export interface User { id: string; }
-export interface BlogCategory { id: string; }
+export interface BlogCategory { 
+  id: string; 
+  title: string;
+  imageUrl?: string;
+}
+

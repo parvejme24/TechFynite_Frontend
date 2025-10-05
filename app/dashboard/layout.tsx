@@ -3,8 +3,8 @@
 import React, { useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "@/Provider/AuthProvider";
-import Sidebar from "@/components/modules/dashboard/Sidebar";
-import Topbar from "@/components/modules/dashboard/Topbar";
+import Sidebar from "@/components/modules/DadhboardModules/dashboard/Sidebar";
+import Topbar from "@/components/modules/DadhboardModules/dashboard/Topbar";
 
 export default function DashboardLayout({
   children,
@@ -15,7 +15,7 @@ export default function DashboardLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (authContext && !authContext.user && !authContext.loading) {
+    if (authContext && !authContext.user && !authContext.firebaseUser && !authContext.loading) {
       router.replace("/login");
     }
   }, [authContext, router]);
@@ -28,7 +28,7 @@ export default function DashboardLayout({
     );
   }
 
-  if (!authContext?.user) {
+  if (!authContext?.user && !authContext?.firebaseUser) {
     // Optionally, you can return null or a spinner here
     return null;
   }
