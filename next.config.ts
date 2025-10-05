@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
       "encrypted-tbn0.gstatic.com",
       "play-lh.googleusercontent.com",
       "media.licdn.com",
+      "i.ibb.co.com",
     ],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,

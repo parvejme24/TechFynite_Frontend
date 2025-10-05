@@ -2,26 +2,13 @@ import Link from "next/link";
 import React from "react";
 import Image from "next/image";
 
-interface KeyFeature {
-  feature: string;
-  featureDescription: string;
-}
-
 interface Template {
   id: string;
   title: string;
   category: string;
-  author: string;
-  publishedDate: string;
   price: string;
-  imageUrl: string;
-  mainImage: string;
-  shortDescription: string;
-  description: string;
+  image: string;
   previewLink: string;
-  weIncludes: string[];
-  keyFeatures: KeyFeature[];
-  demos: string[];
 }
 
 interface TemplateCardProps {
@@ -30,19 +17,21 @@ interface TemplateCardProps {
 
 export default function TemplateCard({ template }: TemplateCardProps) {
   return (
-    <div className="p-5 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-[#1A1D37]">
+    <div className="p-3 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-[#1A1D37]">
       <Image
-        src={template.imageUrl}
+        src={template.image}
         alt={template.title}
         width={400}
         height={300}
-        className="w-full h-48 object-cover rounded-t-lg"
+        className="w-full h-[250px] object-cover rounded-lg"
       />
       <div>
         <div className="flex justify-between items-center py-3">
-          <h3 className="text-xl font-semibold mb-2 dark:text-gray-300">1{template.title}</h3>
+          <h3 className="text-[14px] font-semibold mb-2 dark:text-gray-300">
+            {template.title}
+          </h3>
           <span className="text-lg font-bold text-primary">
-            {template.price}
+            ${template.price}
           </span>
         </div>
 
