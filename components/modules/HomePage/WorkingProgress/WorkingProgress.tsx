@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import ArrowImage from "@/public/images/arrow.png";
-import GlowGradiantDark from "@/public/images/glow-dark.png";
-import GlowGradiantLight from "@/public/images/glow-light.png";
+import ArrowImage from "@/assets/images/arrow.png";
+import GlowGradiantDark from "@/assets/images/glow-dark.png";
+import GlowGradiantLight from "@/assets/images/glow-light.png";
 import Image from "next/image";
 import { motion, cubicBezier } from "framer-motion";
 

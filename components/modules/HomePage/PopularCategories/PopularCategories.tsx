@@ -5,17 +5,17 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { useRouter } from "next/navigation";
 
-import Framer from "@/public/icons/framer.png";
-import Figma from "@/public/icons/figma.png";
-import Webflow from "@/public/icons/webflow.png";
-import Bootstrap from "@/public/icons/bootstrap.png";
-import NodeJS from "@/public/icons/nodejs.png";
-import CSS from "@/public/icons/css.png";
-import HTML from "@/public/icons/html.png";
-import JavaScript from "@/public/icons/js.png";
-import ReactIcon from "@/public/icons/react.png";
-import WordPress from "@/public/icons/wordpress.png";
-
+import FramerIcon from "@/assets/tech-icons/framer.png";
+import FigmaIcon from "@/assets/tech-icons/figma.png";
+import WebflowIcon from "@/assets/tech-icons/webflow.png";
+import JsIcon from "@/assets/tech-icons/js.png";
+import ReactIcon from "@/assets/tech-icons/react.png";
+import PhpIcon from "@/assets/tech-icons/php.png";
+import HtmlIcon from "@/assets/tech-icons/html.png";
+import NodejsIcon from "@/assets/tech-icons/nodejs.png";
+import CssIcon from "@/assets/tech-icons/css.png";
+import BootstrapIcon from "@/assets/tech-icons/bootstrap.png";
+import WordpressIcon from "@/assets/tech-icons/wordpress.png";
 
 interface CategoriesData {
   id: string;
@@ -28,49 +28,49 @@ const categories: CategoriesData[] = [
   {
     id: "framer",
     name: "Framer",
-    icon: Framer,
+    icon: FramerIcon,
     count: 24,
   },
   {
     id: "webflow",
     name: "WebFlow",
-    icon: Webflow,
+    icon: WebflowIcon,
     count: 18,
   },
   {
     id: "JS",
     name: "JS",
-    icon: JavaScript,
+    icon: JsIcon,
     count: 32,
   },
   {
     id: "nodejs",
     name: "NodeJS",
-    icon: NodeJS,
+    icon: NodejsIcon,
     count: 15,
   },
   {
     id: "bootstrap",
     name: "Bootstrap",
-    icon: Bootstrap,
+    icon: BootstrapIcon,
     count: 28,
   },
   {
     id: "html",
     name: "HTML",
-    icon: HTML,
+    icon: HtmlIcon,
     count: 20,
   },
   {
     id: "css",
     name: "CSS",
-    icon: CSS,
+    icon: CssIcon,
     count: 16,
   },
   {
     id: "wordpress",
     name: "WordPress",
-    icon: WordPress,
+    icon: WordpressIcon,
     count: 22,
   },
   {
@@ -140,7 +140,9 @@ export default function Categories() {
                         <h4 className="font-bold text-center text-lg">
                           {item.name}
                         </h4>
-                        <p className="text-center font-semibold text-[16px]">{item.count}</p>
+                        <p className="text-center font-semibold text-[16px]">
+                          {item.count}
+                        </p>
                       </div>
                     </div>
                   </div>

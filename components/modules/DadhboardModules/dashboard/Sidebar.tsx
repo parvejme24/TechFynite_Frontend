@@ -22,7 +22,7 @@ import { VscGitPullRequestGoToChanges } from "react-icons/vsc";
 
 import LOGO from "@/assets/common/logo.png";
 import Image from "next/image";
-import { AuthContext } from "@/Provider/AuthProvider";
+import { AuthContext } from "@/Providers/AuthProvider";
 import { useContext } from "react";
 
 const adminNavigation = [

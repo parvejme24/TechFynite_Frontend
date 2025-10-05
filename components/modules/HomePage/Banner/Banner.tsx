@@ -1,65 +1,40 @@
+"use client";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import React from "react";
 import { FaSearch } from "react-icons/fa";
 
-import TemplatesImage from "@/public/images/templates.png";
-import FigmaLogo from "@/public/images/figma.png";
+import TemplatesImage from "@/assets/images/templates.png";
+import FigmaLogo from "@/assets/images/figma.png";
 
-import Framer from "@/public/icons/framer.png";
-import Figma from "@/public/icons/figma.png";
-import Webflow from "@/public/icons/nodejs.png";
-import Bootstrap from "@/public/icons/bootstrap.png";
-import NodeJS from "@/public/icons/nodejs.png";
-import CSS from "@/public/icons/css.png";
-import HTML from "@/public/icons/html.png";
-import JavaScript from "@/public/icons/js.png";
-import ReactIcon from "@/public/icons/react.png";
-import WordPress from "@/public/icons/wordpress.png";
+// Using public image path strings to avoid missing asset imports
 
 import { StatCard } from "../../common/StatCard/StatCard,";
 
+import FramerIcon from "@/assets/tech-icons/framer.png";
+import FigmaIcon from "@/assets/tech-icons/figma.png";
+import WebflowIcon from "@/assets/tech-icons/webflow.png";
+import JsIcon from "@/assets/tech-icons/js.png";
+import ReactIcon from "@/assets/tech-icons/react.png";
+import PhpIcon from "@/assets/tech-icons/php.png";
+import HtmlIcon from "@/assets/tech-icons/html.png";
+import NodejsIcon from "@/assets/tech-icons/nodejs.png";
+import CssIcon from "@/assets/tech-icons/css.png";
+import BootstrapIcon from "@/assets/tech-icons/bootstrap.png";
+import WordpressIcon from "@/assets/tech-icons/wordpress.png";
+
 const icons = [
-  {
-    id: 1,
-    icon: Framer,
-  },
-  {
-    id: 2,
-    icon: Figma,
-  },
-  {
-    id: 3,
-    icon: Webflow,
-  },
-  {
-    id: 4,
-    icon: ReactIcon,
-  },
-  {
-    id: 5,
-    icon: Bootstrap,
-  },
-  {
-    id: 6,
-    icon: JavaScript,
-  },
-  {
-    id: 7,
-    icon: HTML,
-  },
-  {
-    id: 8,
-    icon: CSS,
-  },
-  {
-    id: 9,
-    icon: WordPress,
-  },
-  {
-    id: 10,
-    icon: NodeJS,
-  },
+  { id: 1, icon: FramerIcon },
+  { id: 2, icon: FigmaIcon },
+  { id: 3, icon: WebflowIcon },
+  { id: 4, icon: JsIcon },
+  { id: 5, icon: ReactIcon },
+  { id: 6, icon: PhpIcon },
+  { id: 7, icon: HtmlIcon },
+  { id: 8, icon: NodejsIcon },
+  { id: 9, icon: CssIcon },
+  { id: 10, icon: WordpressIcon },
+  { id: 11, icon: BootstrapIcon },
 ];
 
 export default function Banner() {

@@ -2,7 +2,7 @@
 
 import React, { useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { AuthContext } from "@/Provider/AuthProvider";
+import { AuthContext } from "@/Providers/AuthProvider";
 import Sidebar from "@/components/modules/DadhboardModules/dashboard/Sidebar";
 import Topbar from "@/components/modules/DadhboardModules/dashboard/Topbar";
 

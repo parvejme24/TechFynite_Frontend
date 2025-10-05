@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AuthContext } from "@/Provider/AuthProvider";
+import { AuthContext } from "@/Providers/AuthProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "next-auth/react";
 import Image from "next/image";

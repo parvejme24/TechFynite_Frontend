@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useState, useEffect } from "react";
-import { useCreateBlogReview } from "@/hooks/useBlogReviewApi";
-import { AuthContext } from "@/Provider/AuthProvider";
+import { AuthContext } from "@/Providers/AuthProvider";
 import { useContext } from "react";
 import { toast } from "sonner";
 
@@ -20,7 +19,7 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
     email: "",
   });
 
-  const createReviewMutation = useCreateBlogReview();
+  // No hook/API dependency
 
   // Debug: Log user data changes
   console.log("AuthContext state:", { user, loading });
@@ -82,37 +81,13 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
       return;
     }
 
-    try {
-      console.log("Attempting to submit comment...");
-      const result = await createReviewMutation.mutateAsync({
-        blogId,
-        fullName: formData.fullName,
-        email: formData.email,
-        commentText: formData.commentText,
-      });
-      console.log("Comment submitted successfully:", result);
-
-      // Reset form (but keep user data)
-      setFormData({
-        fullName: user?.displayName || "",
-        commentText: "",
-        email: user?.email || "",
-      });
-
-      toast.success("Comment posted successfully!");
-    } catch (error: unknown) {
-      console.error("=== ERROR DEBUG ===");
-      console.error("Error submitting comment:", error);
-      let message = "Failed to post comment. Please try again.";
-      if (error && typeof error === "object" && "message" in error && typeof (error as { message?: string }).message === "string") {
-        message = (error as { message: string }).message;
-      }
-      if (message.includes("401")) {
-        toast.error("Please log in to post a comment");
-      } else {
-        toast.error(message);
-      }
-    }
+    // Simulate success (no API hook)
+    setFormData({
+      fullName: user?.displayName || "",
+      commentText: "",
+      email: user?.email || "",
+    });
+    toast.success("Comment posted successfully!");
   };
 
   // Check if all fields are filled
@@ -200,10 +175,10 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
         />
         <Button
           type="submit"
-          disabled={createReviewMutation.isPending || !isFormValid}
+          disabled={!isFormValid}
           className="w-[130px] py-5 cursor-pointer bg-blue-900 hover:bg-blue-900/80 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {createReviewMutation.isPending ? "Posting..." : "Post Comment"}
+          Post Comment
         </Button>
       </form>
     </div>

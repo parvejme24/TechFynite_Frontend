@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import CardBgD from "@/public/images/analytics-bg-d.png";
-import CardBgL from "@/public/images/analytics-bg-l.png";
+import CardBgD from "@/assets/images/analytics-bg-d.png";
+import CardBgL from "@/assets/images/analytics-bg-l.png";
 import CountUp from "react-countup";
 
 interface AnaliticsData {

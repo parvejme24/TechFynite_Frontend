@@ -1,17 +1,49 @@
+"use client";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useBlogs } from "@/hooks/useBlogApi";
 import BlogSidebarSkeleton from "./BlogSidebarSkeleton";
 
+type BlogJson = {
+  id: number | string;
+  title: string;
+  category?: string;
+  image?: string;
+  createdAt?: string;
+};
+
 export default function BlogSidebar() {
-  const { data: blogs = [], isLoading, error } = useBlogs();
-  // Sort by createdAt descending and take the last 5
+  const [blogs, setBlogs] = React.useState<BlogJson[]>([]);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let active = true;
+    fetch("/blogs.json")
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const all = (await res.json()) as BlogJson[];
+        if (!active) return;
+        setBlogs(all || []);
+        setIsLoading(false);
+      })
+      .catch((e: unknown) => {
+        if (!active) return;
+        setError((e as Error).message);
+        setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Sort by createdAt if present, otherwise by id desc
   const latestBlogs = [...blogs]
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
+    .sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : Number(a.id) || 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : Number(b.id) || 0;
+      return bTime - aTime;
+    })
     .slice(0, 5);
 
   return (
@@ -20,7 +52,7 @@ export default function BlogSidebar() {
       {isLoading ? (
         <BlogSidebarSkeleton />
       ) : error ? (
-        <div className="text-red-500">{(error as Error).message}</div>
+        <div className="text-red-500">{error}</div>
       ) : latestBlogs.length === 0 ? (
         <div>No blogs found.</div>
       ) : (
@@ -31,9 +63,9 @@ export default function BlogSidebar() {
                 href={`/blogs/${blog.id}`}
                 className="flex gap-3 items-center w-full"
               >
-                {blog.imageUrl && (
+                {blog.image && (
                   <Image
-                    src={blog.imageUrl}
+                    src={blog.image}
                     alt={blog.title}
                     width={60}
                     height={40}
@@ -45,9 +77,7 @@ export default function BlogSidebar() {
                     {blog.title}
                   </div>
                   {blog.category && (
-                    <div className="text-xs text-gray-500">
-                      {blog.category.title}
-                    </div>
+                    <div className="text-xs text-gray-500">{blog.category}</div>
                   )}
                 </div>
               </Link>

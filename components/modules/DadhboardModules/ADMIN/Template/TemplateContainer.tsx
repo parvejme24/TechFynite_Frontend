@@ -120,7 +120,7 @@ export default function TemplateContainer() {
               }`}
               onClick={() => setSelectedCategory("all")}
             >
-              All
+              All Items
             </button>
             {categories.map((cat: unknown) => {
               const category = cat as { title: string };

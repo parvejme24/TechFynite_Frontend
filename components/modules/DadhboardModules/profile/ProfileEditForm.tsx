@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useUserApi } from "@/hooks/useUserApi";
-import { AuthContext } from "@/Provider/AuthProvider";
+import { AuthContext } from "@/Providers/AuthProvider";
 import { Camera, X } from "lucide-react";
 import Image from "next/image";
 import { useContext } from "react";

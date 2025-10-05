@@ -1,74 +1,69 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import BlogList from "./BlogList";
-import type { BlogCardProps } from "./BlogCard";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import Image from "next/image";
+import React from "react";
+import BlogCard from "./BlogCard";
 
-const BLOGS_PER_PAGE = 8;
+type Blog = {
+  id: number;
+  title: string;
+  category: string;
+  description: string[];
+  image: string;
+  comments?: unknown[];
+  readingTime?: number | string;
+};
 
 export default function BlogContainer() {
-  const [blogs, setBlogs] = useState<BlogCardProps['blog'][]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  const [blogs, setBlogs] = React.useState<Blog[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  useEffect(() => {
-    // Mock implementation - no API calls
-    setLoading(false);
-    setBlogs([]); // Empty array for now
+  React.useEffect(() => {
+    let active = true;
+    fetch("/blogs.json")
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = (await res.json()) as any[];
+        if (!active) return;
+        const mapped: Blog[] = (data || []).map((b) => {
+          const descArr = Array.isArray(b.description) ? b.description : [];
+          const wordCount = descArr.join(" ").trim().split(/\s+/).filter(Boolean).length;
+          const readingTime = Math.max(1, Math.round(wordCount / 200));
+          return {
+            id: Number(b.id),
+            title: String(b.title || ""),
+            category: String(b.category || ""),
+            description: descArr,
+            image: String(b.image || ""),
+            comments: Array.isArray(b.comments) ? b.comments : [],
+            readingTime: b.readingTime ?? readingTime,
+          };
+        });
+        setBlogs(mapped);
+        setLoading(false);
+      })
+      .catch((e: unknown) => {
+        if (!active) return;
+        setError((e as Error).message);
+        setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  // Pagination logic - only if blogs > BLOGS_PER_PAGE
-  const totalPages = Math.ceil(blogs.length / BLOGS_PER_PAGE);
-  const paginatedBlogs: BlogCardProps['blog'][] = blogs.length > BLOGS_PER_PAGE 
-    ? blogs.slice((page - 1) * BLOGS_PER_PAGE, page * BLOGS_PER_PAGE)
-    : blogs;
+  if (error) {
+    return (
+      <div className="container mx-auto max-w-7xl px-5 lg:px-0 py-10">
+        Failed to load blogs.
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 lg:px-0 py-14">
-             <div className="">
-         {error ? (
-           <div className="text-red-500">{error}</div>
-         ) : (
-           <>
-             <BlogList blogs={paginatedBlogs} loading={loading} />
-            {/* Show pagination only if total blogs > BLOGS_PER_PAGE */}
-            {blogs.length > BLOGS_PER_PAGE && (
-              <div className="flex justify-center mt-6 gap-2">
-                <button
-                  className="cursor-pointer p-2 rounded-full border border-gray-300 dark:border-blue-800 bg-white dark:bg-blue-800 text-gray-700 dark:text-white disabled:opacity-50 flex items-center justify-center"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  aria-label="Previous page"
-                >
-                  <FiChevronLeft size={20} />
-                </button>
-                {[...Array(totalPages)].map((_, idx) => (
-                  <button
-                    key={idx}
-                    className={`px-3 py-1 rounded-full border cursor-pointer transition-colors duration-150 ${
-                      page === idx + 1
-                        ? "bg-blue-500 text-white border-blue-500"
-                        : "bg-white dark:bg-blue-900 text-gray-700 dark:text-white border-gray-300 dark:border-blue-800"
-                    }`}
-                    onClick={() => setPage(idx + 1)}
-                    aria-label={`Go to page ${idx + 1}`}
-                  >
-                    {idx + 1}
-                  </button>
-                ))}
-                <button
-                  className="cursor-pointer p-2 rounded-full border border-gray-300 dark:border-blue-800 bg-white dark:bg-blue-800 text-gray-700 dark:text-white disabled:opacity-50 flex items-center justify-center"
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  aria-label="Next page"
-                >
-                  <FiChevronRight size={20} />
-                </button>
-              </div>
-            )}
-          </>
-        )}
+    <div className="container mx-auto max-w-7xl px-5 lg:px-0 py-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {!loading && blogs.map((b) => <BlogCard key={b.id} blog={b} />)}
       </div>
     </div>
   );

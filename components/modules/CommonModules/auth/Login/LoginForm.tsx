@@ -19,7 +19,7 @@ import Image from "next/image";
 import Link from "next/link";
 import GoogleIcon from "@/assets/common/svg/GoogleIcon";
 import Swal from "sweetalert2";
-import { AuthContext } from "@/Provider/AuthProvider";
+import { AuthContext } from "@/Providers/AuthProvider";
 
 interface LoginFormValues {
   email: string;

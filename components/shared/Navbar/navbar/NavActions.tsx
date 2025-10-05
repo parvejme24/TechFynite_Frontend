@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import React, { useContext, useState } from "react";
-import { AuthContext } from "@/Provider/AuthProvider";
+import { AuthContext } from "@/Providers/AuthProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "next-auth/react";
 import Image from "next/image";

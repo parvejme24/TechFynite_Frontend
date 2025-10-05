@@ -1,6 +1,6 @@
 "use client";
 import React, { useContext } from "react";
-import { AuthContext } from "@/Provider/AuthProvider";
+import { AuthContext } from "@/Providers/AuthProvider";
 
 import ProfileCard from "@/components/modules/DadhboardModules/profile/ProfileCard";
 import ProfileEditForm from "@/components/modules/DadhboardModules/profile/ProfileEditForm";

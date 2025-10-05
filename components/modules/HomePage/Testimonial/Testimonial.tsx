@@ -4,7 +4,7 @@ import { BiSolidQuoteAltLeft } from "react-icons/bi";
 import Marquee from "react-fast-marquee";
 import Image from "next/image";
 import StarRatings from "react-star-ratings";
-import ProfileImage from "@/public/images/profile.png";
+import ProfileImage from "@/assets/images/profile.png";
 
 interface TestimonialsData {
   id: number;

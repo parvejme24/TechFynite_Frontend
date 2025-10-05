@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useCreateBlog } from "@/hooks/useBlogApi";
 import { useGetAllBlogCategories as useGetCategories } from "@/hooks/useBlogCategoryApi";
 import { useContext } from "react";
-import { AuthContext } from "@/Provider/AuthProvider";
+import { AuthContext } from "@/Providers/AuthProvider";
 import { toast } from "sonner";
 import { Loader2, Upload, X, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
