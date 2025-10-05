@@ -1,5 +1,7 @@
+"use client";
 import React from "react";
 import PricingCard from "./PricingCard/PricingCard";
+import { motion } from "framer-motion";
 
 const pricingList = [
   {
@@ -50,10 +52,37 @@ const pricingList = [
 ];
 
 export default function PublicPricingList() {
+  const containerVariants = {
+    hidden: { opacity: 0, y: 24 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
+  } as const;
+
+  const cardsVariants = {
+    hidden: {},
+    show: {
+      transition: { staggerChildren: 0.12, delayChildren: 0.1 },
+    },
+  } as const;
+
+  const cardItemVariants = {
+    hidden: { opacity: 0, y: 24, scale: 0.98 },
+    show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.45, ease: "easeOut" } },
+  } as const;
+
   return (
     <div>
       <div className="container mx-auto max-w-7xl px-5 lg:px-0 py-14">
-        <div className="max-w-[700px] mx-auto">
+        <motion.div
+          className="max-w-[700px] mx-auto"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+        >
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-3 dark:text-white">
             Pricing Plans
           </h2>
@@ -62,17 +91,24 @@ export default function PublicPricingList() {
             pricing options and get your project off the bench with the pricing
             plan that works best for you.
           </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+        </motion.div>
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10"
+          variants={cardsVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+        >
           {pricingList.map((item) => (
-            <div
+            <motion.div
               key={item.id}
               className={item.recommended ? "relative" : "relative"}
+              variants={cardItemVariants}
             >
               <PricingCard plan={item} />
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

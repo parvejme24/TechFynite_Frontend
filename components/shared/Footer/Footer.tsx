@@ -5,11 +5,62 @@ import Link from "next/link";
 import Logo from "@/assets/common/logo.png";
 import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 
-import { motion } from "framer-motion";
+import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 // Mock newsletter hook - in real app, this would be imported from your API hooks
 import { toast } from "sonner";
+
+
+// Link underline sweep animation
+function UnderlineText({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="relative inline-block">
+      <span>{children}</span>
+      <motion.span
+        className="absolute left-0 -bottom-0.5 h-[2px] bg-current"
+        initial={{ width: 0 }}
+        whileHover={{ width: "100%" }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+      />
+    </span>
+  );
+}
+
+// Animated per-character hover text with underline sweep
+function MotionLinkText({ text }: { text: string }) {
+  const [hovered, setHovered] = React.useState(false);
+  const letters = React.useMemo(() => text.split("") , [text]);
+  return (
+    <span
+      className="relative inline-block"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ whiteSpace: "nowrap" }}
+    >
+      {letters.map((ch, i) => (
+        <motion.span
+          key={`${ch}-${i}`}
+          className="inline-block"
+          initial={false}
+          animate={{
+            y: hovered ? -2 : 0,
+            x: hovered ? i * 0.6 : 0,
+          }}
+          transition={{ type: "spring", stiffness: 350, damping: 20 }}
+        >
+          {ch === " " ? "\u00A0" : ch}
+        </motion.span>
+      ))}
+      <motion.span
+        className="absolute left-0 -bottom-0.5 h-[2px] bg-current"
+        initial={{ width: 0, opacity: 0.7 }}
+        animate={{ width: hovered ? "100%" : 0, opacity: hovered ? 1 : 0.7 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      />
+    </span>
+  );
+}
 
 // Mock newsletter subscription hook
 const useSubscribeNewsletter = () => {
@@ -82,7 +133,7 @@ const FooterLinks = ({
             href={href}
             className="text-gray-400 hover:text-white transition-colors select-text"
           >
-            {label}
+            <MotionLinkText text={label} />
           </Link>
         </li>
       ))}
@@ -145,75 +196,109 @@ const NewsletterSection = () => {
   );
 };
 
-const GradientBackground = () => (
+const GradientBackground = ({
+  styleTop,
+  styleBottom,
+}: {
+  styleTop?: React.CSSProperties | any;
+  styleBottom?: React.CSSProperties | any;
+}) => (
   <div className="absolute inset-0 pointer-events-none">
-    <div className="absolute -bottom-[80%] -left-[40%] w-[800px] h-[800px] bg-gradient-to-br from-[#8448FA]/20 to-[#053CB2]/20 rounded-full blur-3xl" />
-    <div className="absolute -top-[80%] -right-[40%] w-[800px] h-[800px] bg-gradient-to-br from-[#8448FA]/20 to-[#053CB2]/20 rounded-full blur-3xl" />
+    <motion.div
+      className="absolute -bottom-[80%] -left-[40%] w-[800px] h-[800px] bg-gradient-to-br from-[#8448FA]/20 to-[#053CB2]/20 rounded-full blur-3xl"
+      style={styleBottom}
+    />
+    <motion.div
+      className="absolute -top-[80%] -right-[40%] w-[800px] h-[800px] bg-gradient-to-br from-[#8448FA]/20 to-[#053CB2]/20 rounded-full blur-3xl"
+      style={styleTop}
+    />
   </div>
 );
 
 export default function Footer() {
+  const footerRef = React.useRef<HTMLElement | null>(null);
+  const { scrollYProgress } = useScroll({ target: footerRef, offset: ["start 80%", "end end"] });
+  const smooth = useSpring(scrollYProgress, { stiffness: 120, damping: 20, mass: 0.4 });
+
+  // Parallax + subtle background dynamics
+  const topY = useTransform(smooth, [0, 1], [40, -30]);
+  const bottomY = useTransform(smooth, [0, 1], [-40, 30]);
+  const bgOpacity = useTransform(smooth, [0, 0.5, 1], [0.15, 0.25, 0.18]);
+  const bgScale = useTransform(smooth, [0, 1], [0.95, 1.05]);
+
+  // Staggered reveal for columns
+  const containerVariants = {
+    hidden: { opacity: 0, y: 16 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { staggerChildren: 0.08, delayChildren: 0.05 },
+    },
+  } as const;
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0 },
+  } as const;
+
   return (
     <motion.footer
+      ref={footerRef}
       className="bg-[#0B0D21] text-white py-16 relative overflow-hidden"
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6 }}
     >
-      <GradientBackground />
+      <GradientBackground styleTop={{ y: topY, opacity: bgOpacity, scale: bgScale }} styleBottom={{ y: bottomY, opacity: bgOpacity, scale: bgScale }} />
 
       <div className="container mx-auto max-w-7xl px-5 lg:px-0 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+        >
           {/* Company Info */}
           <motion.div
             className="space-y-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            variants={itemVariants}
           >
-            <div className="flex items-center space-x-2">
-              <Image src={Logo} alt="TechFynite Logo" width={40} height={40} />
-              <h2 className="text-xl font-bold">TechFynite</h2>
-            </div>
-            <p className="text-gray-400 text-sm select-text">
-              Amet minim mollit non deserunt ullamco est sit aliqua dolor do
-              amet sint. Velit officia consequat duis enim velit mollit.
-            </p>
-            <SocialLinks />
+            <Tilt>
+              <div className="flex items-center space-x-2">
+                <Image src={Logo} alt="TechFynite Logo" width={40} height={40} />
+                <h2 className="text-4xl font-bold">TechFynite</h2>
+              </div>
+              <p className="text-gray-400 mt-4 mb-8 text-sm select-text">
+                Amet minim mollit non deserunt ullamco est sit aliqua dolor do
+                amet sint. Velit officia consequat duis enim velit mollit.
+              </p>
+              <SocialLinks />
+            </Tilt>
           </motion.div>
 
           {/* Company Links */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <FooterLinks title="Company" links={companyLinks} />
+          <motion.div variants={itemVariants}>
+            <Tilt>
+              <FooterLinks title="Company" links={companyLinks} />
+            </Tilt>
           </motion.div>
 
           {/* Help Links */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <FooterLinks title="Help" links={helpLinks} />
+          <motion.div variants={itemVariants}>
+            <Tilt>
+              <FooterLinks title="Help" links={helpLinks} />
+            </Tilt>
           </motion.div>
 
           {/* Newsletter */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <NewsletterSection />
+          <motion.div variants={itemVariants}>
+            <Tilt>
+              <NewsletterSection />
+            </Tilt>
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* Copyright */}
         <motion.div
@@ -231,3 +316,40 @@ export default function Footer() {
     </motion.footer>
   );
 }
+
+// Subtle 3D tilt wrapper for interactivity
+function Tilt({ children }: { children: React.ReactNode }) {
+  const ref = React.useRef<HTMLDivElement | null>(null);
+  const [hovered, setHovered] = React.useState(false);
+  const [coords, setCoords] = React.useState({ x: 0, y: 0 });
+
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = (e.clientX - rect.left) / rect.width; // 0..1
+    const y = (e.clientY - rect.top) / rect.height; // 0..1
+    setCoords({ x, y });
+  };
+
+  const rotateX = (0.5 - coords.y) * (hovered ? 6 : 0);
+  const rotateY = (coords.x - 0.5) * (hovered ? 6 : 0);
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onMouseMove={onMouseMove}
+      style={{
+        transformStyle: "preserve-3d",
+      }}
+      animate={{ rotateX, rotateY }}
+      transition={{ type: "spring", stiffness: 200, damping: 18, mass: 0.6 }}
+      className="will-change-transform"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+
