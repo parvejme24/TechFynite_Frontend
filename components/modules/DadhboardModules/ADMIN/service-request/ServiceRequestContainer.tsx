@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useGetAllServiceRequests } from '@/hooks/useServiceRequestApi';
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -80,7 +81,13 @@ const ServiceRequestSkeleton = () => (
 );
 
 export default function ServiceRequestContainer() {
-  const { data: serviceRequests, isLoading, error, refetch } = useGetAllServiceRequests();
+  const { data: serviceRequests, isLoading, error, refetch } = useQuery({
+    queryKey: ['serviceRequests', 'all'],
+    queryFn: async () => {
+      const res = await apiClient.get('/service-requests');
+      return Array.isArray(res.data) ? res.data : [];
+    },
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [emailModal, setEmailModal] = useState<{
