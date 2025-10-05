@@ -1,56 +1,81 @@
 "use client";
-import React, { useState } from "react";
-import Link from "next/link";
+import React, { useEffect, useMemo, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
-// Mock template hooks - in real app, these would be imported from your API hooks
-const useTemplates = () => {
-  return {
-    data: [], // Empty array for now
-    isLoading: false,
-    error: null,
-  };
-};
 
-const useTemplateCategories = () => {
-  return {
-    data: [], // Empty array for now
-    isLoading: false,
-    error: null,
-  };
-};
-import TemplateCard from "./TemplateCard";
-import DashboardPricingCardSkeleton from "@/components/modules/CommonModules/pricing/pricingList/DashboardPricingCardSkeleton";
-
-const TEMPLATES_PER_PAGE = 6;
-
-interface KeyFeature {
-  feature: string;
-  featureDescription: string;
-}
 interface Template {
   id: string;
   title: string;
-  category: string;
-  author: string;
-  publishedDate: string;
+  image: string;
   price: string;
-  imageUrl: string;
-  mainImage: string;
+  category: string;
+  version: string;
+  downloads: string;
+  publishedDate: string;
+  pages: string;
+  views: string;
+  previewLink: string;
   shortDescription: string;
   description: string;
-  previewLink: string;
-  weIncludes: string[];
-  keyFeatures: KeyFeature[]; // Now uses featureDescription
-  demos: string[];
+  whatsIncluded: string[];
+  keyFeatures: Array<{
+    feature: string;
+    featureDescription: string;
+  }>;
+  screenshots: string[];
 }
+
+const useTemplates = () => {
+  const [data, setData] = useState<Template[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<null | { message: string }>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    fetch("/templates.json")
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const raw = (await res.json()) as Template[];
+        if (!isMounted) return;
+        setData(Array.isArray(raw) ? raw : []);
+        setIsLoading(false);
+      })
+      .catch((e: unknown) => {
+        if (!isMounted) return;
+        setError({ message: (e as Error).message });
+        setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return { data, isLoading, error };
+};
+
+const useTemplateCategories = (templates: Template[]) => {
+  const categories = useMemo(() => {
+    const unique = new Set<string>();
+    templates.forEach((t) => {
+      if (t.category) unique.add(t.category);
+    });
+    return Array.from(unique.values()).map((title) => ({ title }));
+  }, [templates]);
+  return {
+    data: categories,
+    isLoading: false,
+    error: null as null | { message: string },
+  };
+};
+import TemplateCard from "./TemplateCard";
+
+const TEMPLATES_PER_PAGE = 9;
+
+// Types moved above to share with mock data
 
 export default function TemplateContainer() {
   const { data: templates = [], isLoading, error } = useTemplates();
-  const {
-    data: categories = [],
-    isLoading: categoriesLoading,
-    error: categoriesError,
-  } = useTemplateCategories();
+  const { data: categories = [] } = useTemplateCategories(templates);
   const [page, setPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
@@ -58,7 +83,10 @@ export default function TemplateContainer() {
   const filteredTemplates =
     selectedCategory === "all"
       ? templates
-      : templates.filter((t: unknown) => (t as { categoryId: string }).categoryId === selectedCategory);
+      : templates.filter(
+          (t: unknown) =>
+            (t as { category: string }).category === selectedCategory
+        );
 
   // Pagination logic
   const totalPages = Math.ceil(filteredTemplates.length / TEMPLATES_PER_PAGE);
@@ -73,69 +101,60 @@ export default function TemplateContainer() {
   }, [selectedCategory]);
 
   if (error) return <div>Error: {error.message}</div>;
-  if (categoriesError) return <div>Error: {categoriesError.message}</div>;
 
   return (
     <div>
       <div className="container mx-auto max-w-7xl px-4 lg:px-0 py-10">
-        <div className="flex justify-end mb-6">
-          <span className="w-[150px] bg-gradient-to-r from-[#BDD9FE] to-[#8AACDA] rounded-lg p-[2px]">
-            <Link
-              href={"/dashboard/ADMIN/templates/create"}
-              target="_blank"
-              className="bg-gradient-to-r text-white from-[#0F59BC] to-[#0F35A7] w-[150px] h-full py-3 flex justify-center items-center rounded-lg"
-            >
-              Create Template
-            </Link>
-          </span>
-        </div>
         <h3 className="text-2xl font-bold text-center mb-6">
           New Arrival Product
         </h3>
 
         {/* Category Tabs */}
-        <div className="flex flex-wrap gap-2 justify-center mb-8">
-          <button
-            className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors duration-150 ${
-              selectedCategory === "all"
-                ? "bg-blue-500 text-white border-blue-500"
-                : "bg-white dark:bg-blue-900 text-gray-700 dark:text-white border-gray-300 dark:border-blue-800"
-            }`}
-            onClick={() => setSelectedCategory("all")}
-          >
-            All
-          </button>
-          {categories.map((cat: unknown) => {
-            const category = cat as { id?: string; _id?: string; title: string };
-            return (
-              <button
-                key={category.id || category._id}
-                className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors duration-150 ${
-                  selectedCategory === (category.id || category._id)
-                    ? "bg-blue-500 text-white border-blue-500"
-                    : "bg-white dark:bg-blue-900 text-gray-700 dark:text-white border-gray-300 dark:border-blue-800"
-                }`}
-                onClick={() => setSelectedCategory(category.id || category._id || "")}
-              >
-                {category.title}
-              </button>
-            );
-          })}
+        <div className="mt-8">
+          <div className="flex justify-center overflow-x-auto gap-3 pb-2 scrollbar-hide">
+            <button
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer whitespace-nowrap flex-shrink-0 ${
+                selectedCategory === "all"
+                  ? "bg-[#0F5BBD] text-white shadow-lg"
+                  : "border-2 border-[#BBD8FC] text-black dark:text-white hover:border-[#0F5BBD] hover:text-[#0F5BBD] dark:hover:text-[#0F5BBD]"
+              }`}
+              onClick={() => setSelectedCategory("all")}
+            >
+              All
+            </button>
+            {categories.map((cat: unknown) => {
+              const category = cat as { title: string };
+              return (
+                <button
+                  key={category.title}
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer whitespace-nowrap flex-shrink-0 ${
+                    selectedCategory === category.title
+                      ? "bg-[#0F5BBD] text-white shadow-lg"
+                      : "border-2 border-[#BBD8FC] text-black dark:text-white hover:border-[#0F5BBD] hover:text-[#0F5BBD] dark:hover:text-[#0F5BBD]"
+                  }`}
+                  onClick={() => setSelectedCategory(category.title)}
+                >
+                  {category.title}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {(isLoading || categoriesLoading)
-            ? Array.from({ length: 6 }).map((_, idx) => (
-                <DashboardPricingCardSkeleton key={idx} />
-              ))
-            : paginatedTemplates.map((template: unknown) => (
-                <TemplateCard key={(template as Template).id} template={template as Template} />
-              ))}
+          {!isLoading &&
+            paginatedTemplates.map((template: unknown) => (
+              <TemplateCard
+                key={(template as Template).id}
+                template={template as Template}
+              />
+            ))}
         </div>
-        {totalPages > 1 && !isLoading && !categoriesLoading && (
+
+        {totalPages > 1 && !isLoading && (
           <div className="flex justify-center mt-8 gap-2">
             <button
-              className="cursor-pointer p-2 rounded-full border border-gray-300 dark:border-blue-800 bg-white dark:bg-blue-800 text-gray-700 dark:text-white disabled:opacity-50 flex items-center justify-center"
+              className="cursor-pointer p-2 rounded-md border border-gray-300 dark:border-blue-800 bg-white dark:bg-blue-800 text-gray-700 dark:text-white disabled:opacity-50 flex items-center justify-center"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               aria-label="Previous page"
@@ -145,10 +164,10 @@ export default function TemplateContainer() {
             {[...Array(totalPages)].map((_, idx) => (
               <button
                 key={idx}
-                className={`px-3 py-1 rounded-full border cursor-pointer transition-colors duration-150 ${
+                className={`px-3 py-1 rounded-md border cursor-pointer transition-colors duration-150 ${
                   page === idx + 1
-                    ? "bg-blue-500 text-white border-blue-500"
-                    : "bg-white dark:bg-blue-900 text-gray-700 dark:text-white border-gray-300 dark:border-blue-800"
+                    ? "bg-[#0F43AF] text-white border-blue-500"
+                    : "bg-transparent text-gray-700 dark:text-white border-[#0F5BBD] dark:border-[#0F5BBD]"
                 }`}
                 onClick={() => setPage(idx + 1)}
               >
@@ -156,7 +175,7 @@ export default function TemplateContainer() {
               </button>
             ))}
             <button
-              className="cursor-pointer p-2 rounded-full border border-gray-300 dark:border-blue-800 bg-white dark:bg-blue-800 text-gray-700 dark:text-white disabled:opacity-50 flex items-center justify-center"
+              className="cursor-pointer p-2 rounded-md border border-gray-300 dark:border-blue-800 bg-white dark:bg-blue-800 text-gray-700 dark:text-white disabled:opacity-50 flex items-center justify-center"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               aria-label="Next page"

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import TemplateCard from "../../CommonModules/template/TemplateCard";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
+import Link from "next/link";
 
 // TypeScript interface for template data
 interface Template {
@@ -110,7 +111,9 @@ export default function NewProducts() {
         <div className="mt-12">
           {filteredTemplates.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-600 dark:text-gray-400 text-lg">No products found in this category.</p>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                No products found in this category.
+              </p>
             </div>
           ) : (
             <Swiper
@@ -137,6 +140,13 @@ export default function NewProducts() {
             </Swiper>
           )}
         </div>
+
+        <Link
+          href="/template"
+          className="mt-10 block w-[180px] text-center mx-auto bg-gradient-to-bl from-[#0F5BBD] to-[#0F35A7] border border-[#BDD9FE] text-xs md:text-[16px] px-8 py-3 rounded-lg text-white cursor-pointer"
+        >
+          Explore More
+        </Link>
       </div>
     </div>
   );
