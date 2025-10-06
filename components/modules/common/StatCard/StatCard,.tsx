@@ -67,15 +67,15 @@ export const StatCard = ({
   index,
   className,
   animationDelay,
-  width = "110px",
-  height = "110px",
+  width = "80px",
+  height = "80px",
 }: StatCardProps) => {
   const count = useCountAnimation(statData[index].count);
   const defaultStyle = statData[index].style;
 
   return (
     <motion.div
-      className={`absolute border shadow-2xl rounded-xl text-center inline-block ${
+      className={`absolute border shadow-2xl rounded-xl text-center inline-block w-20 h-20 md:w-[110px] md:h-[110px] ${
         className || defaultStyle.className
       }`}
       style={{ width, height }}
@@ -88,10 +88,10 @@ export const StatCard = ({
       }}
     >
       <div className="h-full flex flex-col justify-center items-center">
-        <h2 className="text-[35px] font-extrabold">
+        <h2 className="text-xs sm:text-sm md:text-base lg:text-lg font-extrabold">
           {count.toLocaleString()}K
         </h2>
-        <p className="text-[13px]">{statData[index].title}</p>
+        <p className="text-[8px] sm:text-[10px] md:text-xs lg:text-sm">{statData[index].title}</p>
       </div>
     </motion.div>
   );

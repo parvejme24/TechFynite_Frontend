@@ -4,6 +4,7 @@ import { GoArrowRight } from "react-icons/go";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 import FramerIcon from "@/assets/tech-icons/framer.png";
 import FigmaIcon from "@/assets/tech-icons/figma.png";
@@ -25,6 +26,12 @@ interface CategoriesData {
 }
 
 const categories: CategoriesData[] = [
+  {
+    id: "figma",
+    name: "Figma",
+    icon: FigmaIcon,
+    count: 24,
+  },
   {
     id: "framer",
     name: "Framer",
@@ -79,6 +86,12 @@ const categories: CategoriesData[] = [
     icon: ReactIcon,
     count: 22,
   },
+  {
+    id: "php",
+    name: "PHP",
+    icon: PhpIcon,
+    count: 22,
+  },
 ];
 
 import Image from "next/image";
@@ -87,25 +100,70 @@ export default function Categories() {
   const router = useRouter();
 
   const handleExploreMore = () => {
-    router.push("/products");
+    router.push("/template");
   };
 
   return (
-    <div className="py-14 bg-gradient-to-b from-[#FAFCFF] dark:from-[#000424] to-[#FAFCFF] dark:to-[#000424]">
+    <motion.div
+      className="py-14 bg-gradient-to-b from-[#FAFCFF] dark:from-[#000424] to-[#FAFCFF] dark:to-[#000424]"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
       <div className="container mx-auto max-w-7xl px-5 lg:px-0">
-        <div className="flex justify-between items-center">
-          <h2 className="md:text-[24px] font-bold dark:text-[#FFFFFF]">
+        <motion.div
+          className="flex justify-between items-center"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <motion.h2
+            className="md:text-[24px] font-bold dark:text-[#FFFFFF]"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{
+              opacity: 1,
+              x: 0,
+              backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+            }}
+            transition={{
+              duration: 0.5,
+              delay: 0.2,
+              backgroundPosition: {
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              },
+            }}
+            style={{
+              background:
+                "linear-gradient(90deg, #1f2937, #3b82f6, #8b5cf6, #1f2937)",
+              backgroundSize: "200% 100%",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
             Popular Categories
-          </h2>
+          </motion.h2>
 
-          <button
+          <motion.button
             onClick={handleExploreMore}
             className="text-xs md:text-[16px] flex items-center gap-2 text-[#0F5BBD] cursor-pointer hover:underline duration-300"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            whileHover={{ scale: 1.05, x: 5 }}
+            whileTap={{ scale: 0.95 }}
           >
             Explore More <GoArrowRight className="md:text-2xl" />
-          </button>
-        </div>
-        <div className="mt-5">
+          </motion.button>
+        </motion.div>
+        <motion.div
+          className="mt-5"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
           <Swiper
             spaceBetween={20}
             slidesPerView={2}
@@ -122,36 +180,84 @@ export default function Categories() {
             }}
             className="categories-swiper"
           >
-            {categories.map((item) => (
+            {categories.map((item, index) => (
               <SwiperSlide key={item.id}>
-                <div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{
+                    duration: 0.4,
+                    delay: 0.5 + index * 0.1,
+                    ease: "easeOut",
+                  }}
+                  whileHover={{
+                    scale: 0.95,
+                    y: 5,
+                    transition: { duration: 0.2 },
+                  }}
+                >
                   <div className="p-[1px] bg-gradient-to-t from-[#87A9D6] dark:from-[#04010B] to-[#ABCFFF] dark:to-[#16073F] rounded-xl">
-                    <div className="cursor-pointer bg-[#F5F9FF] dark:bg-[#1A1D37] border border-[#ABCFFE] dark:border-[#16073E] rounded-xl px-6 py-10">
-                      <div className="flex justify-center items-center">
-                        <span className="bg-[#FFFFFF] dark:bg-[#000424] rounded-full p-4 text-3xl w-[67px] h-[67px] flex justify-center items-center">
+                    <motion.div
+                      className="cursor-pointer bg-[#F5F9FF] dark:bg-[#1A1D37] border border-[#ABCFFE] dark:border-[#16073E] rounded-xl px-6 py-10"
+                      whileHover={{
+                        scale: 0.98,
+                        transition: { duration: 0.2 },
+                      }}
+                    >
+                      <motion.div
+                        className="flex justify-center items-center"
+                        whileHover={{ scale: 0.9 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <motion.span
+                          className="bg-[#FFFFFF] dark:bg-[#000424] rounded-full p-4 text-3xl w-[67px] h-[67px] flex justify-center items-center"
+                          whileHover={{ rotate: 5 }}
+                          transition={{ duration: 0.3 }}
+                        >
                           <Image
                             src={item.icon}
                             alt="category image"
                             className="w-[40px] h-auto"
                           />
-                        </span>
-                      </div>
-                      <div className="mt-3">
-                        <h4 className="font-bold text-center text-lg">
+                        </motion.span>
+                      </motion.div>
+                      <motion.div
+                        className="mt-3"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
+                      >
+                        <motion.h4
+                          className="font-bold text-center text-lg"
+                          whileHover={{ scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                        >
                           {item.name}
-                        </h4>
-                        <p className="text-center font-semibold text-[16px]">
+                        </motion.h4>
+                        <motion.p
+                          className="text-center font-semibold text-[16px]"
+                          animate={{
+                            color: ["#1e40af", "#3b82f6", "#1e40af"],
+                          }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            scale: { duration: 0.2 },
+                          }}
+                          whileHover={{ scale: 0.9 }}
+                        >
                           {item.count}
-                        </p>
-                      </div>
-                    </div>
+                        </motion.p>
+                      </motion.div>
+                    </motion.div>
                   </div>
-                </div>
+                </motion.div>
               </SwiperSlide>
             ))}
           </Swiper>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

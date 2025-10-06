@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Template {
   id: string;
@@ -103,66 +104,168 @@ export default function TemplateContainer() {
   if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="w-full"
+    >
       <div className="container mx-auto max-w-7xl px-4 lg:px-0 py-10">
-        <h3 className="text-2xl font-bold text-center mb-6">
+        <motion.h3 
+          className="text-3xl font-bold text-center mb-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ 
+            opacity: 1, 
+            y: 0,
+            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
+          }}
+          transition={{ 
+            duration: 0.5, 
+            delay: 0.1,
+            backgroundPosition: {
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }
+          }}
+          style={{
+            background: "linear-gradient(90deg, #1f2937, #3b82f6, #8b5cf6, #1f2937)",
+            backgroundSize: "200% 100%",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text"
+          }}
+        >
           New Arrival Product
-        </h3>
+        </motion.h3>
 
         {/* Category Tabs */}
-        <div className="mt-8">
-          <div className="flex justify-center overflow-x-auto gap-3 pb-2 scrollbar-hide">
-            <button
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer whitespace-nowrap flex-shrink-0 ${
+        <motion.div 
+          className="mt-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <motion.div 
+            className="flex justify-center overflow-x-auto gap-3 pb-2 scrollbar-hide"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <motion.button
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer whitespace-nowrap flex-shrink-0 text-base ${
                 selectedCategory === "all"
                   ? "bg-[#0F5BBD] text-white shadow-lg"
                   : "border-2 border-[#BBD8FC] text-black dark:text-white hover:border-[#0F5BBD] hover:text-[#0F5BBD] dark:hover:text-[#0F5BBD]"
               }`}
               onClick={() => setSelectedCategory("all")}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.4 }}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
               All Items
-            </button>
-            {categories.map((cat: unknown) => {
+            </motion.button>
+            {categories.map((cat: unknown, index) => {
               const category = cat as { title: string };
               return (
-                <button
+                <motion.button
                   key={category.title}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer whitespace-nowrap flex-shrink-0 ${
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer whitespace-nowrap flex-shrink-0 text-base ${
                     selectedCategory === category.title
                       ? "bg-[#0F5BBD] text-white shadow-lg"
                       : "border-2 border-[#BBD8FC] text-black dark:text-white hover:border-[#0F5BBD] hover:text-[#0F5BBD] dark:hover:text-[#0F5BBD]"
                   }`}
                   onClick={() => setSelectedCategory(category.title)}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   {category.title}
-                </button>
+                </motion.button>
               );
             })}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {!isLoading &&
-            paginatedTemplates.map((template: unknown) => (
-              <TemplateCard
-                key={(template as Template).id}
-                template={template as Template}
-              />
-            ))}
-        </div>
+        <motion.div 
+          className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <AnimatePresence mode="wait">
+            {!isLoading && paginatedTemplates.length > 0 ? (
+              paginatedTemplates.map((template: unknown, index) => (
+                <motion.div
+                  key={(template as Template).id}
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                  transition={{ 
+                    duration: 0.4, 
+                    delay: index * 0.1,
+                    ease: "easeOut"
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    y: -5,
+                    transition: { duration: 0.2 }
+                  }}
+                  layout
+                >
+                  <TemplateCard template={template as Template} />
+                </motion.div>
+              ))
+            ) : !isLoading ? (
+              <motion.div 
+                className="col-span-full text-center py-12"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <motion.div
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    opacity: [0.7, 1, 0.7]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <p className="text-gray-500 text-lg">
+                    No templates found matching your criteria.
+                  </p>
+                </motion.div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </motion.div>
 
         {totalPages > 1 && !isLoading && (
-          <div className="flex justify-center mt-8 gap-2">
-            <button
+          <motion.div 
+            className="flex justify-center mt-8 gap-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <motion.button
               className="cursor-pointer p-2 rounded-md border border-gray-300 dark:border-blue-800 bg-white dark:bg-blue-800 text-gray-700 dark:text-white disabled:opacity-50 flex items-center justify-center"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               aria-label="Previous page"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <FiChevronLeft size={20} />
-            </button>
+            </motion.button>
             {[...Array(totalPages)].map((_, idx) => (
-              <button
+              <motion.button
                 key={idx}
                 className={`px-3 py-1 rounded-md border cursor-pointer transition-colors duration-150 ${
                   page === idx + 1
@@ -170,21 +273,28 @@ export default function TemplateContainer() {
                     : "bg-transparent text-gray-700 dark:text-white border-[#0F5BBD] dark:border-[#0F5BBD]"
                 }`}
                 onClick={() => setPage(idx + 1)}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.6 + idx * 0.1 }}
+                whileHover={{ scale: 1.1, y: -2 }}
+                whileTap={{ scale: 0.9 }}
               >
                 {idx + 1}
-              </button>
+              </motion.button>
             ))}
-            <button
+            <motion.button
               className="cursor-pointer p-2 rounded-md border border-gray-300 dark:border-blue-800 bg-white dark:bg-blue-800 text-gray-700 dark:text-white disabled:opacity-50 flex items-center justify-center"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               aria-label="Next page"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <FiChevronRight size={20} />
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
