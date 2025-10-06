@@ -78,6 +78,23 @@ export default function PageHeader({
           <motion.h2
             variants={textVariants}
             className="text-[#000000] dark:text-white text-center text-2xl md:text-[45px] font-bold leading-tight"
+            animate={{
+              backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+            }}
+            transition={{
+              backgroundPosition: {
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }
+            }}
+            style={{
+              background: "linear-gradient(90deg, #1f2937, #3b82f6, #8b5cf6, #1f2937)",
+              backgroundSize: "200% 100%",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text"
+            }}
           >
             {value ? `${count.toLocaleString()}+ ` : ""}
             {title}

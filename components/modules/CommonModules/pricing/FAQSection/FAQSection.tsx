@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { FaQuestion } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface FAQItem {
   question: string;
@@ -128,17 +129,32 @@ export default function FAQSection() {
   );
 
   return (
-    <div className="container mx-auto max-w-7xl px-5 lg:px-0 py-14">
+    <motion.div 
+      className="container mx-auto max-w-7xl px-5 lg:px-0 py-14"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Sidebar */}
-        <div className="md:col-span-1 border border-[#bababad7] dark:border-[#ffffff28] rounded-xl bg-gradient-to-b from-[#FFFFFF] dark:from-[#0B0E20] to-[#EBF3FF] dark:to-[#0B0E20] py-10 w-full md:w-[270px]">
+        <motion.div 
+          className="md:col-span-1 border border-[#bababad7] dark:border-[#ffffff28] rounded-xl bg-gradient-to-b from-[#FFFFFF] dark:from-[#0B0E20] to-[#EBF3FF] dark:to-[#0B0E20] py-10 w-full md:w-[270px]"
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
           <div className="">
-            <h3 className="text-[35px] leading-tight font-bold mb-4 px-4">
+            <motion.h3 
+              className="text-[35px] leading-tight font-bold mb-4 px-4"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
               Questions & Answers
-            </h3>
+            </motion.h3>
             <div className="space-y-2 mt-8">
-              {faqData.map((category) => (
-                <button
+              {faqData.map((category, index) => (
+                <motion.button
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
                   className={`cursor-pointer text-[15px] w-full flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
@@ -146,47 +162,122 @@ export default function FAQSection() {
                       ? "bg-[#0F59BC] text-white px-10 font-bold"
                       : "hover:bg-[#EAF3FF] dark:hover:bg-[#1E2B4D] px-10"
                   }`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    x: 5,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <div className="space-x-2">
-                    <span className="bg-white py-2 px-3.5 rounded text-[#0F5BBD] font-extrabold border-1 border-black">
+                    <motion.span 
+                      className="bg-white py-2 px-3.5 rounded text-[#0F5BBD] font-extrabold border-1 border-black"
+                      whileHover={{ 
+                        scale: 1.1,
+                        rotate: 5,
+                        transition: { duration: 0.2 }
+                      }}
+                    >
                       {category.name[0]}
-                    </span>
+                    </motion.span>
                     <span>{category.name}</span>
                   </div>
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* FAQ Content */}
-        <div className="md:col-span-3 md:pl-14 lg:px-0">
-          <div className="space-y-4">
-            {activeCategoryData?.faqs.map((faq, index) => (
-              <div
-                key={index}
-                className="bg-transparent hover:bg-white dark:hover:bg-[#1A1D37] rounded-lg p-6 hover:shadow-sm duration-300"
-              >
-                <div className="flex gap-3">
-                  <div>
-                    <span className="bg-[#ACD0FF] rounded-full text-black flex justify-center items-center w-[30px] h-[30px] mt-1">
-                      <FaQuestion />
-                    </span>{" "}
+        <motion.div 
+          className="md:col-span-3 md:pl-14 lg:px-0"
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={activeCategory}
+              className="space-y-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              {activeCategoryData?.faqs.map((faq, index) => (
+                <motion.div
+                  key={index}
+                  className="bg-transparent hover:bg-white dark:hover:bg-[#1A1D37] rounded-lg p-6 hover:shadow-sm duration-300"
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    duration: 0.4, 
+                    delay: index * 0.1,
+                    ease: "easeOut"
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    y: -5,
+                    transition: { duration: 0.2 }
+                  }}
+                  layout
+                >
+                  <div className="flex gap-3">
+                    <motion.div
+                      whileHover={{ 
+                        scale: 1.1,
+                        rotate: 10,
+                        transition: { duration: 0.2 }
+                      }}
+                    >
+                      <motion.span 
+                        className="bg-[#ACD0FF] rounded-full text-black flex justify-center items-center w-[30px] h-[30px] mt-1"
+                        animate={{
+                          scale: [1, 1.05, 1],
+                          opacity: [0.8, 1, 0.8]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      >
+                        <FaQuestion />
+                      </motion.span>
+                    </motion.div>
+                    <div>
+                      <motion.h4 
+                        className="text-[24px] font-semibold flex items-center gap-2"
+                        whileHover={{ 
+                          scale: 1.02,
+                          transition: { duration: 0.2 }
+                        }}
+                      >
+                        {faq.question}
+                      </motion.h4>
+                      <motion.p 
+                        className="text-[14px] text-gray-600 dark:text-gray-300"
+                        initial={{ opacity: 0.8 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3, delay: 0.2 }}
+                        whileHover={{ 
+                          scale: 1.01,
+                          transition: { duration: 0.2 }
+                        }}
+                      >
+                        {faq.answer}
+                      </motion.p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-[24px] font-semibold flex items-center gap-2">
-                      {faq.question}
-                    </h4>
-                    <p className="text-[14px] text-gray-600 dark:text-gray-300">
-                      {faq.answer}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -83,14 +83,51 @@ export default function PublicPricingList() {
           whileInView="show"
           viewport={{ once: true, margin: "-80px" }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-3 dark:text-white">
+          <motion.h2 
+            className="text-3xl md:text-4xl font-bold text-center mb-3 dark:text-white"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ 
+              opacity: 1, 
+              y: 0,
+              backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
+            }}
+            transition={{ 
+              duration: 0.5, 
+              delay: 0.2,
+              backgroundPosition: {
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }
+            }}
+            whileHover={{ 
+              scale: 1.02,
+              transition: { duration: 0.2 }
+            }}
+            style={{
+              background: "linear-gradient(90deg, #1f2937, #3b82f6, #8b5cf6, #1f2937)",
+              backgroundSize: "200% 100%",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text"
+            }}
+          >
             Pricing Plans
-          </h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 mb-8">
+          </motion.h2>
+          <motion.p 
+            className="text-center text-gray-600 dark:text-gray-400 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            whileHover={{ 
+              scale: 1.01,
+              transition: { duration: 0.2 }
+            }}
+          >
             Worried about choosing the right package? Choose from multiple
             pricing options and get your project off the bench with the pricing
             plan that works best for you.
-          </p>
+          </motion.p>
         </motion.div>
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10"
