@@ -164,7 +164,7 @@ export default function UsersPage() {
                           disabled={
                             updatingId === user.id ||
                             !currentUser ||
-                            (currentUser.role !== "ADMIN" && currentUser.role !== "SUPER_ADMIN") ||
+                            (currentUser.role !== "ADMIN") ||
                             currentUser.id === user.id
                           }
                         >
@@ -173,7 +173,7 @@ export default function UsersPage() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
-                        {["USER", "ADMIN", "SUPER_ADMIN"].map((role) => (
+                        {["USER", "ADMIN"].map((role) => (
                           <DropdownMenuItem
                             key={role}
                             onClick={() => handleRoleSelect(user.id, role)}
@@ -181,7 +181,7 @@ export default function UsersPage() {
                               (roleSelections[user.id] || user.role) === role ||
                               updatingId === user.id ||
                               !currentUser ||
-                              (currentUser.role !== "ADMIN" && currentUser.role !== "SUPER_ADMIN") ||
+                              (currentUser.role !== "ADMIN") ||
                               currentUser.id === user.id
                             }
                           >
@@ -199,7 +199,7 @@ export default function UsersPage() {
                         !roleSelections[user.id] ||
                         roleSelections[user.id] === user.role ||
                         !currentUser ||
-                        (currentUser.role !== "ADMIN" && currentUser.role !== "SUPER_ADMIN") ||
+                        (currentUser.role !== "ADMIN") ||
                         currentUser.id === user.id
                       }
                       onClick={() => handleRoleUpdate(user.id)}

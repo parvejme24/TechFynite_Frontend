@@ -11,7 +11,7 @@ interface CheckoutContainerProps {
 }
 
 const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ templateId }) => {
-  const { getCurrentUser } = useAuth();
+  const { user: currentUser } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [order, setOrder] = useState<CheckoutOrder | null>(null);
   const [userInfo, setUserInfo] = useState<CheckoutUser | null>(null);
@@ -19,16 +19,10 @@ const CheckoutContainer: React.FC<CheckoutContainerProps> = ({ templateId }) => 
 
   // Get current user
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await getCurrentUser();
-        setUser(currentUser);
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-      }
-    };
-    fetchUser();
-  }, [getCurrentUser]);
+    if (currentUser) {
+      setUser(currentUser as unknown as User);
+    }
+  }, [currentUser]);
 
   // Generate fake order data based on templateId
   useEffect(() => {

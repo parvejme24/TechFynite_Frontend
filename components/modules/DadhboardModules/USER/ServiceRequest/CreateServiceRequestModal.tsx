@@ -6,7 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useCreateServiceRequest } from '@/hooks/useServiceRequestApi';
+// Mock hook for now
+const useCreateServiceRequest = () => ({
+  mutate: (data: any) => console.log('Creating service request:', data),
+  mutateAsync: async (data: any) => {
+    console.log('Creating service request:', data);
+    return Promise.resolve();
+  },
+  isPending: false,
+  error: null
+});
 import { ServiceRequestType, ServiceRequestPriority, CreateServiceRequestData } from '@/types/serviceRequest';
 import { toast } from 'sonner';
 

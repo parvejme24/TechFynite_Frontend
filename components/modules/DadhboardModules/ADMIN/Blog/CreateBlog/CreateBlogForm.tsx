@@ -73,7 +73,7 @@ export default function CreateBlogForm({ onSuccess }: CreateBlogFormProps) {
 
   const { fields: descriptionFields, append: appendDescription, remove: removeDescription } = useFieldArray({
     control,
-    name: "description",
+    name: "content",
   });
 
   const { fields: contentFields, append: appendContent, remove: removeContent } = useFieldArray({
@@ -155,7 +155,7 @@ export default function CreateBlogForm({ onSuccess }: CreateBlogFormProps) {
 
   // Add description paragraph
   const addDescriptionParagraph = () => {
-    appendDescription("");
+    appendDescription({ heading: "", order: 0, description: [""] });
   };
 
   const onSubmit = async (data: CreateBlogFormData) => {
@@ -177,22 +177,18 @@ export default function CreateBlogForm({ onSuccess }: CreateBlogFormProps) {
         ?.filter(block => block.heading.trim() !== "" || block.description[0]?.trim() !== "")
         .map((block, index) => ({
           heading: block.heading.trim(),
-          description: [block.description[0]?.trim() || ""].filter(d => d !== ""),
-          imageUrl: block.imageUrl?.trim() || undefined,
-          order: index,
+          description: block.description[0]?.trim() || "",
+          image: null as File | null,
         }));
 
       // Prepare the blog data
       const blogData = {
         title: data.title.trim(),
         categoryId: data.categoryId,
-        description: data.description.filter(d => d.trim() !== ""),
+        description: data.description.filter(d => d.trim() !== "").join(" "),
         readingTime: data.readingTime,
-        authorId: user.id,
-        slug: data.slug?.trim() || undefined,
-        imageUrl,
-        isPublished: data.isPublished,
-        ...(processedContent && processedContent.length > 0 && { content: processedContent }),
+        content: processedContent || [],
+        image: mainImageFile || new File([], "placeholder.jpg"),
       };
 
       console.log("Sending blog data:", blogData);

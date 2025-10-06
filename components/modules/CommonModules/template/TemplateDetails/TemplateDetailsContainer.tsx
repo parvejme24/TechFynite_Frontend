@@ -4,7 +4,20 @@ import Image from "next/image";
 // Mock template hook - in real app, this would be imported from your API hooks
 const useTemplate = (id: string) => {
   return {
-    data: null, // No template data for now
+    data: {
+      id: id,
+      title: "Sample Template",
+      imageUrl: "/placeholder.jpg",
+      categoryId: "1",
+      pages: 5,
+      price: 29.99,
+      description: "This is a sample template description.",
+      whatsIncluded: ["Feature 1", "Feature 2", "Feature 3"],
+      features: ["Responsive Design", "Modern UI", "Easy to Customize"],
+      tags: ["React", "Next.js", "TypeScript"],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as any, // Mock data for now
     isLoading: false,
     error: null,
   };

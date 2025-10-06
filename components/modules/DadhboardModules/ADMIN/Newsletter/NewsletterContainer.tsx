@@ -4,7 +4,10 @@ import React, { useState } from 'react';
 // Mock newsletter hooks - in real app, these would be imported from your API hooks
 const useNewsletterSubscribers = () => {
   return {
-    data: [], // Empty array for now
+    data: [
+      { id: "1", email: "user1@example.com", name: "John Doe", status: "active", subscribedAt: "2024-01-01" },
+      { id: "2", email: "user2@example.com", name: "Jane Smith", status: "inactive", subscribedAt: "2024-01-02" }
+    ] as any[], // Mock data for now
     isLoading: false,
     error: null,
     refetch: () => Promise.resolve(),

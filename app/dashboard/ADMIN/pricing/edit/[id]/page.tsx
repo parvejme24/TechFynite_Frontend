@@ -5,7 +5,15 @@ import { useParams, useRouter } from "next/navigation";
 // Mock pricing hooks - in real app, these would be imported from your API hooks
 const usePricingById = (id: string) => {
   return {
-    data: null, // No pricing data for now
+    data: {
+      id: id,
+      title: "Sample Plan",
+      price: 29.99,
+      license: "Standard",
+      duration: "monthly",
+      features: ["Feature 1", "Feature 2"],
+      recommended: false,
+    } as any, // Mock data for now
     isLoading: false,
     error: null,
   };

@@ -1,8 +1,7 @@
 "use client";
 import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthGuard, useAdminGuard } from '@/hooks/useAuth';
-import { UserRole } from '@/types/user';
+import { useSession } from 'next-auth/react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -22,14 +21,11 @@ export const ProtectedRoute = ({
   fallback = <div>Loading...</div>,
 }: ProtectedRouteProps) => {
   const router = useRouter();
+  const { data: session, status } = useSession();
   
-  // Use appropriate guard based on requirements
-  const authGuard = useAuthGuard();
-  const adminGuard = useAdminGuard();
-  
-  const { isAuthenticated, isLoading, user } = requireAdmin || requireSuperAdmin 
-    ? adminGuard 
-    : authGuard;
+  const isAuthenticated = !!session?.user;
+  const isLoading = status === 'loading';
+  const user = session?.user;
 
   useEffect(() => {
     if (!isLoading) {
@@ -40,18 +36,18 @@ export const ProtectedRoute = ({
       }
 
       // Check admin requirement
-      if (requireAdmin && !adminGuard.isAdmin) {
+      if (requireAdmin && user?.role !== 'ADMIN') {
         router.push('/dashboard'); // Redirect to dashboard if not admin
         return;
       }
 
       // Check super admin requirement
-      if (requireSuperAdmin && !adminGuard.isSuperAdmin) {
+      if (requireSuperAdmin && user?.role !== 'SUPER_ADMIN') {
         router.push('/dashboard'); // Redirect to dashboard if not super admin
         return;
       }
     }
-  }, [isLoading, isAuthenticated, requireAuth, requireAdmin, requireSuperAdmin, redirectTo, router, adminGuard.isAdmin, adminGuard.isSuperAdmin]);
+  }, [isLoading, isAuthenticated, requireAuth, requireAdmin, requireSuperAdmin, redirectTo, router, user?.role]);
 
   // Show fallback while loading
   if (isLoading) {
@@ -63,11 +59,11 @@ export const ProtectedRoute = ({
     return null; // Will redirect in useEffect
   }
 
-  if (requireAdmin && !adminGuard.isAdmin) {
+  if (requireAdmin && user?.role !== 'ADMIN') {
     return null; // Will redirect in useEffect
   }
 
-  if (requireSuperAdmin && !adminGuard.isSuperAdmin) {
+  if (requireSuperAdmin && user?.role !== 'SUPER_ADMIN') {
     return null; // Will redirect in useEffect
   }
 

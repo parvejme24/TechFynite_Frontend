@@ -159,7 +159,7 @@ export default function Topbar() {
               <button className="cursor-pointer flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
                 <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center">
                   {hasProfilePicture() ? (
-                    <Image src={getPhotoUrl()} alt="User" width={32} height={32} className="rounded-full object-cover" />
+                    <Image src={getPhotoUrl() || "/placeholder.jpg"} alt="User" width={32} height={32} className="rounded-full object-cover" />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
                       {getInitials()}

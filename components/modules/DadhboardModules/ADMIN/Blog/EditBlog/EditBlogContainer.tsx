@@ -2,7 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useBlogCategories, useCreateBlogCategory, useUpdateBlogCategory, useDeleteBlogCategory, useBlog, useUpdateBlog } from "@/hooks/useBlogApi";
+import { useBlog, useUpdateBlog } from "@/hooks/useBlogApi";
+import { useGetAllBlogCategories as useBlogCategories, useCreateBlogCategory, useUpdateBlogCategory, useDeleteBlogCategory } from "@/hooks/useBlogCategoryApi";
 import { Label } from "@radix-ui/react-label";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
@@ -49,19 +50,13 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
   useEffect(() => {
     if (blog) {
       setTitle(blog.title || "");
-      setDescription(blog.description || "");
+      setDescription("");
       setReadingTime(blog.readingTime?.toString() || "");
-      setSelectedCategory(blog.categoryId || "");
+      setSelectedCategory(blog.category?.id || "");
       setMainImagePreview(blog.imageUrl || "");
       
-      if (blog.content && Array.isArray(blog.content)) {
-        setContentBlocks(blog.content.map((block: { heading?: string; description?: string; imageUrl?: string }) => ({
-          heading: block.heading || "",
-          description: block.description || "",
-          image: null,
-          imagePreview: block.imageUrl || ""
-        })));
-      }
+      // Initialize with empty content blocks
+      setContentBlocks([{ heading: "", description: "", image: null, imagePreview: "" }]);
     }
   }, [blog]);
 
@@ -98,7 +93,7 @@ export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
     const payload = {
       title: categoryForm.title.trim(),
       slug: categoryForm.slug.trim(),
-      imageFile: categoryForm.imageFile
+      imageFile: categoryForm.imageFile || new File([], "placeholder.jpg")
     };
 
     if (editingCategory) {

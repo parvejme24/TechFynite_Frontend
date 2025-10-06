@@ -45,8 +45,10 @@ export default function TemplateCard({ template }: TemplateCardProps) {
               repeat: Infinity,
               ease: "easeInOut"
             }}
-            whileHover={{ scale: 1.1 }}
-            transition={{ duration: 0.2 }}
+            whileHover={{ 
+              scale: 1.1,
+              transition: { duration: 0.2 }
+            }}
           >
             ${template.price}
           </motion.span>

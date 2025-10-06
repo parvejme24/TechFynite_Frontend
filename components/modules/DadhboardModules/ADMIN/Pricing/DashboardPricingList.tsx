@@ -4,7 +4,10 @@ import React from "react";
 // Mock pricing hook - in real app, this would be imported from your API hooks
 const usePricing = () => {
   return {
-    data: [], // Empty array for now
+    data: [
+      { id: "1", name: "Basic Plan", price: 29, features: ["Feature 1", "Feature 2"] },
+      { id: "2", name: "Pro Plan", price: 59, features: ["Feature 1", "Feature 2", "Feature 3"] }
+    ] as any[], // Mock data for now
     isLoading: false,
     error: null,
   };

@@ -4,7 +4,10 @@ import React, { useState } from "react";
 // Mock contact hook - in real app, this would be imported from your API hooks
 const useGetUserContacts = () => {
   return {
-    data: [], // Empty array for now
+    data: [
+      { id: "1", fullName: "John Doe", email: "john@example.com", companyName: "Acme Corp", serviceRequred: "Web Development" },
+      { id: "2", fullName: "Jane Smith", email: "jane@example.com", companyName: "Tech Inc", serviceRequred: "Mobile App" }
+    ] as any[], // Mock data for now
     isLoading: false,
     error: null,
     refetch: () => Promise.resolve(),

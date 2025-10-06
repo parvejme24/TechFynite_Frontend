@@ -130,7 +130,7 @@ export default function CreateBlogCategoryForm({ onSuccess }: CreateBlogCategory
       await createBlogCategoryMutation.mutateAsync({
         title: data.title,
         slug: data.slug,
-        imageUrl,
+        imageFile: imageFile || new File([], "placeholder.jpg"),
       });
 
       // Reset form

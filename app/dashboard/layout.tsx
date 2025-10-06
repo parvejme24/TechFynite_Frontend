@@ -15,7 +15,7 @@ export default function DashboardLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (authContext && !authContext.user && !authContext.firebaseUser && !authContext.loading) {
+    if (authContext && !authContext.user && !authContext.loading) {
       router.replace("/login");
     }
   }, [authContext, router]);
@@ -28,7 +28,7 @@ export default function DashboardLayout({
     );
   }
 
-  if (!authContext?.user && !authContext?.firebaseUser) {
+  if (!authContext?.user) {
     // Optionally, you can return null or a spinner here
     return null;
   }

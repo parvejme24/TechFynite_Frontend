@@ -71,7 +71,7 @@ const ProfileCard: React.FC = () => {
           {user?.displayName || "N/A"}
         </h3>
         <p className="text-gray-500">
-          {user?.designation || "No designation"}
+          {user?.profile?.designation || "No designation"}
         </p>
 
         <div className="mt-4 space-y-2 w-full">
@@ -81,16 +81,16 @@ const ProfileCard: React.FC = () => {
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
-            <Phone className="text-2xl" /> {user?.phone || "N/A"}
+            <Phone className="text-2xl" /> {user?.profile?.phone || "N/A"}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
-            <Globe className="text-2xl" /> {user?.country || "N/A"}
+            <Globe className="text-2xl" /> {user?.profile?.country || "N/A"}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
             <DollarSign className="text-2xl" /> Balance:{" "}
-            {user?.balance ?? 0}
+            {user?.profile?.balance ?? 0}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
@@ -100,7 +100,7 @@ const ProfileCard: React.FC = () => {
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
             <IoCheckmarkCircleSharp className="text-green-500 text-2xl" />{" "}
-            Verified: {user?.isVerified ? "Yes" : "No"}
+            Verified: {"No"}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
