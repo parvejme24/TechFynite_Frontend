@@ -1,7 +1,28 @@
 "use client";
 import React, { createContext, useEffect, ReactNode } from "react";
-import { useAuth as useAuthHook, useCurrentUser, User } from "@/hooks/useAuth";
+import { 
+  useAuth as useAuthHook, 
+  useCurrentUser, 
+  useLogin,
+  useRegister,
+  useGoogleLogin,
+  useLogout,
+  useVerifyOtp,
+  useResendOtp,
+  useChangePassword,
+  useUpdateProfile,
+  useUpdateAvatar,
+  useGetAllUsers,
+  useDeleteUser,
+  useBanUser,
+  useUnbanUser,
+  useTrashUser,
+  useRestoreUser,
+  useChangeUserRole
+} from "@/hooks/useAuth";
+import { IUser as User } from "@/types/auth";
 import { UserRole } from "@/types/user";
+import { signIn, signOut } from "next-auth/react";
 
 // Request/Response interfaces for backward compatibility
 export interface RegisterRequest {
@@ -130,12 +151,43 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user, isLoading, isAuthenticated, session } = useAuthHook();
+  // Only fetch current user data when authenticated to avoid 404 errors
   const { data: currentUserData, error: currentUserError } = useCurrentUser();
+  
+  // Auth hooks
+  const { login: loginHook, isLoading: loginLoading } = useLogin();
+  const { register: registerHook, isLoading: registerLoading } = useRegister();
+  const { googleLogin: googleLoginHook, isLoading: googleLoading } = useGoogleLogin();
+  const { logout: logoutHook, isLoading: logoutLoading } = useLogout();
+  const { verifyOtp: verifyOtpHook, isLoading: verifyLoading } = useVerifyOtp();
+  const { resendOtp: resendOtpHook, isLoading: resendLoading } = useResendOtp();
+  const { changePassword: changePasswordHook, isLoading: changePasswordLoading } = useChangePassword();
+  const { updateProfile: updateProfileHook, isLoading: updateProfileLoading } = useUpdateProfile();
+  const { updateAvatar: updateAvatarHook, isLoading: updateAvatarLoading } = useUpdateAvatar();
+  const getAllUsersQuery = useGetAllUsers();
+  const { deleteUser: deleteUserHook, isLoading: deleteUserLoading } = useDeleteUser();
+  const { banUser: banUserHook, isLoading: banUserLoading } = useBanUser();
+  const { unbanUser: unbanUserHook, isLoading: unbanUserLoading } = useUnbanUser();
+  const { trashUser: trashUserHook, isLoading: trashUserLoading } = useTrashUser();
+  const { restoreUser: restoreUserHook, isLoading: restoreUserLoading } = useRestoreUser();
+  const { changeUserRole: changeUserRoleHook, isLoading: changeUserRoleLoading } = useChangeUserRole();
 
-  // Get the actual user data from either session or current user query
-  const actualUser = user || currentUserData?.data?.user || null;
+  // Get the actual user data - prioritize fresh API data over session data
+  const actualUser = currentUserData?.data?.user || user || null;
+  
+  // Debug: Log user data sources
+  if (actualUser) {
+    console.log("AuthProvider - User data sources:", {
+      sessionUser: user,
+      apiUser: currentUserData?.data?.user,
+      actualUser: actualUser,
+      actualUserFullName: actualUser.fullName,
+      actualUserName: (actualUser as any).name
+    });
+  }
   const loading = isLoading || (isAuthenticated && !actualUser);
-  const error = currentUserError?.message || null;
+  const error = currentUserError ? 'Failed to fetch user data' : null;
+
 
   // Store session secret when user is authenticated
   useEffect(() => {
@@ -157,11 +209,23 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     return role === "SUPER_ADMIN";
   };
 
-  // Legacy methods for existing forms (mock implementations)
+  // Legacy methods for existing forms - now use NextAuth
   const signInUser = async (email: string, password: string) => {
-    // This will be handled by NextAuth credentials provider
-    console.log("Legacy signInUser called - use NextAuth signIn instead");
-    return { user: actualUser };
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+      
+      if (result?.ok) {
+        return { user: actualUser };
+      } else {
+        throw new Error(result?.error || 'Login failed');
+      }
+    } catch (error) {
+      throw error;
+    }
   };
 
   const createUser = async (
@@ -169,133 +233,316 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     password: string,
     displayName: string
   ) => {
-    // This will be handled by NextAuth credentials provider
-    console.log("Legacy createUser called - use NextAuth signIn instead");
-    return { user: actualUser };
+    try {
+      const result = await registerHook({
+        fullName: displayName,
+        email,
+        password,
+      });
+      
+      if (result.success) {
+        return { user: result.data?.user };
+      } else {
+        throw new Error(result.error || 'Registration failed');
+      }
+    } catch (error) {
+      throw error;
+    }
   };
 
   const logOut = async () => {
-    // This will be handled by NextAuth signOut
-    console.log("Legacy logOut called - use NextAuth signOut instead");
+    try {
+      await signOut({ redirect: false });
+    } catch (error) {
+      throw error;
+    }
   };
 
-  // New comprehensive auth methods (mock implementations for now)
+  // New comprehensive auth methods using hooks
   const register = async (
     data: RegisterRequest
   ): Promise<LoginResponse | null> => {
-    console.log("Register called - integrate with your backend API");
-    return null;
+    try {
+      const result = await registerHook({
+        fullName: data.displayName,
+        email: data.email,
+        password: data.password,
+      });
+      
+      if (result.success && result.data) {
+        return {
+          accessToken: result.data.nextAuthSecret || '',
+          refreshToken: '',
+          user: result.data.user,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return null;
+    }
   };
 
   const login = async (data: LoginRequest): Promise<LoginResponse | null> => {
-    console.log("Login called - integrate with your backend API");
-    return null;
+    try {
+      const result = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+      
+      if (result?.ok) {
+        return {
+          accessToken: session?.user?.nextAuthSecret || '',
+          refreshToken: '',
+          user: actualUser as User,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Login error:', error);
+      return null;
+    }
   };
 
   const googleLogin = async (): Promise<LoginResponse | null> => {
-    console.log("Google login called - integrate with your backend API");
-    return null;
+    try {
+      const result = await signIn('google', { redirect: false });
+      
+      if (result?.ok) {
+        return {
+          accessToken: session?.user?.nextAuthSecret || '',
+          refreshToken: '',
+          user: actualUser as User,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Google login error:', error);
+      return null;
+    }
   };
 
   const logout = async (): Promise<void> => {
-    console.log("Logout called - integrate with your backend API");
+    try {
+      await logoutHook();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
-  // Email verification (mock implementations)
+  // Email verification using hooks
   const verifyEmail = async (
     data: VerifyEmailRequest
   ): Promise<{ message: string } | null> => {
-    console.log("Verify email called - integrate with your backend API");
-    return { message: "Email verified successfully" };
+    try {
+      const result = await verifyOtpHook({
+        email: data.email,
+        otp: data.otp,
+      });
+      
+      if (result.success) {
+        return { message: "Email verified successfully" };
+      }
+      return null;
+    } catch (error) {
+      console.error('Email verification error:', error);
+      return null;
+    }
   };
 
   const resendVerificationEmail = async (
     data: ResendVerificationRequest
   ): Promise<{ message: string } | null> => {
-    console.log(
-      "Resend verification email called - integrate with your backend API"
-    );
-    return { message: "Verification email sent successfully" };
+    try {
+      const result = await resendOtpHook(data.email);
+      
+      if (result.success) {
+        return { message: "Verification email sent successfully" };
+      }
+      return null;
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      return null;
+    }
   };
 
-  // Password management (mock implementations)
+  // Password management using hooks
   const forgotPassword = async (
     data: ForgotPasswordRequest
   ): Promise<{ message: string } | null> => {
-    console.log("Forgot password called - integrate with your backend API");
-    return { message: "Password reset email sent successfully" };
+    try {
+      const result = await resendOtpHook(data.email);
+      
+      if (result.success) {
+        return { message: "Password reset email sent successfully" };
+      }
+      return null;
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      return null;
+    }
   };
 
   const resetPassword = async (
     data: ResetPasswordRequest
   ): Promise<{ message: string } | null> => {
-    console.log("Reset password called - integrate with your backend API");
-    return { message: "Password reset successfully" };
+    try {
+      const result = await verifyOtpHook({
+        email: data.email,
+        otp: data.otp,
+      });
+      
+      if (result.success) {
+        return { message: "Password reset successfully" };
+      }
+      return null;
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return null;
+    }
   };
 
   const changePassword = async (
     data: ChangePasswordRequest
   ): Promise<{ message: string } | null> => {
-    console.log("Change password called - integrate with your backend API");
-    return { message: "Password changed successfully" };
+    try {
+      const result = await changePasswordHook({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+      
+      if (result.success) {
+        return { message: "Password changed successfully" };
+      }
+      return null;
+    } catch (error) {
+      console.error('Change password error:', error);
+      return null;
+    }
   };
 
-  // Profile management (mock implementations)
+  // Profile management using hooks
   const getProfile = async (): Promise<User | null> => {
     return actualUser;
   };
 
   const refreshProfile = async () => {
-    console.log("Refresh profile called - integrate with your backend API");
+    // This will be handled by RTK Query cache invalidation
   };
 
   const updateProfile = async (
     data: UpdateProfileRequest
   ): Promise<User | null> => {
-    console.log("Update profile called - integrate with your backend API");
-    return actualUser;
+    try {
+      const result = await updateProfileHook({
+        fullName: data.displayName,
+        designation: data.designation,
+        phone: data.phone,
+        country: data.country,
+        city: data.city,
+        stateOrRegion: data.stateOrRegion,
+        postCode: data.postCode,
+      });
+      
+      if (result.success && result.data) {
+        return result.data.user;
+      }
+      return null;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      return null;
+    }
   };
 
   const uploadProfilePhoto = async (
     file: File
   ): Promise<{ photoUrl: string } | null> => {
-    console.log(
-      "Upload profile photo called - integrate with your backend API"
-    );
-    return { photoUrl: "https://via.placeholder.com/150" };
+    try {
+      const result = await updateAvatarHook(file);
+      
+      if (result.success && result.data) {
+        return { photoUrl: result.data.avatarUrl };
+      }
+      return null;
+    } catch (error) {
+      console.error('Upload profile photo error:', error);
+      return null;
+    }
   };
 
-  // Admin functions (mock implementations)
+  // Admin functions using hooks
   const getAllUsers = async (params?: {
     page?: number;
     limit?: number;
     search?: string;
   }): Promise<{ users: User[]; total: number } | null> => {
-    console.log("Get all users called - integrate with your backend API");
-    return { users: [], total: 0 };
+    try {
+      const result = getAllUsersQuery.data;
+      
+      if (result?.data) {
+        return {
+          users: result.data.users,
+          total: result.data.pagination?.total || 0,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Get all users error:', error);
+      return null;
+    }
   };
 
   const updateUserRole = async (
     userId: string,
     role: UserRole
   ): Promise<{ message: string } | null> => {
-    console.log("Update user role called - integrate with your backend API");
-    return { message: "User role updated successfully" };
+    try {
+      const result = await changeUserRoleHook(userId, role as 'ADMIN' | 'USER');
+      
+      if (result.success) {
+        return { message: "User role updated successfully" };
+      }
+      return null;
+    } catch (error) {
+      console.error('Update user role error:', error);
+      return null;
+    }
   };
 
   const updateUserStatus = async (
     userId: string,
     isActive: boolean
   ): Promise<{ message: string } | null> => {
-    console.log("Update user status called - integrate with your backend API");
-    return { message: "User status updated successfully" };
+    try {
+      const result = isActive 
+        ? await unbanUserHook(userId)
+        : await banUserHook(userId);
+      
+      if (result.success) {
+        return { message: `User ${isActive ? 'activated' : 'deactivated'} successfully` };
+      }
+      return null;
+    } catch (error) {
+      console.error('Update user status error:', error);
+      return null;
+    }
   };
 
   const deleteUser = async (
     userId: string
   ): Promise<{ message: string } | null> => {
-    console.log("Delete user called - integrate with your backend API");
-    return { message: "User deleted successfully" };
+    try {
+      const result = await deleteUserHook(userId);
+      
+      if (result.success) {
+        return { message: "User deleted successfully" };
+      }
+      return null;
+    } catch (error) {
+      console.error('Delete user error:', error);
+      return null;
+    }
   };
 
   const authInfo: AuthContextType = {

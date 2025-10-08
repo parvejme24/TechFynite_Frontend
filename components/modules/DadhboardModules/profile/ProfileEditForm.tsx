@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { AuthContext } from "@/Providers/AuthProvider";
-import type { User } from "@/types/user";
+import { IUser, IUpdateProfile } from "@/types/auth";
 import { Camera, X } from "lucide-react";
 import Image from "next/image";
 import { useContext } from "react";
+import { useUpdateProfile, useUpdateAvatar, useCurrentUser } from "@/hooks/useAuth";
+import { useQueryClient } from '@tanstack/react-query';
 
 
 
@@ -35,51 +37,42 @@ const ProfileEditForm: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [removeExistingImage, setRemoveExistingImage] = useState(false);
-  const { user, loading: authLoading, refreshProfile } = useContext(AuthContext) || {} as { user?: Partial<User>; loading?: boolean; refreshProfile?: () => Promise<void> };
-  const [updateLoading, setUpdateLoading] = useState(false);
+  const { user, loading: authLoading } = useContext(AuthContext) || {};
+  
+  
+  // Use the proper hooks for profile and avatar updates
+  const { updateProfile, isLoading: profileUpdateLoading } = useUpdateProfile();
+  const { updateAvatar, isLoading: avatarUpdateLoading } = useUpdateAvatar();
+  const { refetch: refetchCurrentUser } = useCurrentUser();
+  const queryClient = useQueryClient();
+  
   const [error, setError] = useState<string | null>(null);
-
-  const updateUserProfile = async (userId: string, updateData: Record<string, unknown>) => {
-    try {
-      setUpdateLoading(true);
-      setError(null);
-      // TODO: integrate with real API. For now, simulate success.
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return { id: userId, ...updateData } as unknown;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Update failed");
-      return null;
-    } finally {
-      setUpdateLoading(false);
-    }
-  };
 
   const form = useForm<ProfileFormValues>({
     defaultValues: {
-      fullName: (user as Partial<User> | undefined)?.displayName || "",
-      email: (user as Partial<User> | undefined)?.email || "",
-      phone: (user as Partial<User> | undefined)?.phone || "",
-      city: (user as Partial<User> | undefined)?.city || "",
-      country: (user as Partial<User> | undefined)?.country || "",
-      designation: (user as Partial<User> | undefined)?.designation || "",
-      stateOrRegion: (user as Partial<User> | undefined)?.stateOrRegion || "",
-      postCode: (user as Partial<User> | undefined)?.postCode || "",
+      fullName: user?.fullName || "",
+      email: user?.email || "",
+      phone: user?.profile?.phone || "",
+      city: user?.profile?.city || "",
+      country: user?.profile?.country || "",
+      designation: user?.profile?.designation || "",
+      stateOrRegion: user?.profile?.stateOrRegion || "",
+      postCode: user?.profile?.postCode || "",
     },
     mode: "onTouched",
   });
 
   useEffect(() => {
     if (user) {
-      const u = user as Partial<User>;
       form.reset({
-        fullName: u.displayName || "",
-        email: u.email || "",
-        phone: u.phone || "",
-        city: u.city || "",
-        country: u.country || "",
-        designation: u.designation || "",
-        stateOrRegion: u.stateOrRegion || "",
-        postCode: u.postCode || "",
+        fullName: user.fullName || "",
+        email: user.email || "",
+        phone: user.profile?.phone || "",
+        city: user.profile?.city || "",
+        country: user.profile?.country || "",
+        designation: user.profile?.designation || "",
+        stateOrRegion: user.profile?.stateOrRegion || "",
+        postCode: user.profile?.postCode || "",
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -104,44 +97,119 @@ const ProfileEditForm: React.FC = () => {
     if (!user) return;
 
     try {
-      const updateData = {
-        displayName: values.fullName,
-        email: values.email,
+      setError(null);
+
+      // Prepare profile update data (excluding avatar - handled separately)
+      const profileData: IUpdateProfile = {
+        fullName: values.fullName,
         phone: values.phone,
         city: values.city,
         country: values.country,
         designation: values.designation,
         stateOrRegion: values.stateOrRegion,
         postCode: values.postCode,
-        ...(selectedImage && { photo: selectedImage }),
-        ...(removeExistingImage && { removePhoto: true }),
       };
 
-      const updatedUser = await updateUserProfile((user as Partial<User>).id as string, updateData);
+      // Update profile information only
+      await updateProfile(profileData);
 
-      if (updatedUser) {
-        // Refresh user data in context
-        await (refreshProfile?.());
-        toast.success("Profile updated successfully!");
+      // Refresh current user data to get updated information
+      await refetchCurrentUser();
 
-        // Clear image selection after successful update
-        setSelectedImage(null);
-        setPreviewUrl(null);
-        setRemoveExistingImage(false);
+      // Also invalidate the cache to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['getCurrentUser'] });
 
+      toast.success("Profile updated successfully!");
 
-      } else {
-        toast.error(error || "Profile update failed!");
+      // Don't clear the form - keep the updated values
+
+    } catch (err: any) {
+      const errorMessage = err?.message || "Profile update failed!";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  };
+
+  // Separate function for avatar upload
+  const handleAvatarUpdate = async () => {
+    if (!selectedImage) return;
+
+    try {
+      setError(null);
+
+      // Validate file
+      if (selectedImage.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error("Image size must be less than 5MB");
+        return;
       }
-    } catch {
-      toast.error("Profile update failed!");
+      
+      if (!selectedImage.type.startsWith('image/')) {
+        toast.error("Please select a valid image file");
+        return;
+      }
+      
+      // Check if token is expired
+      const expiresAt = (user as any)?.expiresAt;
+      if (expiresAt) {
+        const expirationDate = new Date(expiresAt);
+        const now = new Date();
+        
+        if (now > expirationDate) {
+          toast.error("Session expired. Please log in again.");
+          return;
+        }
+      }
+      
+      // Test if current user endpoint works first
+      try {
+        await refetchCurrentUser();
+      } catch (currentUserError) {
+        toast.error("Session expired. Please log in again.");
+        return;
+      }
+
+      // Upload avatar using separate API
+      await updateAvatar(selectedImage);
+
+      // Refresh current user data to get updated information
+      await refetchCurrentUser();
+
+      toast.success("Profile image updated successfully!");
+
+      // Clear image selection after successful update
+      setSelectedImage(null);
+      setPreviewUrl(null);
+      setRemoveExistingImage(false);
+
+    } catch (err: any) {
+      // Try to get more specific error information
+      let errorMessage = "Avatar update failed!";
+      
+      if (err?.data?.message) {
+        errorMessage = err.data.message;
+      } else if (err?.data?.error) {
+        errorMessage = err.data.error;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      } else if (err?.status === 500) {
+        errorMessage = "Server error. Please try again or contact support.";
+      } else if (err?.status === 401) {
+        errorMessage = "Session expired. Please log in again.";
+      } else if (err?.status === 413) {
+        errorMessage = "File too large. Please select a smaller image.";
+      } else if (err?.status === 415) {
+        errorMessage = "Invalid file type. Please select a valid image.";
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
   // Show loading state while fetching user data
   if (authLoading) {
-    return (
-      <div className="lg:col-span-2 -lg shadow p-6 flex-1 bg-white dark:bg-[#1A1D37] rounded-md">
+  return (
+    <div className="shadow p-6 flex-1 bg-white dark:bg-[#1A1D37] rounded-md">
         <div className="space-y-6">
           <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -163,7 +231,7 @@ const ProfileEditForm: React.FC = () => {
   // Show error state if user data couldn't be fetched
   if (!user) {
     return (
-      <div className="lg:col-span-2 -lg shadow p-6 flex-1 bg-white dark:bg-[#1A1D37] rounded-md">
+      <div className="shadow p-6 flex-1 bg-white dark:bg-[#1A1D37] rounded-md">
         <div className="flex flex-col items-center justify-center h-64">
           <p className="text-red-500 text-center">Failed to load user data. Please try again.</p>
         </div>
@@ -172,7 +240,12 @@ const ProfileEditForm: React.FC = () => {
   }
 
   return (
-    <div className="lg:col-span-2 -lg shadow p-6 flex-1 bg-white dark:bg-[#1A1D37] rounded-md">
+    <div className="shadow p-6 flex-1 bg-white dark:bg-[#1A1D37] rounded-md">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Edit Profile</h2>
+        <p className="text-gray-600 dark:text-gray-400">Update your personal information and profile picture</p>
+      </div>
+      
       <Form {...form}>
         <form
           className="space-y-6"
@@ -190,9 +263,9 @@ const ProfileEditForm: React.FC = () => {
                     height={128}
                     className="w-full h-full object-cover"
                   />
-                                 ) : user?.photoUrl && !removeExistingImage ? (
-                   <Image
-                     src={user.photoUrl}
+                ) : (user as any)?.profile?.avatarUrl && !removeExistingImage ? (
+                  <Image
+                    src={(user as any).profile.avatarUrl}
                      alt="Current profile"
                      width={128}
                      height={128}
@@ -217,7 +290,7 @@ const ProfileEditForm: React.FC = () => {
               </label>
 
                              {/* Remove Button */}
-               {(previewUrl || (user?.photoUrl && !removeExistingImage)) && (
+                {(previewUrl || ((user as any)?.profile?.avatarUrl && !removeExistingImage)) && (
                  <button
                    type="button"
                    onClick={removeImage}
@@ -231,6 +304,27 @@ const ProfileEditForm: React.FC = () => {
             <p className="text-sm text-gray-500 text-center">
               Click the camera icon to upload a new profile picture
             </p>
+            
+            {/* Save Avatar Button - Only show when image is selected */}
+            {selectedImage && (
+              <div className="flex justify-center">
+                <Button
+                  type="button"
+                  onClick={handleAvatarUpdate}
+                  disabled={avatarUpdateLoading}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md transition-colors"
+                >
+                  {avatarUpdateLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Profile Image"
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Form Fields */}
@@ -350,9 +444,9 @@ const ProfileEditForm: React.FC = () => {
             <Button
               type="submit"
               className="bg-blue-600 cursor-pointer text-white px-6 py-2 rounded hover:bg-blue-700 transition"
-                             disabled={(!form.formState.isDirty && !selectedImage && !removeExistingImage) || updateLoading}
+              disabled={!form.formState.isDirty || profileUpdateLoading}
             >
-              {updateLoading ? "Updating..." : "Update Profile"}
+              {profileUpdateLoading ? "Updating..." : "Update Profile"}
             </Button>
           </div>
         </form>

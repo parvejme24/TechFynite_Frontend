@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import {
@@ -19,7 +19,9 @@ import Image from "next/image";
 import GoogleIcon from "@/assets/common/svg/GoogleIcon";
 
 import Swal from "sweetalert2";
-import { AuthContext } from "@/Providers/AuthProvider";
+import { useRegister, useGoogleSignIn } from "@/hooks/useAuth";
+import { extractErrorMessage } from "@/lib/errorHandler";
+import OTPVerificationModal from "../OTPVerificationModal";
 
 interface RegisterFormValues {
   displayName: string;
@@ -37,46 +39,68 @@ export default function RegisterForm() {
     mode: "onTouched",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const authContext = useContext(AuthContext);
+  const { register, isLoading: registerLoading, error: registerError } = useRegister();
+  const googleSignIn = useGoogleSignIn();
 
   const onSubmit = async (data: RegisterFormValues) => {
-    setLoading(true);
     try {
-      if (!authContext) throw new Error("Auth context not available");
-      await authContext.createUser(data.email, data.password, data.displayName);
-
-      Swal.fire({
-        icon: "success",
-        title: "Registration Successful!",
-        text: "A verification email has been sent. Please verify your email.",
-        timer: 2000,
-        showConfirmButton: false,
+      const result = await register({
+        fullName: data.displayName,
+        email: data.email,
+        password: data.password,
       });
-      setTimeout(() => router.push("/login"), 2000);
-    } catch (err) {
+
+      if (result.success) {
+        // Store the registered email and show OTP modal
+        setRegisteredEmail(data.email);
+        setShowOTPModal(true);
+        
+        // Show success message
+        Swal.fire({
+          icon: "success",
+          title: "Registration Successful!",
+          text: "Please verify your email with the OTP sent to your inbox.",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      }
+    } catch (err: any) {
       console.error("Registration error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      
+      // Extract error message using utility function
+      const errorMessage = extractErrorMessage(err, "Registration failed");
+      
       Swal.fire({
         icon: "error",
         title: "Registration Failed",
         text: errorMessage,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
+  const handleOTPSuccess = () => {
+    // Redirect to login page after successful OTP verification
+    router.push("/login");
+  };
+
+  const handleOTPModalClose = () => {
+    setShowOTPModal(false);
+    setRegisteredEmail('');
+  };
+
   return (
-    <Form {...form}>
-      <motion.form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6 max-w-lg mx-5 md:mx-auto bg-[#F5F7F9] dark:bg-[#1A1D37] px-8 md:px-12 py-10 md:py-14 rounded-lg shadow"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
+    <>
+      <Form {...form}>
+        <motion.form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-6 max-w-lg mx-5 md:mx-auto bg-[#F5F7F9] dark:bg-[#1A1D37] px-8 md:px-12 py-10 md:py-14 rounded-lg shadow"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -229,9 +253,9 @@ export default function RegisterForm() {
             <Button
               type="submit"
               className="w-full bg-[#0F5BBD] hover:bg-[#0f5abdda] cursor-pointer text-white h-[42px] text-[16px]"
-              disabled={loading}
+              disabled={registerLoading}
             >
-              {loading ? "Registering..." : "Register Now"}
+              {registerLoading ? "Registering..." : "Register Now"}
             </Button>
           </motion.div>
         </motion.div>
@@ -269,28 +293,8 @@ export default function RegisterForm() {
               type="button"
               variant="outline"
               className="w-full h-[42px] cursor-pointer rounded-full flex items-center justify-center gap-2"
-              onClick={async () => {
-                setLoading(true);
-                try {
-                  if (!authContext) throw new Error("Auth context not available");
-                  await authContext.googleLogin();
-                  Swal.fire({
-                    icon: "success",
-                    title: "Google Sign-In Successful!",
-                    timer: 2000,
-                    showConfirmButton: false,
-                  });
-                  setTimeout(() => router.push("/dashboard"), 2000); // or wherever you want to redirect
-                } catch (err) {
-                  const errorMessage = err instanceof Error ? err.message : "Unknown error";
-                  Swal.fire({
-                    icon: "error",
-                    title: "Google Sign-In Failed",
-                    text: errorMessage,
-                  });
-                } finally {
-                  setLoading(false);
-                }
+              onClick={() => {
+                googleSignIn();
               }}
             >
               <motion.div
@@ -321,7 +325,16 @@ export default function RegisterForm() {
             Login
           </motion.button>
         </motion.div>
-      </motion.form>
-    </Form>
+        </motion.form>
+      </Form>
+
+      {/* OTP Verification Modal */}
+      <OTPVerificationModal
+        isOpen={showOTPModal}
+        onClose={handleOTPModalClose}
+        email={registeredEmail}
+        onSuccess={handleOTPSuccess}
+      />
+    </>
   );
 }

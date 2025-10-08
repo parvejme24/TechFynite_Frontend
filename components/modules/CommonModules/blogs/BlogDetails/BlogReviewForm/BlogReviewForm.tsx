@@ -21,16 +21,15 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
 
   // No hook/API dependency
 
-  // Debug: Log user data changes
   console.log("AuthContext state:", { user, loading });
 
   // Auto-populate user data when component mounts or userData changes
   useEffect(() => {
     console.log("useEffect triggered with user:", user);
     if (user) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        fullName: user.displayName || "",
+        fullName: user.fullName || "",
         email: user.email || "",
       }));
     }
@@ -49,13 +48,16 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Debug: Log user state and token
-    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-    console.log("=== SUBMIT DEBUG ===");
-    console.log("User state:", user);
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     console.log("Form data:", formData);
     console.log("Access token exists:", !!token);
-    console.log("Token value:", token ? token.substring(0, 20) + "..." : "null");
+    console.log(
+      "Token value:",
+      token ? token.substring(0, 20) + "..." : "null"
+    );
     console.log("Loading state:", loading);
 
     // Validation
@@ -83,7 +85,7 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
 
     // Simulate success (no API hook)
     setFormData({
-      fullName: user?.displayName || "",
+      fullName: user?.fullName || "",
       commentText: "",
       email: user?.email || "",
     });
@@ -91,9 +93,10 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
   };
 
   // Check if all fields are filled
-  const isFormValid = formData.fullName.trim() && 
-                     formData.commentText.trim() && 
-                     formData.email.trim();
+  const isFormValid =
+    formData.fullName.trim() &&
+    formData.commentText.trim() &&
+    formData.email.trim();
 
   // Show loading state while checking authentication
   if (loading) {
@@ -116,9 +119,10 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
   // Show login message if user is not authenticated
   if (!user && !loading) {
     // Check if access token exists in localStorage as fallback
-    const hasToken = typeof window !== "undefined" && localStorage.getItem("accessToken");
+    const hasToken =
+      typeof window !== "undefined" && localStorage.getItem("accessToken");
     console.log("No user data, but token exists:", hasToken);
-    
+
     if (!hasToken) {
       return (
         <div className="p-4 mt-10">
@@ -127,8 +131,8 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
             <p className="text-gray-600 mb-4">
               You need to be logged in to post a comment.
             </p>
-            <Button 
-              onClick={() => window.location.href = '/login'}
+            <Button
+              onClick={() => (window.location.href = "/login")}
               className="bg-blue-900 hover:bg-blue-900/80 text-white"
             >
               Log In

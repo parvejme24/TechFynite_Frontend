@@ -17,7 +17,8 @@ interface EditBlogContainerProps {
 }
 
 export default function EditBlogContainer({ blogId }: EditBlogContainerProps) {
-  const { data: categories = [] } = useBlogCategories();
+  const { data: categoriesResponse } = useBlogCategories();
+  const categories = categoriesResponse?.categories || [];
   const { data: blog, isLoading: blogLoading, error: blogError } = useBlog(blogId);
   const { mutate: createCategory, isPending: createCategoryLoading } = useCreateBlogCategory();
   const { mutate: updateCategory, isPending: updateCategoryLoading } = useUpdateBlogCategory();

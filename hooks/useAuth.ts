@@ -1,228 +1,439 @@
 import React from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import apiClient from '@/lib/api-client';
+import { useDispatch } from 'react-redux';
+import {
+  useRegisterMutation,
+  useVerifyOtpMutation,
+  useResendOtpMutation,
+  useLoginMutation,
+  useGoogleLoginMutation,
+  useValidateSessionMutation,
+  useLogoutMutation,
+  useChangePasswordMutation,
+  useUpdateProfileMutation,
+  useUpdateAvatarImageMutation,
+  useGetCurrentUserQuery,
+  useGetAllUsersQuery,
+  useGetUserStatsQuery,
+  useGetUserByIdQuery,
+  useDeleteUserMutation,
+  useBanUserMutation,
+  useUnbanUserMutation,
+  useTrashUserMutation,
+  useRestoreUserMutation,
+  useChangeUserRoleMutation,
+} from '@/redux/services/authApi';
+import {
+  IUser,
+  IRegisterUser,
+  ILoginUser,
+  IGoogleLogin,
+  IVerifyOtp,
+  IResendOtp,
+  IChangePassword,
+  IUpdateProfile,
+  IUserQuery,
+  UserRole,
+} from '@/types/auth';
 
-// Types
-export interface User {
-  id: string;
-  fullName: string;
-  email: string;
-  role: 'ADMIN' | 'USER';
-  isBanned: boolean;
-  isTrashed: boolean;
-  isDeletedPermanently: boolean;
-  isLoggedIn: boolean;
-  lastLoginAt: string;
-  provider: string;
-  providerId?: string;
-  createdAt: string;
-  updatedAt: string;
-  // NextAuth fields
-  name?: string;
-  image?: string;
-  // Legacy fields for backward compatibility
-  displayName?: string;
-  photoUrl?: string;
-  photoURL?: string;
-  profile?: {
-    id: string;
-    userId: string;
-    avatarUrl?: string;
-    coverImageUrl?: string;
-    designation?: string;
-    phone?: string;
-    country?: string;
-    city?: string;
-    stateOrRegion?: string;
-    postCode?: string;
-    balance: number;
-    createdAt: string;
-    updatedAt: string;
-  };
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  fullName: string;
-  email: string;
-  password: string;
-}
-
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
-
-export interface UpdateProfileRequest {
-  avatarUrl?: string;
-  coverImageUrl?: string;
-  designation?: string;
-  phone?: string;
-  country?: string;
-  city?: string;
-  stateOrRegion?: string;
-  postCode?: string;
-}
-
-export interface AuthResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    user: User;
-    nextAuthSecret?: string;
-    expiresAt?: string;
-  };
-  error?: string;
-}
-
-// API functions
-const authApi = {
-  // Register user
-  register: async (data: RegisterRequest): Promise<AuthResponse> => {
-    const response = await apiClient.post('/auth/register', data);
-    return response.data;
-  },
-
-  // Login user
-  login: async (data: LoginRequest): Promise<AuthResponse> => {
-    const response = await apiClient.post('/auth/login', data);
-    return response.data;
-  },
-
-  // Validate session
-  validateSession: async (nextAuthSecret: string): Promise<AuthResponse> => {
-    const response = await apiClient.post('/auth/validate-session', { nextAuthSecret });
-    return response.data;
-  },
-
-  // Logout user
-  logout: async (nextAuthSecret: string): Promise<AuthResponse> => {
-    const response = await apiClient.post('/auth/logout', { nextAuthSecret });
-    return response.data;
-  },
-
-  // Get current user
-  getCurrentUser: async (): Promise<AuthResponse> => {
-    const response = await apiClient.get('/auth/me');
-    return response.data;
-  },
-
-  // Change password
-  changePassword: async (data: ChangePasswordRequest): Promise<AuthResponse> => {
-    const response = await apiClient.post('/auth/change-password', data);
-    return response.data;
-  },
-
-  // Update profile
-  updateProfile: async (data: UpdateProfileRequest): Promise<AuthResponse> => {
-    const response = await apiClient.put('/auth/profile', data);
-    return response.data;
-  },
-};
-
-// React Query hooks
+// Main useAuth hook - provides authentication state and common operations
 export const useAuth = () => {
   const { data: session, status } = useSession();
-  const queryClient = useQueryClient();
+  const dispatch = useDispatch();
 
-  // Console log session data when it changes
-  React.useEffect(() => {
-    console.log("🔐 useAuth - Session Status:", status);
-    console.log("🔐 useAuth - Session Data:", session);
-    if (session?.user) {
-      console.log("🔐 useAuth - User from Session:", session.user);
-    }
-  }, [session, status]);
 
   return {
-    user: session?.user as User | undefined,
+    user: session?.user as IUser | undefined,
     isLoading: status === 'loading',
     isAuthenticated: !!session?.user,
     session,
+    isAdmin: session?.user?.role === UserRole.ADMIN,
   };
 };
 
+// Current user query hook - only fetch when authenticated
 export const useCurrentUser = () => {
-  return useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => authApi.getCurrentUser(),
-    enabled: false, // We'll manually trigger this
-    retry: false,
+  const { isAuthenticated } = useAuth();
+  return useGetCurrentUserQuery(undefined, {
+    skip: !isAuthenticated, // Skip the query if user is not authenticated
   });
 };
 
+// Registration hook
 export const useRegister = () => {
-  const queryClient = useQueryClient();
+  const [registerMutation, { isLoading, error, data }] = useRegisterMutation();
 
-  return useMutation({
-    mutationFn: authApi.register,
-    onSuccess: (data) => {
-      if (data.success && data.data?.nextAuthSecret) {
+  const register = async (userData: IRegisterUser) => {
+    try {
+      const result = await registerMutation(userData).unwrap();
+      if (result.success && result.data?.nextAuthSecret) {
         // Store the session secret
-        localStorage.setItem('nextAuthSecret', data.data.nextAuthSecret);
-        // Invalidate and refetch user data
-        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+        localStorage.setItem('nextAuthSecret', result.data.nextAuthSecret);
       }
-    },
-  });
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    register,
+    isLoading,
+    error,
+    data,
+  };
 };
 
+// OTP verification hook
+export const useVerifyOtp = () => {
+  const [verifyOtpMutation, { isLoading, error, data }] = useVerifyOtpMutation();
+
+  const verifyOtp = async (otpData: IVerifyOtp) => {
+    try {
+      const result = await verifyOtpMutation(otpData).unwrap();
+      if (result.success && result.data?.nextAuthSecret) {
+        localStorage.setItem('nextAuthSecret', result.data.nextAuthSecret);
+      }
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    verifyOtp,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+// Resend OTP hook
+export const useResendOtp = () => {
+  const [resendOtpMutation, { isLoading, error, data }] = useResendOtpMutation();
+
+  const resendOtp = async (email: string) => {
+    try {
+      const result = await resendOtpMutation({ email }).unwrap();
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    resendOtp,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+// Login hook
 export const useLogin = () => {
-  const queryClient = useQueryClient();
+  const [loginMutation, { isLoading, error, data }] = useLoginMutation();
 
-  return useMutation({
-    mutationFn: authApi.login,
-    onSuccess: (data) => {
-      if (data.success && data.data?.nextAuthSecret) {
-        // Store the session secret
-        localStorage.setItem('nextAuthSecret', data.data.nextAuthSecret);
-        // Invalidate and refetch user data
-        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+  const login = async (credentials: ILoginUser) => {
+    try {
+      const result = await loginMutation(credentials).unwrap();
+      if (result.success && result.data?.nextAuthSecret) {
+        localStorage.setItem('nextAuthSecret', result.data.nextAuthSecret);
       }
-    },
-  });
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    login,
+    isLoading,
+    error,
+    data,
+  };
 };
 
-export const useLogout = () => {
-  const queryClient = useQueryClient();
+// Google login hook
+export const useGoogleLogin = () => {
+  const [googleLoginMutation, { isLoading, error, data }] = useGoogleLoginMutation();
 
-  return useMutation({
-    mutationFn: (nextAuthSecret: string) => authApi.logout(nextAuthSecret),
-    onSuccess: () => {
+  const googleLogin = async (googleData: IGoogleLogin) => {
+    try {
+      const result = await googleLoginMutation(googleData).unwrap();
+      if (result.success && result.data?.nextAuthSecret) {
+        localStorage.setItem('nextAuthSecret', result.data.nextAuthSecret);
+      }
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    googleLogin,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+// Session validation hook
+export const useValidateSession = () => {
+  const [validateSessionMutation, { isLoading, error, data }] = useValidateSessionMutation();
+
+  const validateSession = async (nextAuthSecret: string) => {
+    try {
+      const result = await validateSessionMutation({ nextAuthSecret }).unwrap();
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    validateSession,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+// Logout hook
+export const useLogout = () => {
+  const [logoutMutation, { isLoading, error, data }] = useLogoutMutation();
+
+  const logout = async () => {
+    try {
+      const nextAuthSecret = localStorage.getItem('nextAuthSecret');
+      if (nextAuthSecret) {
+        await logoutMutation({ nextAuthSecret }).unwrap();
+      }
       // Clear stored session
       localStorage.removeItem('nextAuthSecret');
-      // Clear all queries
-      queryClient.clear();
       // Sign out from NextAuth
       signOut();
-    },
-  });
+      return { success: true };
+    } catch (err) {
+      // Even if logout fails on server, clear local storage
+      localStorage.removeItem('nextAuthSecret');
+      signOut();
+      throw err;
+    }
+  };
+
+  return {
+    logout,
+    isLoading,
+    error,
+    data,
+  };
 };
 
+// Change password hook
 export const useChangePassword = () => {
-  return useMutation({
-    mutationFn: authApi.changePassword,
-  });
+  const [changePasswordMutation, { isLoading, error, data }] = useChangePasswordMutation();
+
+  const changePassword = async (passwordData: IChangePassword) => {
+    try {
+      const result = await changePasswordMutation(passwordData).unwrap();
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    changePassword,
+    isLoading,
+    error,
+    data,
+  };
 };
 
+// Update profile hook
 export const useUpdateProfile = () => {
-  const queryClient = useQueryClient();
+  const [updateProfileMutation, { isLoading, error, data }] = useUpdateProfileMutation();
 
-  return useMutation({
-    mutationFn: authApi.updateProfile,
-    onSuccess: () => {
-      // Invalidate and refetch user data
-      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-    },
+  const updateProfile = async (profileData: IUpdateProfile) => {
+    try {
+      const result = await updateProfileMutation(profileData).unwrap();
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    updateProfile,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+// Update avatar hook - using separate Cloudinary upload endpoint
+export const useUpdateAvatar = () => {
+  const [updateAvatarMutation, { isLoading, error, data }] = useUpdateAvatarImageMutation();
+
+  const updateAvatar = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const result = await updateAvatarMutation(formData).unwrap();
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    updateAvatar,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+// Admin hooks - only fetch when user is admin
+export const useGetAllUsers = (query?: IUserQuery) => {
+  const { isAdmin } = useAuth();
+  return useGetAllUsersQuery(query, {
+    skip: !isAdmin, // Skip the query if user is not admin
   });
 };
 
-// Google OAuth functions
+export const useGetUserStats = () => {
+  const { isAdmin } = useAuth();
+  return useGetUserStatsQuery(undefined, {
+    skip: !isAdmin, // Skip the query if user is not admin
+  });
+};
+
+export const useGetUserById = (id: string) => {
+  return useGetUserByIdQuery(id);
+};
+
+export const useDeleteUser = () => {
+  const [deleteUserMutation, { isLoading, error, data }] = useDeleteUserMutation();
+
+  const deleteUser = async (id: string) => {
+    try {
+      const result = await deleteUserMutation(id).unwrap();
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    deleteUser,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+export const useBanUser = () => {
+  const [banUserMutation, { isLoading, error, data }] = useBanUserMutation();
+
+  const banUser = async (id: string) => {
+    try {
+      const result = await banUserMutation(id).unwrap();
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    banUser,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+export const useUnbanUser = () => {
+  const [unbanUserMutation, { isLoading, error, data }] = useUnbanUserMutation();
+
+  const unbanUser = async (id: string) => {
+    try {
+      const result = await unbanUserMutation(id).unwrap();
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    unbanUser,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+export const useTrashUser = () => {
+  const [trashUserMutation, { isLoading, error, data }] = useTrashUserMutation();
+
+  const trashUser = async (id: string) => {
+    try {
+      const result = await trashUserMutation(id).unwrap();
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    trashUser,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+export const useRestoreUser = () => {
+  const [restoreUserMutation, { isLoading, error, data }] = useRestoreUserMutation();
+
+  const restoreUser = async (id: string) => {
+    try {
+      const result = await restoreUserMutation(id).unwrap();
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    restoreUser,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+export const useChangeUserRole = () => {
+  const [changeUserRoleMutation, { isLoading, error, data }] = useChangeUserRoleMutation();
+
+  const changeUserRole = async (id: string, role: 'ADMIN' | 'USER') => {
+    try {
+      const result = await changeUserRoleMutation({ id, role }).unwrap();
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  return {
+    changeUserRole,
+    isLoading,
+    error,
+    data,
+  };
+};
+
+// Google OAuth functions (for NextAuth integration)
 export const useGoogleSignIn = () => {
   return () => {
     signIn('google', { callbackUrl: '/' });
@@ -230,12 +441,26 @@ export const useGoogleSignIn = () => {
 };
 
 export const useCredentialsSignIn = () => {
-  return (credentials: LoginRequest) => {
+  return (credentials: ILoginUser) => {
     return signIn('credentials', {
       email: credentials.email,
       password: credentials.password,
       redirect: false,
     });
+  };
+};
+
+// Utility hook for checking authentication status
+export const useAuthStatus = () => {
+  const { user, isLoading, isAuthenticated, isAdmin } = useAuth();
+  
+  return {
+    user,
+    isLoading,
+    isAuthenticated,
+    isAdmin,
+    isUser: isAuthenticated && !isAdmin,
+    isLoggedIn: isAuthenticated,
   };
 };
 

@@ -1,88 +1,95 @@
-"use client";
-import { useMutation, useQuery, UseMutationResult, UseQueryResult } from "@tanstack/react-query";
-import apiClient from "@/lib/api-client";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '@/lib/api-client';
+import { Blog } from '@/types/blog';
 
-// Types inferred from component usage
 export interface BlogListResponse {
-  id: string;
-  title: string;
-  imageUrl?: string;
-  readingTime: number;
-  likes?: number;
-  category?: { id?: string; title: string; imageUrl?: string };
+  blogs: Blog[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
-type CreateBlogPayload = {
+export interface CreateBlogData {
   title: string;
-  description: string;
   categoryId: string;
+  imageUrl?: string;
+  description: string;
+  content: any[];
   readingTime: number;
-  content: { heading: string; description: string; image: File | null }[];
-  image: File;
+  image?: File;
+}
+
+export interface UpdateBlogData extends Partial<CreateBlogData> {
+  id: string;
+}
+
+// Get all blogs
+export const useGetAllBlogs = (page: number = 1, limit: number = 10) => {
+  return useQuery<BlogListResponse>({
+    queryKey: ['blogs', 'all', page, limit],
+    queryFn: async () => {
+      const response = await apiClient.get(`/blogs?page=${page}&limit=${limit}`);
+      return response.data;
+    },
+  });
 };
 
-type UpdateBlogPayload = Partial<CreateBlogPayload> & { id: string };
-
-export function useGetAllBlogs(): UseQueryResult<BlogListResponse[], unknown> {
-  return useQuery({
-    queryKey: ["blogs", "all"],
+// Get single blog
+export const useBlog = (id: string) => {
+  return useQuery<Blog>({
+    queryKey: ['blog', id],
     queryFn: async () => {
-      const response = await apiClient.get<BlogListResponse[]>("/blogs");
-      return response.data ?? [];
+      const response = await apiClient.get(`/blogs/${id}`);
+      return response.data.data;
     },
-  });
-}
-
-export function useBlog(id?: string): UseQueryResult<BlogListResponse, unknown> {
-  return useQuery({
-    queryKey: ["blogs", id],
     enabled: !!id,
-    queryFn: async () => {
-      const response = await apiClient.get<BlogListResponse>(`/blogs/${id}`);
-      return response.data;
+  });
+};
+
+// Create blog
+export const useCreateBlog = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<Blog, Error, CreateBlogData>({
+    mutationFn: async (data) => {
+      const response = await apiClient.post('/blogs', data);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blogs'] });
     },
   });
-}
+};
 
-export function useCreateBlog(): UseMutationResult<unknown, unknown, CreateBlogPayload> {
-  return useMutation({
-    mutationKey: ["blogs", "create"],
-    mutationFn: async (payload: CreateBlogPayload) => {
-      const formData = new FormData();
-      formData.append("title", payload.title);
-      formData.append("description", payload.description);
-      formData.append("categoryId", payload.categoryId);
-      formData.append("readingTime", String(payload.readingTime));
-      formData.append("image", payload.image);
-      formData.append("content", JSON.stringify(payload.content.map(c => ({ heading: c.heading, description: c.description }))));
-
-      const response = await apiClient.post("/blogs", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      return response.data;
+// Update blog
+export const useUpdateBlog = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<Blog, Error, UpdateBlogData>({
+    mutationFn: async ({ id, ...data }) => {
+      const response = await apiClient.put(`/blogs/${id}`, data);
+      return response.data.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['blogs'] });
+      queryClient.invalidateQueries({ queryKey: ['blog', data.id] });
     },
   });
-}
+};
 
-export function useUpdateBlog(): UseMutationResult<unknown, unknown, UpdateBlogPayload> {
-  return useMutation({
-    mutationKey: ["blogs", "update"],
-    mutationFn: async (payload: UpdateBlogPayload) => {
-      const { id, ...rest } = payload;
-      const response = await apiClient.put(`/blogs/${id}`, rest);
-      return response.data;
+// Delete blog
+export const useDeleteBlog = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<void, Error, string>({
+    mutationFn: async (id) => {
+      await apiClient.delete(`/blogs/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blogs'] });
     },
   });
-}
-
-export function useDeleteBlog(): UseMutationResult<unknown, unknown, string> {
-  return useMutation({
-    mutationKey: ["blogs", "delete"],
-    mutationFn: async (id: string) => {
-      const response = await apiClient.delete(`/blogs/${id}`);
-      return response.data;
-    },
-  });
-}
-
-
+};

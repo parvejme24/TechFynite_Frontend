@@ -1,13 +1,13 @@
 import React from "react";
 import BlogCardSkeleton from "./BlogCardSkeleton";
 import BlogCard from "./BlogCard";
-import { BlogListResponse } from "@/hooks/useBlogApi";
+import { Blog } from "@/types/blog";
 
 interface BlogListProps {
-  blogs: BlogListResponse[];
-  onBlogClick?: (blog: BlogListResponse) => void;
-  onEdit?: (blog: BlogListResponse) => void;
-  onDelete?: (blog: BlogListResponse) => void;
+  blogs: Blog[];
+  onBlogClick?: (blog: Blog) => void;
+  onEdit?: (blog: Blog) => void;
+  onDelete?: (blog: Blog) => void;
   loading?: boolean;
 }
 

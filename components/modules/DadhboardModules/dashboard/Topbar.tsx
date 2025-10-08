@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FiSearch, FiBell, FiSun, FiMoon, FiLogOut } from "react-icons/fi";
+import { FiSearch, FiBell, FiSun, FiMoon, FiLogOut, FiUser, FiSettings, FiMenu, FiX } from "react-icons/fi";
 import { useTheme } from "next-themes";
 import {
   DropdownMenu,
@@ -16,38 +16,26 @@ import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
-export default function Topbar() {
+interface TopbarProps {
+  onMenuToggle?: () => void;
+  isMenuOpen?: boolean;
+}
+
+export default function Topbar({ onMenuToggle, isMenuOpen = false }: TopbarProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notifications, setNotifications] = useState(3); // Mock notification count
   const authContext = React.useContext(AuthContext);
   const { user: nextAuthUser, isAuthenticated } = useAuth();
   const user = nextAuthUser || authContext?.user;
   const router = useRouter();
 
-  // Console log user data when user changes
-  React.useEffect(() => {
-    if (user) {
-      console.log("🔐 Topbar - User Data:", {
-        id: user.id,
-        fullName: user.fullName,
-        name: user.name,
-        displayName: user.displayName,
-        email: user.email,
-        role: user.role,
-        provider: user.provider,
-        image: user.image,
-        photoUrl: user.photoUrl,
-        isAuthenticated,
-        lastLoginAt: user.lastLoginAt,
-        createdAt: user.createdAt
-      });
-    } else {
-      console.log("🔐 Topbar - No user data");
-    }
-  }, [user, isAuthenticated]);
 
   // Only show theme toggle after mounting to avoid hydration mismatch
   useEffect(() => {
@@ -81,9 +69,19 @@ export default function Topbar() {
   };
 
   const getDisplayName = () => {
-    if (user && user.fullName) return user.fullName;
-    if (user && user.displayName) return user.displayName;
-    if (user && user.name) return user.name;
+    if (!user) return 'User';
+    
+    // Check multiple possible name fields
+    if (user.fullName) return user.fullName;
+    if ((user as any).name) return (user as any).name;
+    if ((user as any).displayName) return (user as any).displayName;
+    
+    // Fallback to email if no name is available
+    if (user.email) {
+      const emailName = user.email.split('@')[0];
+      return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+    }
+    
     return 'User';
   };
 
@@ -100,95 +98,178 @@ export default function Topbar() {
   };
 
   const hasProfilePicture = () => {
-    return !!(user && (user.photoUrl || user.photoURL || user.image));
+    return !!(user && user.profile?.avatarUrl);
   };
 
   const getPhotoUrl = () => {
-    if (user && user.photoUrl) return user.photoUrl;
-    if (user && user.photoURL) return user.photoURL;
-    if (user && user.image) return user.image;
+    if (user && user.profile?.avatarUrl) return user.profile.avatarUrl;
     return undefined;
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Implement search functionality
+      console.log("Searching for:", searchQuery);
+    }
+  };
+
+  const handleNotificationClick = () => {
+    // Implement notification functionality
+    setNotifications(0);
+  };
+
+  const handleProfileClick = () => {
+    router.push("/dashboard/profile");
+  };
+
+  const handleSettingsClick = () => {
+    router.push("/dashboard/settings");
+  };
+
   return (
-    <div className="h-16 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1A1D37]">
-      <div className="flex items-center justify-between h-full px-6">
-        <div className="pl-10 lg:pl-0">
-          <h1 className="text-xs md:text-xl font-semibold text-gray-900 dark:text-white">
-            {formatDate(currentTime)}
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {formatTime(currentTime)}
-          </p>
+    <div className="h-16 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1A1D37] sticky top-0 z-40">
+      <div className="flex items-center justify-between h-full px-4 lg:px-6">
+        {/* Left Section - Menu Toggle & Date/Time */}
+        <div className="flex items-center space-x-4">
+          {/* Mobile Menu Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMenuToggle}
+            className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+          >
+            {isMenuOpen ? (
+              <FiX className="w-5 h-5" />
+            ) : (
+              <FiMenu className="w-5 h-5" />
+            )}
+          </Button>
+
+          {/* Date and Time */}
+          <div className="hidden sm:block">
+            <h1 className="text-sm lg:text-lg font-semibold text-gray-900 dark:text-white">
+              {formatDate(currentTime)}
+            </h1>
+            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">
+              {formatTime(currentTime)}
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          {/* Search */}
-          <div className="relative hidden md:block">
+        {/* Center Section - Search */}
+        <div className="flex-1 max-w-md mx-4">
+          <form onSubmit={handleSearch} className="relative">
             <input
               type="text"
-              placeholder="Search..."
-              className="w-48 lg:w-64 px-4 py-2 pl-10 border border-gray-300 dark:border-gray-700 rounded-full focus:ring-2 focus:ring-[#0F5BBD] focus:border-transparent dark:bg-[#010102] dark:text-white"
+              placeholder="Search dashboard..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 pl-10 pr-4 border border-gray-300 dark:border-gray-700 rounded-full focus:ring-2 focus:ring-[#0F5BBD] focus:border-transparent dark:bg-[#010102] dark:text-white text-sm cursor-text"
             />
-            <FiSearch className="absolute left-3 top-3 text-gray-400" />
-          </div>
+            <FiSearch className="absolute left-3 top-2.5 text-gray-400 w-4 h-4 cursor-pointer" />
+          </form>
+        </div>
 
+        {/* Right Section - Actions */}
+        <div className="flex items-center space-x-2">
           {/* Theme Toggle */}
           {mounted && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
             >
               {theme === "dark" ? (
-                <FiSun className="w-5 h-5" />
+                <FiSun className="w-4 h-4" />
               ) : (
-                <FiMoon className="w-5 h-5" />
+                <FiMoon className="w-4 h-4" />
               )}
-            </button>
+            </Button>
           )}
 
           {/* Notifications */}
-          <button className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white relative">
-            <FiBell className="w-5 h-5" />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleNotificationClick}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 relative cursor-pointer"
+          >
+            <FiBell className="w-4 h-4" />
+            {notifications > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              >
+                {notifications > 9 ? "9+" : notifications}
+              </Badge>
+            )}
+          </Button>
 
           {/* User Menu */}
-                     <DropdownMenu modal={false} open={dropdownOpen} onOpenChange={setDropdownOpen}>
+          <DropdownMenu modal={false} open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
-              <button className="cursor-pointer flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center">
+              <Button
+                variant="ghost"
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+              >
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center cursor-pointer">
                   {hasProfilePicture() ? (
-                    <Image src={getPhotoUrl() || "/placeholder.jpg"} alt="User" width={32} height={32} className="rounded-full object-cover" />
+                    <Image 
+                      src={getPhotoUrl() || "/placeholder.jpg"} 
+                      alt="User" 
+                      width={32} 
+                      height={32} 
+                      className="rounded-full object-cover" 
+                    />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
                       {getInitials()}
                     </div>
                   )}
                 </div>
-                {/* Remove name from topbar, only avatar shown */}
-              </button>
+              </Button>
             </DropdownMenuTrigger>
-                         <DropdownMenuContent
-               align="end"
-               className="w-56 bg-white dark:bg-[#1A1D37] border border-gray-200 dark:border-gray-800"
-               sideOffset={8}
-               avoidCollisions={true}
-             >
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="px-4 py-2">
+            <DropdownMenuContent
+              align="end"
+              className="w-64 bg-white dark:bg-[#1A1D37] border border-gray-200 dark:border-gray-800"
+              sideOffset={8}
+              avoidCollisions={true}
+            >
+              <DropdownMenuLabel className="px-4 py-2">
                 <div className="font-semibold text-base text-gray-900 dark:text-white">
                   {getDisplayName()}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-300">
                   {user?.email || "No email"}
                 </div>
-              </div>
+                {user?.role && (
+                  <Badge variant="secondary" className="mt-1 text-xs">
+                    {user.role}
+                  </Badge>
+                )}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600 dark:text-red-400" onClick={async () => {
-                await signOut({ callbackUrl: "/" });
-              }}>
+              
+              <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                <FiUser className="w-4 h-4 mr-2" />
+                Profile
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={handleSettingsClick} className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                <FiSettings className="w-4 h-4 mr-2" />
+                Settings
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem 
+                className="text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20" 
+                onClick={async () => {
+                  await signOut({ callbackUrl: "/" });
+                }}
+              >
                 <FiLogOut className="w-4 h-4 mr-2" />
                 Logout
               </DropdownMenuItem>

@@ -19,7 +19,7 @@ A modern Next.js application built with TypeScript, Tailwind CSS, and Firebase.
 2. **Configure Environment Variables**
    In your Vercel project settings, add these environment variables:
    ```
-   NEXT_PUBLIC_API_BASE_URL=https://your-api-domain.com/api/v1
+   NEXT_PUBLIC_API_URL=https://your-api-domain.com/api/v1
    NODE_ENV=production
    ```
 
@@ -49,7 +49,7 @@ Copy `env.example` to `.env.local` and configure:
 
 ```bash
 # API Configuration
-NEXT_PUBLIC_API_BASE_URL=https://your-api-domain.com/api/v1
+NEXT_PUBLIC_API_URL=https://your-api-domain.com/api/v1
 
 # Environment
 NODE_ENV=production

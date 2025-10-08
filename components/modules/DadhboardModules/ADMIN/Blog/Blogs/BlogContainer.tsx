@@ -9,10 +9,13 @@ import { useRouter } from "next/navigation";
 const BLOGS_PER_PAGE = 8;
 
 export default function BlogContainer() {
-  const { data: blogs = [], isLoading, error } = useGetAllBlogs();
+  const { data: blogsResponse, isLoading, error } = useGetAllBlogs();
   const [page, setPage] = useState(1);
   const { mutate: deleteBlog } = useDeleteBlog();
   const router = useRouter();
+
+  // Extract blogs array from response
+  const blogs = blogsResponse?.blogs || [];
 
   // Pagination logic - only if blogs > BLOGS_PER_PAGE
   const totalPages = Math.ceil(blogs.length / BLOGS_PER_PAGE);

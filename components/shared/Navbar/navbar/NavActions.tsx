@@ -30,49 +30,17 @@ export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Console log user data when user changes
-  React.useEffect(() => {
-    if (user) {
-      console.log("🔐 NavActions - User Data:", {
-        id: user.id,
-        fullName: user.fullName,
-        name: user.name,
-        displayName: user.displayName,
-        email: user.email,
-        role: user.role,
-        provider: user.provider,
-        image: user.image,
-        photoUrl: user.photoUrl,
-        isAuthenticated,
-        lastLoginAt: user.lastLoginAt,
-        createdAt: user.createdAt
-      });
-    } else {
-      console.log("🔐 NavActions - No user data");
-    }
-  }, [user, isAuthenticated]);
 
   const getPhotoUrl = () => {
-    if (user && user.photoUrl) {
-      console.log("🔐 NavActions - Using photoUrl:", user.photoUrl);
-      return user.photoUrl;
+    if (user && user.profile?.avatarUrl) {
+      return user.profile.avatarUrl;
     }
-    if (user && user.photoURL) {
-      console.log("🔐 NavActions - Using photoURL:", user.photoURL);
-      return user.photoURL;
-    }
-    if (user && user.image) {
-      console.log("🔐 NavActions - Using Google image:", user.image);
-      return user.image; // NextAuth image field (Google avatar)
-    }
-    console.log("🔐 NavActions - No profile picture found");
     return undefined;
   };
 
   const getDisplayName = () => {
     if (user && user.fullName) return user.fullName;
-    if (user && user.displayName) return user.displayName;
-    if (user && user.name) return user.name; // NextAuth name field
+    if (user && (user as any).name) return (user as any).name;
     return 'User';
   };
 
@@ -89,16 +57,7 @@ export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
   };
 
   const hasProfilePicture = () => {
-    const hasPhoto = !!(user && (user.photoUrl || user.photoURL || user.image));
-    console.log("🔐 NavActions - Has profile picture:", hasPhoto);
-    if (hasPhoto) {
-      console.log("🔐 NavActions - Profile picture source:", {
-        photoUrl: user?.photoUrl,
-        photoURL: user?.photoURL,
-        image: user?.image
-      });
-    }
-    return hasPhoto;
+    return !!(user && user.profile?.avatarUrl);
   };
 
   function getImageUrl(imageUrl?: string) {

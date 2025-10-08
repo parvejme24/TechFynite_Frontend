@@ -24,28 +24,33 @@ import LOGO from "@/assets/common/logo.png";
 import Image from "next/image";
 import { AuthContext } from "@/Providers/AuthProvider";
 import { useContext } from "react";
+import { UserRole } from "@/types/user";
 
 const adminNavigation = [
-  { name: "Overview", href: "/dashboard/ADMIN", icon: FiHome },
+  { name: "Overview", href: "/dashboard", icon: FiHome },
   { name: "Profile", href: "/dashboard/profile", icon: FiUser },
-  { name: "Templates", href: "/dashboard/ADMIN/templates", icon: FiFileText },
-  { name: "Blogs", href: "/dashboard/ADMIN/blogs", icon: FiFileText },
-  { name: "Pricing", href: "/dashboard/ADMIN/pricing", icon: FiDollarSign },
-  { name: "Newsletter", href: "/dashboard/ADMIN/newsletter", icon: FiMail },
-  { name: "Users", href: "/dashboard/ADMIN/users", icon: FiUsers },
-  { name: "Analytics", href: "/dashboard/ADMIN/analytics", icon: FiBarChart2 },
+  { name: "Templates", href: "/dashboard/templates", icon: FiFileText },
+  { name: "Blogs", href: "/dashboard/blogs", icon: FiFileText },
+  { name: "Pricing", href: "/dashboard/pricing", icon: FiDollarSign },
+  { name: "Newsletter", href: "/dashboard/newsletter", icon: FiMail },
+  { name: "Users", href: "/dashboard/users", icon: FiUsers },
+  { name: "Analytics", href: "/dashboard/analytics", icon: FiBarChart2 },
   {
     name: "Service Request",
-    href: "/dashboard/ADMIN/service-request",
+    href: "/dashboard/service-request",
     icon: VscGitPullRequestGoToChanges,
   },
 ];
 
 const userNavigation = [
   { name: "Profile", href: "/dashboard/profile", icon: FiUser },
-  { name: "My Purchases", href: "/dashboard/USER/purchases", icon: FiShoppingBag },
-  { name: "Payment History", href: "/dashboard/USER/payment", icon: FiCreditCard },
-  { name: "Service Request", href: "/dashboard/USER/service-request", icon: VscGitPullRequestGoToChanges },
+  { name: "My Purchases", href: "/dashboard/purchases", icon: FiShoppingBag },
+  { name: "Payment History", href: "/dashboard/payment", icon: FiCreditCard },
+  {
+    name: "Service Request",
+    href: "/dashboard/service-request",
+    icon: VscGitPullRequestGoToChanges,
+  },
   { name: "Notifications", href: "/dashboard/notifications", icon: FiBell },
   { name: "Settings", href: "/dashboard/settings", icon: FiSettings },
 ];
@@ -54,8 +59,9 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, loading } = useContext(AuthContext) || {};
-  const isAdmin = user?.role === "ADMIN";
-  const isUser = user?.role === "USER";
+  const role = (user as { role?: UserRole })?.role;
+  const isAdmin = role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
+  const isUser = role === UserRole.USER;
 
   return (
     <>
@@ -66,7 +72,7 @@ export default function Sidebar() {
         </div>
       ) : (
         <button
-          className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none"
+          className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none cursor-pointer"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           {isMobileMenuOpen ? (
@@ -75,6 +81,14 @@ export default function Sidebar() {
             <FiMenu className="h-6 w-6" />
           )}
         </button>
+      )}
+
+      {/* Backdrop overlay to close sidebar on outside click (mobile only) */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/30 backdrop-blur-[1px] lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
       )}
 
       {/* Sidebar */}
@@ -89,14 +103,21 @@ export default function Sidebar() {
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="w-7 lg:w-9 h-7 lg:h-9 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
-                <div className="h-6 lg:h-8 w-24 lg:w-32 bg-gray-300 dark:bg-gray-600 rounded animate-pulse" style={{ animationDelay: '200ms' }}></div>
+                <div
+                  className="h-6 lg:h-8 w-24 lg:w-32 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"
+                  style={{ animationDelay: "200ms" }}
+                ></div>
               </div>
             ) : (
               <Link
                 href="/dashboard"
                 className="text-xl lg:text-2xl font-bold text-[#0F5BBD] dark:text-white flex items-center gap-2"
               >
-                <Image src={LOGO} alt="Techfynite Logo" className="w-7 lg:w-9" />
+                <Image
+                  src={LOGO}
+                  alt="Techfynite Logo"
+                  className="w-7 lg:w-9"
+                />
                 TechFynite
               </Link>
             )}
@@ -112,17 +133,23 @@ export default function Sidebar() {
                     key={index}
                     className="flex items-center px-4 py-3 rounded-lg"
                     style={{
-                      animationDelay: `${index * 100}ms`
+                      animationDelay: `${index * 100}ms`,
                     }}
                   >
                     <div className="w-5 h-5 bg-gray-300 dark:bg-gray-600 rounded mr-3 animate-pulse"></div>
-                    <div 
+                    <div
                       className={`h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse ${
-                        index === 0 ? 'w-20' : 
-                        index === 1 ? 'w-16' : 
-                        index === 2 ? 'w-24' : 
-                        index === 3 ? 'w-12' : 
-                        index === 4 ? 'w-28' : 'w-20'
+                        index === 0
+                          ? "w-20"
+                          : index === 1
+                          ? "w-16"
+                          : index === 2
+                          ? "w-24"
+                          : index === 3
+                          ? "w-12"
+                          : index === 4
+                          ? "w-28"
+                          : "w-20"
                       }`}
                     ></div>
                   </div>
@@ -136,6 +163,7 @@ export default function Sidebar() {
                     <Link
                       key={item.name}
                       href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                         isActive
                           ? "bg-[#0F5BBD] text-white"

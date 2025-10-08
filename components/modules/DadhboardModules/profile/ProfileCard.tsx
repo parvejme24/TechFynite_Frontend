@@ -5,10 +5,15 @@ import { FaEnvelopeOpen } from "react-icons/fa";
 import { Clock } from "lucide-react";
 import { IoCheckmarkCircleSharp } from "react-icons/io5";
 import { AuthContext } from "@/Providers/AuthProvider";
-
+import { RiAdminLine } from "react-icons/ri";
+import { IUser } from "@/types/auth";
 
 const ProfileCard: React.FC = () => {
   const { user, loading, error } = useContext(AuthContext) || {};
+  
+  
+  const displayName = user?.fullName || (user as any)?.name || "N/A";
+  const photoUrl = user?.profile?.avatarUrl || (user as any)?.image || "";
 
   if (loading) {
     return (
@@ -46,38 +51,41 @@ const ProfileCard: React.FC = () => {
   return (
     <div className="bg-white dark:bg-[#1A1D37] rounded-lg shadow p-6">
       <div className="flex flex-col items-center gap-2">
-                 <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center mb-2">
-           {user?.photoUrl ? (
-             <Image
-               src={user.photoUrl}
-               alt="user profile"
-               width={96}
-               height={96}
-               className="w-full h-full object-cover"
-             />
-           ) : (
-             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl">
-               {user?.displayName ? 
-                 (user.displayName.trim().split(' ').length >= 2 ? 
-                   `${user.displayName.trim().split(' ')[0][0]}${user.displayName.trim().split(' ')[user.displayName.trim().split(' ').length - 1][0]}`.toUpperCase() :
-                   user.displayName[0].toUpperCase()
-                 ) : 
-                 'U'
-               }
-             </div>
-           )}
-         </div>
-        <h3 className="text-xl font-semibold">
-          {user?.displayName || "N/A"}
-        </h3>
+        <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center mb-2">
+          {photoUrl ? (
+            <Image
+              src={photoUrl}
+              alt="user profile"
+              width={96}
+              height={96}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl">
+              {displayName && displayName !== "N/A"
+                ? displayName.trim().split(" ").length >= 2
+                  ? `${displayName.trim().split(" ")[0][0]}${
+                      displayName.trim().split(" ")[
+                        displayName.trim().split(" ").length - 1
+                      ][0]
+                    }`.toUpperCase()
+                  : displayName[0].toUpperCase()
+                : "U"}
+            </div>
+          )}
+        </div>
+        <h3 className="text-xl font-semibold">{displayName}</h3>
         <p className="text-gray-500">
           {user?.profile?.designation || "No designation"}
         </p>
 
         <div className="mt-4 space-y-2 w-full">
           <div className="flex items-center gap-2 py-1">
-            <FaEnvelopeOpen className="text-2xl" />{" "}
-            {user?.email || "N/A"}
+            <FaEnvelopeOpen className="text-2xl" /> {user?.email || "N/A"}
+          </div>
+          <hr className="w-full border-dashed border-gray-400" />
+          <div className="flex items-center gap-2 py-1">
+            <RiAdminLine className="text-2xl" /> {user?.role || "N/A"}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
@@ -89,18 +97,8 @@ const ProfileCard: React.FC = () => {
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
-            <DollarSign className="text-2xl" /> Balance:{" "}
-            {user?.profile?.balance ?? 0}
-          </div>
-          <hr className="w-full border-dashed border-gray-400" />
-          <div className="flex items-center gap-2 py-1">
-            <UserIcon className="text-2xl" /> Role:{" "}
-            {user?.role || "N/A"}
-          </div>
-          <hr className="w-full border-dashed border-gray-400" />
-          <div className="flex items-center gap-2 py-1">
             <IoCheckmarkCircleSharp className="text-green-500 text-2xl" />{" "}
-            Verified: {"No"}
+            Verified: {user?.otpVerified ? "Yes" : "No"}
           </div>
           <hr className="w-full border-dashed border-gray-400" />
           <div className="flex items-center gap-2 py-1">
@@ -110,8 +108,6 @@ const ProfileCard: React.FC = () => {
               : "N/A"}
           </div>
         </div>
-
-
       </div>
     </div>
   );

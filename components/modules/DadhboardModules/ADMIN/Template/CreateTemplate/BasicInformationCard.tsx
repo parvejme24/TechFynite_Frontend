@@ -95,17 +95,16 @@ export default function BasicInformationCard({
     }
     // If it's a relative path starting with /uploads, use the base URL without /api/v1
     if (imageUrl.startsWith('/uploads/')) {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
       // Remove /api/v1 from the base URL for uploads
       const uploadBaseUrl = baseUrl.replace('/api/v1', '');
       return `${uploadBaseUrl}${imageUrl}`;
     }
     // For other relative paths, prepend the full base URL
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
     return `${baseUrl}${imageUrl}`;
   };
 
-  // Debug: Log categories to see what we're getting
   console.log("Categories received:", categories);
   console.log("Categories with images:", categories?.filter((cat: Category) => cat.imageUrl));
   console.log("Full category data:", categories?.map((cat: Category) => ({
@@ -116,7 +115,6 @@ export default function BasicInformationCard({
     slug: cat.slug
   })));
   
-  // Debug: Log selected category
   const selectedCategory = categories.find((cat) => cat.id === formData.categoryId);
   if (selectedCategory) {
     console.log("Selected category:", {

@@ -48,7 +48,8 @@ export default function CreateBlogForm({ onSuccess }: CreateBlogFormProps) {
 
   const { user } = useContext(AuthContext) || {};
   const createBlogMutation = useCreateBlog();
-  const { data: categories = [], isLoading: categoriesLoading } = useGetCategories();
+  const { data: categoriesResponse, isLoading: categoriesLoading } = useGetCategories();
+  const categories = categoriesResponse?.categories || [];
 
   const {
     register,

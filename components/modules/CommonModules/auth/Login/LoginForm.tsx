@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import {
@@ -19,7 +19,9 @@ import Image from "next/image";
 import Link from "next/link";
 import GoogleIcon from "@/assets/common/svg/GoogleIcon";
 import Swal from "sweetalert2";
-import { AuthContext } from "@/Providers/AuthProvider";
+import { useGoogleSignIn } from "@/hooks/useAuth";
+import { signIn } from "next-auth/react";
+import { extractErrorMessage } from "@/lib/errorHandler";
 
 interface LoginFormValues {
   email: string;
@@ -35,31 +37,74 @@ export default function LoginForm() {
     mode: "onTouched",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const authContext = useContext(AuthContext);
+  const googleSignIn = useGoogleSignIn();
 
   const onSubmit = async (data: LoginFormValues) => {
-    setLoading(true);
+    setIsLoading(true);
+
     try {
-      if (!authContext) throw new Error("Auth context not available");
-      await authContext.signInUser(data.email, data.password);
-      Swal.fire({
-        icon: "success",
-        title: "Login Successful!",
-        timer: 1500,
-        showConfirmButton: false,
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
       });
-      setTimeout(() => router.push("/dashboard"), 2000);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+
+      if (result?.ok) {
+        Swal.fire({
+          icon: "success",
+          title: "Login Successful!",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        setTimeout(() => router.push("/dashboard"), 2000);
+      } else {
+        // Handle NextAuth errors
+        console.error("🔐 NextAuth login failed:", result);
+
+        let errorMessage = "Invalid email or password";
+
+        // Map NextAuth errors to user-friendly messages
+        if (result?.error) {
+          switch (result.error) {
+            case "CredentialsSignin":
+              errorMessage = "Invalid email or password";
+              break;
+            case "AccessDenied":
+              errorMessage = "Access denied. Please contact support.";
+              break;
+            case "Configuration":
+              errorMessage =
+                "Server configuration error. Please try again later.";
+              break;
+            case "Verification":
+              errorMessage = "Please verify your email before logging in.";
+              break;
+            default:
+              errorMessage = result.error;
+          }
+        }
+
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: errorMessage,
+        });
+      }
+    } catch (err: any) {
+      console.error("Login error:", err);
+
+      // Extract error message using utility function
+      const errorMessage = extractErrorMessage(err, "Login failed");
+
       Swal.fire({
         icon: "error",
         title: "Login Failed",
         text: errorMessage,
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -81,7 +126,12 @@ export default function LoginForm() {
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ duration: 0.6, delay: 0.3, type: "spring", stiffness: 200 }}
+              transition={{
+                duration: 0.6,
+                delay: 0.3,
+                type: "spring",
+                stiffness: 200,
+              }}
             >
               <Image src={LOGO} alt="TechFynite Logo" />
             </motion.div>
@@ -93,7 +143,7 @@ export default function LoginForm() {
               TechFynite
             </motion.span>
           </h3>
-          <motion.h2 
+          <motion.h2
             className="text-[32px] md:text-[40px] font-bold"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -157,7 +207,7 @@ export default function LoginForm() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <motion.div 
+                  <motion.div
                     className="relative"
                     whileFocus={{ scale: 1.02 }}
                     transition={{ duration: 0.2 }}
@@ -186,7 +236,7 @@ export default function LoginForm() {
             )}
           />
         </motion.div>
-        <motion.div 
+        <motion.div
           className="flex justify-end text-[#3C5F4F] *:hover:underline"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -207,26 +257,26 @@ export default function LoginForm() {
             <Button
               type="submit"
               className="w-full bg-[#0F5BBD] hover:bg-[#0f5abdda] cursor-pointer text-white h-[42px] text-[16px]"
-              disabled={loading}
+              disabled={isLoading}
             >
-              {loading ? "Logging in..." : "Login Now"}
+              {isLoading ? "Logging in..." : "Login Now"}
             </Button>
           </motion.div>
         </motion.div>
-        <motion.div 
+        <motion.div
           className="flex items-center gap-2"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 1.0 }}
         >
-          <motion.div 
+          <motion.div
             className="flex-1 h-px bg-muted-foreground/20"
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ duration: 0.5, delay: 1.1 }}
           />
           <span className="text-xs text-muted-foreground">or</span>
-          <motion.div 
+          <motion.div
             className="flex-1 h-px bg-muted-foreground/20"
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
@@ -247,29 +297,8 @@ export default function LoginForm() {
               type="button"
               variant="outline"
               className="w-full h-[42px] cursor-pointer rounded-full flex items-center justify-center gap-2"
-              onClick={async () => {
-                setLoading(true);
-                try {
-                  if (!authContext) throw new Error("Auth context not available");
-                  await authContext.googleLogin();
-                  Swal.fire({
-                    icon: "success",
-                    title: "Google Sign-In Successful!",
-                    timer: 1500,
-                    showConfirmButton: false,
-                  });
-                  setTimeout(() => router.push("/"), 1500);
-                } catch (err) {
-                  const errorMessage =
-                    err instanceof Error ? err.message : "Unknown error";
-                  Swal.fire({
-                    icon: "error",
-                    title: "Google Sign-In Failed",
-                    text: errorMessage,
-                  });
-                } finally {
-                  setLoading(false);
-                }
+              onClick={() => {
+                googleSignIn();
               }}
             >
               <motion.div
@@ -282,7 +311,7 @@ export default function LoginForm() {
             </Button>
           </motion.div>
         </motion.div>
-        <motion.div 
+        <motion.div
           className="text-center text-[15px] mt-2 text-[#718096]"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

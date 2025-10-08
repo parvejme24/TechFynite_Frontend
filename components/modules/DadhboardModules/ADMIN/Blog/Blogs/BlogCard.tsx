@@ -6,13 +6,13 @@ import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { FiEdit3, FiTrash2 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { BlogListResponse } from "@/hooks/useBlogApi";
+import { Blog } from "@/types/blog";
 
 export interface BlogCardProps {
-  blog: BlogListResponse;
+  blog: Blog;
   onClick?: () => void;
-  onEdit?: (blog: BlogListResponse) => void;
-  onDelete?: (blog: BlogListResponse) => void;
+  onEdit?: (blog: Blog) => void;
+  onDelete?: (blog: Blog) => void;
 }
 
 import placeholderImage from "@/assets/common/placeholder.png";

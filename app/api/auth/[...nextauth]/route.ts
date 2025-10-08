@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
+import { randomUUID } from "crypto";
 
 const authOptions: NextAuthOptions = {
   providers: [
@@ -17,13 +18,16 @@ const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          console.log("🔐 NextAuth - Missing credentials");
           return null;
         }
 
-        console.log("🔐 NextAuth - Attempting credentials login for:", credentials.email);
+        if (!process.env.NEXT_PUBLIC_API_URL) {
+          return null;
+        }
 
         try {
+          const clientToken = randomUUID();
+          
           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
             method: "POST",
             headers: {
@@ -32,106 +36,99 @@ const authOptions: NextAuthOptions = {
             body: JSON.stringify({
               email: credentials.email,
               password: credentials.password,
+              clientToken: clientToken,
             }),
           });
 
+          if (!response.ok) {
+            return null;
+          }
+
           const data = await response.json();
-          console.log("🔐 NextAuth - Backend response:", data);
 
           if (data.success && data.data?.user) {
             const userData = {
               id: data.data.user.id,
               email: data.data.user.email,
               name: data.data.user.fullName,
+              fullName: data.data.user.fullName,
               image: data.data.user.profile?.avatarUrl,
               nextAuthSecret: data.data.nextAuthSecret,
               expiresAt: data.data.expiresAt,
               role: data.data.user.role,
+              profile: data.data.user.profile,
             };
-            console.log("🔐 NextAuth - Returning user data:", userData);
             return userData;
           }
-        } catch (error) {
-          console.error("🔐 NextAuth - Auth error:", error);
-        }
 
-        console.log("🔐 NextAuth - Login failed");
-        return null;
+          return null;
+        } catch (error) {
+          return null;
+        }
       }
     })
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log("🔐 NextAuth - SignIn callback triggered");
-      console.log("🔐 NextAuth - User:", user);
-      console.log("🔐 NextAuth - Account:", account);
-      console.log("🔐 NextAuth - Profile:", profile);
-
       if (account?.provider === "google") {
-        console.log("🔐 NextAuth - Processing Google OAuth");
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google-login`, {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              email: user.email!,
-              fullName: user.name!,
-              providerId: user.id,
-              avatarUrl: user.image, // Google profile picture
+              email: user.email,
+              fullName: user.name,
+              googleId: account.providerAccountId,
+              avatarUrl: user.image,
             }),
           });
 
-          const data = await response.json();
-          console.log("🔐 NextAuth - Google login backend response:", data);
-
-          if (data.success && data.data?.user) {
-            // Update user object with backend data
-            user.id = data.data.user.id;
-            user.role = data.data.user.role;
-            user.nextAuthSecret = data.data.nextAuthSecret;
-            user.expiresAt = data.data.expiresAt;
-            console.log("🔐 NextAuth - Updated user object:", user);
-            return true;
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data?.user) {
+              user.id = data.data.user.id;
+              user.role = data.data.user.role;
+              user.nextAuthSecret = data.data.nextAuthSecret;
+              user.expiresAt = data.data.expiresAt;
+              user.profile = data.data.user.profile;
+            }
           }
         } catch (error) {
-          console.error("🔐 NextAuth - Google auth error:", error);
+          return false;
         }
-        console.log("🔐 NextAuth - Google login failed");
-        return false;
       }
       return true;
     },
     async jwt({ token, user, account }) {
-      console.log("🔐 NextAuth - JWT callback triggered");
-      console.log("🔐 NextAuth - Token:", token);
-      console.log("🔐 NextAuth - User:", user);
-      console.log("🔐 NextAuth - Account:", account);
-
       if (user) {
         token.id = user.id;
+        token.name = user.name;
+        token.fullName = user.fullName;
+        token.email = user.email;
+        token.image = user.image;
+        token.profile = user.profile;
         token.role = user.role;
         token.nextAuthSecret = user.nextAuthSecret;
         token.expiresAt = user.expiresAt;
-        console.log("🔐 NextAuth - Updated token with user data:", token);
       }
       return token;
     },
     async session({ session, token }) {
-      console.log("🔐 NextAuth - Session callback triggered");
-      console.log("🔐 NextAuth - Session:", session);
-      console.log("🔐 NextAuth - Token:", token);
-
       if (token) {
         session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.fullName = token.fullName as string;
+        session.user.email = token.email as string;
+        session.user.image = token.image as string;
+        session.user.profile = token.profile as any;
         session.user.role = token.role as string;
         session.user.nextAuthSecret = token.nextAuthSecret as string;
         session.user.expiresAt = token.expiresAt as string;
-        console.log("🔐 NextAuth - Updated session with token data:", session);
       }
       return session;
-    }
+    },
   },
   pages: {
     signIn: "/auth/signin",
