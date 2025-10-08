@@ -8,9 +8,8 @@ import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-// Mock newsletter hook - in real app, this would be imported from your API hooks
 import { toast } from "sonner";
-
+import { useNewsletter } from "@/hooks/useNewsletterApi";
 
 // Link underline sweep animation
 function UnderlineText({ children }: { children: React.ReactNode }) {
@@ -62,17 +61,6 @@ function MotionLinkText({ text }: { text: string }) {
   );
 }
 
-// Mock newsletter subscription hook
-const useSubscribeNewsletter = () => {
-  return {
-    mutateAsync: async ({ email }: { email: string }) => {
-      // Mock implementation - in real app, this would call your backend API
-      console.log("Mock newsletter subscription for:", email);
-      return Promise.resolve({ success: true });
-    },
-    isPending: false,
-  };
-};
 
 const socialLinks = [
   { icon: Twitter, label: "Twitter", href: "#" },
@@ -143,7 +131,7 @@ const FooterLinks = ({
 
 const NewsletterSection = () => {
   const [email, setEmail] = useState("");
-  const subscribeMutation = useSubscribeNewsletter();
+  const { subscribe, isSubscribing, subscribeError } = useNewsletter();
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,12 +149,35 @@ const NewsletterSection = () => {
     }
 
     try {
-      await subscribeMutation.mutateAsync({ email: email.trim() });
-      toast.success("Successfully subscribed to newsletter!");
-      setEmail(""); // Clear the input after successful subscription
-    } catch (error) {
+      const result = await subscribe(email.trim());
+      if (result.success) {
+        toast.success("Successfully subscribed to newsletter!");
+        setEmail(""); // Clear the input after successful subscription
+      } else {
+        toast.error(result.message || "Failed to subscribe. Please try again.");
+      }
+    } catch (error: any) {
       console.error("Newsletter subscription error:", error);
-      toast.error("Failed to subscribe. Please try again.");
+      
+      // Handle specific error messages based on response
+      if (error?.response?.data?.message) {
+        const errorMessage = error.response.data.message;
+        if (errorMessage.includes("already subscribed")) {
+          toast.error("This email is already subscribed to our newsletter.");
+        } else if (errorMessage.includes("Invalid email")) {
+          toast.error("Please enter a valid email address.");
+        } else {
+          toast.error(errorMessage);
+        }
+      } else if (error?.response?.status === 400) {
+        toast.error("Invalid request. Please check your email and try again.");
+      } else if (error?.response?.status === 500) {
+        toast.error("Server error. Please try again later.");
+      } else if (error?.message?.includes("Network Error")) {
+        toast.error("Network error. Please check your connection and try again.");
+      } else {
+        toast.error("Failed to subscribe. Please try again.");
+      }
     }
   };
 
@@ -182,14 +193,14 @@ const NewsletterSection = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-[70%] bg-[#0A0D20] border-[#E4E4E7] border-[2px] text-white placeholder:text-gray-400 h-11 px-4"
-          disabled={subscribeMutation.isPending}
+          disabled={isSubscribing}
         />
         <Button 
           type="submit"
           className="bg-[#2563EB] hover:bg-[#2564ebc0] h-10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={subscribeMutation.isPending}
+          disabled={isSubscribing}
         >
-          {subscribeMutation.isPending ? "Subscribing..." : "Subscribe"}
+          {isSubscribing ? "Subscribing..." : "Subscribe"}
         </Button>
       </form>
     </div>

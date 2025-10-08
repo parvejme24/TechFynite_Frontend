@@ -2,18 +2,8 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-// Mock newsletter hook - in real app, this would be imported from your API hooks
-const useSubscribeNewsletter = () => {
-  return {
-    mutateAsync: async ({ email }: { email: string }) => {
-      // Mock implementation - in real app, this would call your backend API
-      console.log("Mock newsletter subscription for:", email);
-      return Promise.resolve({ success: true });
-    },
-    isPending: false,
-  };
-};
 import { toast } from "sonner";
+import { useNewsletter } from "@/hooks/useNewsletterApi";
 
 const NewsletterHeader = () => (
   <motion.div
@@ -34,7 +24,7 @@ const NewsletterHeader = () => (
 
 const NewsletterForm = () => {
   const [email, setEmail] = useState("");
-  const subscribeMutation = useSubscribeNewsletter();
+  const { subscribe, isSubscribing, subscribeError } = useNewsletter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,12 +42,35 @@ const NewsletterForm = () => {
     }
 
     try {
-      await subscribeMutation.mutateAsync({ email: email.trim() });
-      toast.success("Thank you for subscribing to our newsletter!");
-      setEmail(""); // Clear the input after successful subscription
-    } catch (error) {
+      const result = await subscribe(email.trim());
+      if (result.success) {
+        toast.success("Thank you for subscribing to our newsletter!");
+        setEmail(""); // Clear the input after successful subscription
+      } else {
+        toast.error(result.message || "Failed to subscribe. Please try again.");
+      }
+    } catch (error: any) {
       console.error("Newsletter subscription error:", error);
-      toast.error("Failed to subscribe. Please try again.");
+      
+      // Handle specific error messages based on response
+      if (error?.response?.data?.message) {
+        const errorMessage = error.response.data.message;
+        if (errorMessage.includes("already subscribed")) {
+          toast.error("This email is already subscribed to our newsletter.");
+        } else if (errorMessage.includes("Invalid email")) {
+          toast.error("Please enter a valid email address.");
+        } else {
+          toast.error(errorMessage);
+        }
+      } else if (error?.response?.status === 400) {
+        toast.error("Invalid request. Please check your email and try again.");
+      } else if (error?.response?.status === 500) {
+        toast.error("Server error. Please try again later.");
+      } else if (error?.message?.includes("Network Error")) {
+        toast.error("Network error. Please check your connection and try again.");
+      } else {
+        toast.error("Failed to subscribe. Please try again.");
+      }
     }
   };
 
@@ -77,13 +90,13 @@ const NewsletterForm = () => {
         placeholder="Enter Your Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        disabled={subscribeMutation.isPending}
+        disabled={isSubscribing}
       />
       <input
         type="submit"
-        value={subscribeMutation.isPending ? "Subscribing..." : "Subscribe"}
+        value={isSubscribing ? "Subscribing..." : "Subscribe"}
         className="absolute right-1 cursor-pointer text-white bg-[#0F5BBD] px-5 md:px-10 py-2 md:py-2.5 rounded-lg hover:bg-[#0d4da3] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={subscribeMutation.isPending}
+        disabled={isSubscribing}
       />
     </motion.form>
   );

@@ -1,39 +1,35 @@
 "use client";
 
-import React, { useState } from 'react';
-// Mock newsletter hooks - in real app, these would be imported from your API hooks
-const useNewsletterSubscribers = () => {
-  return {
-    data: [
-      { id: "1", email: "user1@example.com", name: "John Doe", status: "active", subscribedAt: "2024-01-01" },
-      { id: "2", email: "user2@example.com", name: "Jane Smith", status: "inactive", subscribedAt: "2024-01-02" }
-    ] as any[], // Mock data for now
-    isLoading: false,
-    error: null,
-    refetch: () => Promise.resolve(),
-  };
-};
-
-const useNewsletterCount = () => {
-  return {
-    data: {
-      total: 0,
-      active: 0,
-      inactive: 0,
-    },
-  };
-};
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FiMail, FiUsers, FiSearch, FiDownload, FiRefreshCw } from 'react-icons/fi';
-import { toast } from 'sonner';
+import React, { useState } from "react";
+import { useNewsletter, useGetNewsletterStats } from "@/hooks/useNewsletterApi";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  FiMail,
+  FiUsers,
+  FiSearch,
+  FiDownload,
+  FiRefreshCw,
+  FiTrash2,
+  FiTrendingUp,
+  FiTrendingDown,
+} from "react-icons/fi";
+import { toast } from "sonner";
+import Swal from "sweetalert2";
 import Image from "next/image";
 
 // Skeleton Components
 const StatsCardSkeleton = () => (
-  <Card className='bg-white dark:bg-[#1A1D37]'>
+  <Card className="bg-white dark:bg-[#1A1D37]">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <div className="h-4 w-24 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 dark:from-gray-600 dark:via-gray-500 dark:to-gray-600 rounded animate-pulse bg-[length:200%_100%] animate-shimmer"></div>
       <div className="h-4 w-4 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 dark:from-gray-600 dark:via-gray-500 dark:to-gray-600 rounded animate-pulse bg-[length:200%_100%] animate-shimmer"></div>
@@ -100,7 +96,7 @@ const NewsletterSkeleton = () => (
       </div>
 
       {/* Table Skeleton */}
-      <Card className='bg-white dark:bg-[#1A1D37]'>
+      <Card className="bg-white dark:bg-[#1A1D37]">
         <CardHeader>
           <div className="h-6 w-48 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 dark:from-gray-600 dark:via-gray-500 dark:to-gray-600 rounded animate-pulse bg-[length:200%_100%] animate-shimmer"></div>
         </CardHeader>
@@ -138,56 +134,128 @@ const NewsletterSkeleton = () => (
     </div>
     <style jsx>{`
       @keyframes shimmer {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
+        0% {
+          background-position: -200% 0;
+        }
+        100% {
+          background-position: 200% 0;
+        }
       }
-      .animate-shimmer { animation: shimmer 2s infinite; }
+      .animate-shimmer {
+        animation: shimmer 2s infinite;
+      }
     `}</style>
   </div>
 );
 
 export default function NewsletterContainer() {
-  const { data: subscribers = [], isLoading, error, refetch } = useNewsletterSubscribers();
-  const { data: count } = useNewsletterCount();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const {
+    subscribers = [],
+    isLoading,
+    error,
+    deleteSubscriber,
+    isDeleting,
+  } = useNewsletter();
+
+  const { data: statsData, isLoading: statsLoading } = useGetNewsletterStats();
+  const stats = statsData?.data;
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Filter subscribers based on search term and status
   const filteredSubscribers = subscribers.filter((subscriber) => {
-    const matchesSearch = subscriber.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (subscriber.name && subscriber.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = filterStatus === 'all' || subscriber.status === filterStatus;
+    const matchesSearch =
+      subscriber.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (subscriber.user?.fullName &&
+        subscriber.user.fullName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()));
+    const matchesStatus =
+      filterStatus === "all" ||
+      (filterStatus === "active" && subscriber.isActive) ||
+      (filterStatus === "inactive" && !subscriber.isActive);
     return matchesSearch && matchesStatus;
   });
 
   const handleRefresh = () => {
-    refetch();
-    toast.success('Subscriber list refreshed!');
+    window.location.reload(); // Simple refresh for now
+    toast.success("Subscriber list refreshed!");
+  };
+
+  const handleDelete = async (id: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this action!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      focusCancel: true,
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      await deleteSubscriber(id);
+
+      Swal.fire({
+        title: "Deleted!",
+        text: "The subscriber has been deleted successfully.",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error: any) {
+      console.error("Delete error:", error);
+
+      Swal.fire({
+        title: "Error!",
+        text:
+          error?.message || "Failed to delete subscriber. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const handleExport = () => {
     const csvContent = [
-      ['Email', 'Name', 'Status', 'Subscribed Date'],
-      ...filteredSubscribers.map(sub => [
+      ["Email", "Name", "Status", "Subscribed Date", "User ID"],
+      ...filteredSubscribers.map((sub) => [
         sub.email,
-        sub.name || 'Anonymous',
-        sub.status,
-        new Date(sub.subscribedAt).toLocaleDateString()
-      ])
-    ].map(row => row.join(',')).join('\n');
+        sub.user?.fullName || "Anonymous",
+        sub.isActive ? "Active" : "Inactive",
+        new Date(sub.createdAt).toLocaleDateString(),
+        sub.userId || "N/A",
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `newsletter-subscribers-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `newsletter-subscribers-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
-    toast.success('Subscriber list exported!');
+    toast.success("Subscriber list exported!");
   };
 
   // Show skeleton while loading
-  if (isLoading) {
+  if (isLoading || statsLoading) {
     return <NewsletterSkeleton />;
   }
 
@@ -196,8 +264,13 @@ export default function NewsletterContainer() {
       <div className="min-h-screen py-8">
         <div className="container mx-auto max-w-7xl px-4">
           <div className="text-center py-12">
-            <div className="text-red-500 text-lg mb-4">Error loading newsletter subscribers</div>
-            <Button onClick={handleRefresh} className="bg-blue-600 hover:bg-blue-700">
+            <div className="text-red-500 text-lg mb-4">
+              Error loading newsletter subscribers
+            </div>
+            <Button
+              onClick={handleRefresh}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               <FiRefreshCw className="w-4 h-4 mr-2" />
               Try Again
             </Button>
@@ -212,7 +285,7 @@ export default function NewsletterContainer() {
       <div className="container mx-auto max-w-7xl px-4">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Newsletter Subscribers
@@ -222,11 +295,18 @@ export default function NewsletterContainer() {
               </p>
             </div>
             <div className="flex gap-3">
-              <Button onClick={handleRefresh} variant="outline" className="cursor-pointer">
+              <Button
+                onClick={handleRefresh}
+                variant="outline"
+                className="cursor-pointer"
+              >
                 <FiRefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              <Button onClick={handleExport} className="bg-green-600 hover:bg-green-700 cursor-pointer">
+              <Button
+                onClick={handleExport}
+                className="bg-green-600 hover:bg-green-700 cursor-pointer"
+              >
                 <FiDownload className="w-4 h-4 mr-2" />
                 Export CSV
               </Button>
@@ -235,35 +315,84 @@ export default function NewsletterContainer() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className='bg-white dark:bg-[#1A1D37]'>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+          <Card className="bg-white dark:bg-[#1A1D37]">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Subscribers</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Subscribers
+              </CardTitle>
               <FiUsers className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{count?.total || 0}</div>
+              <div className="text-2xl font-bold">
+                {stats?.totalSubscribers || 0}
+              </div>
             </CardContent>
           </Card>
-          <Card className='bg-white dark:bg-[#1A1D37]'>
+          <Card className="bg-white dark:bg-[#1A1D37]">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Subscribers</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Active Subscribers
+              </CardTitle>
               <FiMail className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{count?.active || 0}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats?.activeSubscribers || 0}
+              </div>
             </CardContent>
           </Card>
-          <Card className='bg-white dark:bg-[#1A1D37]'>
+          <Card className="bg-white dark:bg-[#1A1D37]">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Inactive Subscribers</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Inactive Subscribers
+              </CardTitle>
               <FiMail className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{count?.inactive || 0}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {stats?.inactiveSubscribers || 0}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white dark:bg-[#1A1D37]">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Growth Rate</CardTitle>
+              {stats?.growthRate && stats.growthRate >= 0 ? (
+                <FiTrendingUp className="h-4 w-4 text-green-500" />
+              ) : (
+                <FiTrendingDown className="h-4 w-4 text-red-500" />
+              )}
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`text-2xl font-bold ${
+                  stats?.growthRate && stats.growthRate >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {stats?.growthRate ? `${stats.growthRate.toFixed(1)}%` : "0%"}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white dark:bg-[#1A1D37]">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Unsubscribe Rate
+              </CardTitle>
+              <FiTrendingDown className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">
+                {stats?.unsubscribeRate
+                  ? `${stats.unsubscribeRate.toFixed(1)}%`
+                  : "0%"}
+              </div>
             </CardContent>
           </Card>
         </div>
+
 
         {/* Filters */}
         <div className="mb-6 flex flex-col sm:flex-row gap-4">
@@ -276,35 +405,39 @@ export default function NewsletterContainer() {
               className="pl-10"
             />
           </div>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          >
-            <option value="all">All Status</option>
-            <option value="subscribed">Subscribed</option>
-            <option value="unsubscribed">Unsubscribed</option>
-            <option value="pending">Pending</option>
-          </select>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Subscribers Table */}
-        <Card className='bg-white dark:bg-[#1A1D37]'>
+        <Card className="bg-white dark:bg-[#1A1D37]">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Subscriber List ({filteredSubscribers.length} of {subscribers.length})</span>
+              <span>
+                Subscriber List ({filteredSubscribers.length} of{" "}
+                {subscribers.length})
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {filteredSubscribers.length === 0 ? (
               <div className="text-center py-8">
                 <FiMail className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-medium mb-2">No subscribers found</h3>
+                <h3 className="text-lg font-medium mb-2">
+                  No subscribers found
+                </h3>
                 <p className="text-gray-500">
-                  {searchTerm || filterStatus !== 'all' 
-                    ? 'Try adjusting your search or filters'
-                    : 'No newsletter subscribers yet'
-                  }
+                  {searchTerm || filterStatus !== "all"
+                    ? "Try adjusting your search or filters"
+                    : "No newsletter subscribers yet"}
                 </p>
               </div>
             ) : (
@@ -312,22 +445,35 @@ export default function NewsletterContainer() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Email</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Name</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Subscribed Date</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Last Updated</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                        Email
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                        Name
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                        Status
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                        Subscribed Date
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredSubscribers.map((subscriber) => (
-                      <tr key={subscriber.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <tr
+                        key={subscriber.id}
+                        className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                      >
                         <td className="py-3 px-4">
                           <div className="flex items-center">
-                            {subscriber.avatar_url ? (
+                            {(subscriber.user as any)?.profile?.avatarUrl ? (
                               <Image
-                                src={subscriber.avatar_url}
-                                alt={subscriber.name || 'User'}
+                                src={(subscriber.user as any).profile.avatarUrl}
+                                alt={subscriber.user?.fullName || "User"}
                                 width={32}
                                 height={32}
                                 className="w-8 h-8 rounded-full mr-3"
@@ -337,29 +483,45 @@ export default function NewsletterContainer() {
                                 <FiMail className="w-4 h-4 text-gray-500" />
                               </div>
                             )}
-                            <span className="font-medium text-gray-900 dark:text-white">{subscriber.email}</span>
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {subscriber.email}
+                            </span>
                           </div>
                         </td>
                         <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
-                          {subscriber.name || 'Anonymous'}
+                          {subscriber.user?.fullName || "Anonymous"}
                         </td>
                         <td className="py-3 px-4">
-                          <Badge 
-                            variant={subscriber.status === 'subscribed' ? 'default' : 'secondary'}
+                          <Badge
+                            variant={
+                              subscriber.isActive ? "default" : "secondary"
+                            }
                             className={
-                              subscriber.status === 'subscribed' 
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                              subscriber.isActive
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
                             }
                           >
-                            {subscriber.status}
+                            {subscriber.isActive ? "Active" : "Inactive"}
                           </Badge>
                         </td>
                         <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
-                          {new Date(subscriber.subscribedAt).toLocaleDateString()}
+                          {new Date(subscriber.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
-                          {new Date(subscriber.lastChanged).toLocaleDateString()}
+                        <td className="py-3 px-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(subscriber.id)}
+                            disabled={deletingId === subscriber.id}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+                          >
+                            {deletingId === subscriber.id ? (
+                              <FiRefreshCw className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <FiTrash2 className="w-4 h-4" />
+                            )}
+                          </Button>
                         </td>
                       </tr>
                     ))}
