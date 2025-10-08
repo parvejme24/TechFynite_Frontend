@@ -16,6 +16,9 @@ import {
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tech-fynite-backend.vercel.app/api/v1';
 
+// Debug: Log the base URL being used
+console.log("🔧 Redux API Base URL:", baseUrl);
+
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
@@ -25,6 +28,9 @@ export const authApi = createApi({
         const token = localStorage.getItem('nextAuthSecret');
         if (token) {
           headers.set('authorization', `Bearer ${token}`);
+          console.log("🔑 Redux API - Token added to headers");
+        } else {
+          console.log("⚠️ Redux API - No token found in localStorage");
         }
       }
       headers.set('content-type', 'application/json');
@@ -97,7 +103,7 @@ export const authApi = createApi({
     }),
 
     // Admin routes (admin authentication required)
-    getAllUsers: builder.query<IApiResponse<{ users: IUser[]; pagination: any }>, IUserQuery | void>({
+    getAllUsers: builder.query<IApiResponse<IUser[]> & { pagination: any }, IUserQuery | void>({
       query: (params = {}) => ({ 
         url: '/auth/users', 
         method: 'GET', 
