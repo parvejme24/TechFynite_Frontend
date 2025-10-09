@@ -175,16 +175,6 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Get the actual user data - prioritize fresh API data over session data
   const actualUser = currentUserData?.data?.user || user || null;
   
-  // Debug: Log user data sources
-  if (actualUser) {
-    console.log("AuthProvider - User data sources:", {
-      sessionUser: user,
-      apiUser: currentUserData?.data?.user,
-      actualUser: actualUser,
-      actualUserFullName: actualUser.fullName,
-      actualUserName: (actualUser as any).name
-    });
-  }
   const loading = isLoading || (isAuthenticated && !actualUser);
   const error = currentUserError ? 'Failed to fetch user data' : null;
 

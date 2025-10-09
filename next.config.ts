@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
       "play-lh.googleusercontent.com",
       "media.licdn.com",
       "i.ibb.co.com",
+      "res.cloudinary.com",
     ],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,

@@ -29,7 +29,6 @@ import {
   FiUserX,
   FiTrash2,
   FiShield,
-  FiShieldOff,
   FiUser,
   FiUserPlus,
   FiDownload,
@@ -221,32 +220,10 @@ export default function UsersContainer() {
   const users = usersData?.data || [];
   const stats = statsData?.data;
 
-  // Debug: Log API responses
-  console.log("🔍 Users API Debug:", {
-    usersData,
-    users,
-    usersLoading,
-    usersError,
-    statsData,
-    stats,
-    statsLoading,
-    statsError,
-    currentUser,
-    authToken:
-      typeof window !== "undefined"
-        ? localStorage.getItem("nextAuthSecret")
-        : "N/A",
-    apiUrl: process.env.NEXT_PUBLIC_API_URL,
-    apiBaseUrl:
-      process.env.NEXT_PUBLIC_API_URL ||
-      "https://tech-fynite-backend.vercel.app/api/v1",
-  });
-
   // Use users directly since API already filters them
   const filteredUsers = users;
 
   const handleRefresh = () => {
-    console.log("🔄 Refreshing users...");
     refetchUsers();
     toast.success("Users list refreshed!");
   };
@@ -302,8 +279,6 @@ export default function UsersContainer() {
         showConfirmButton: false,
       });
     } catch (error: any) {
-      console.error("Redux API Error:", error);
-
       // Fallback: Try direct fetch
       try {
         const token = localStorage.getItem("nextAuthSecret");
@@ -326,7 +301,6 @@ export default function UsersContainer() {
         }
 
         const data = await response.json();
-        console.log("Direct API Success:", data);
 
         Swal.fire({
           title: "User Banned!",
@@ -338,8 +312,6 @@ export default function UsersContainer() {
 
         refetchUsers();
       } catch (directError: any) {
-        console.error("Direct API Error:", directError);
-
         Swal.fire({
           title: "CORS Error!",
           text: `Failed to ban user due to CORS policy. Please update your backend CORS configuration to allow PATCH requests. Error: ${directError.message}`,
@@ -493,8 +465,6 @@ export default function UsersContainer() {
         showConfirmButton: false,
       });
     } catch (error: any) {
-      console.error("Redux API Error:", error);
-
       // Fallback: Try direct fetch with proper CORS handling
       try {
         const token = localStorage.getItem("nextAuthSecret");
@@ -518,7 +488,6 @@ export default function UsersContainer() {
         }
 
         const data = await response.json();
-        console.log("Direct API Success:", data);
 
         Swal.fire({
           title: "Role Changed!",
@@ -531,8 +500,6 @@ export default function UsersContainer() {
         // Refresh the users list
         refetchUsers();
       } catch (directError: any) {
-        console.error("Direct API Error:", directError);
-
         Swal.fire({
           title: "CORS Error!",
           text: `Failed to change user role due to CORS policy. Please update your backend CORS configuration to allow PATCH requests. Error: ${directError.message}`,

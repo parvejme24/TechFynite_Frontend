@@ -134,27 +134,39 @@ export default function Banner() {
         />
 
         {/* Animated particles */}
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-blue-500 dark:bg-blue-300 rounded-full opacity-80 dark:opacity-60"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -100, 0],
-              opacity: [0, 1, 0],
-              scale: [0, 1, 0],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
+        {[...Array(15)].map((_, i) => {
+          // Use fixed positions to avoid hydration mismatch
+          const positions = [
+            { left: 10, top: 20 }, { left: 25, top: 15 }, { left: 40, top: 30 },
+            { left: 60, top: 10 }, { left: 80, top: 25 }, { left: 15, top: 45 },
+            { left: 35, top: 60 }, { left: 55, top: 50 }, { left: 75, top: 40 },
+            { left: 90, top: 60 }, { left: 20, top: 75 }, { left: 45, top: 80 },
+            { left: 65, top: 70 }, { left: 85, top: 85 }, { left: 5, top: 50 }
+          ];
+          const pos = positions[i] || { left: 50, top: 50 };
+          
+          return (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-blue-500 dark:bg-blue-300 rounded-full opacity-80 dark:opacity-60"
+              style={{
+                left: `${pos.left}%`,
+                top: `${pos.top}%`,
+              }}
+              animate={{
+                y: [0, -100, 0],
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0],
+              }}
+              transition={{
+                duration: 3 + (i * 0.2),
+                repeat: Infinity,
+                delay: i * 0.3,
+                ease: "easeInOut",
+              }}
+            />
+          );
+        })}
 
         {/* Interactive floating orbs */}
         <motion.div
