@@ -186,8 +186,9 @@ html {
 }
 
 body {
-  overflow-y: scroll !important;
+  /* overflow-y: scroll !important; */
   scroll-behavior: smooth;
+  position: relative !important;
 }
 
 /* Fix for Shadcn dropdowns hiding scrollbars */
@@ -197,7 +198,8 @@ body[style*="overflow: hidden"] {
 }
 
 /* Ensure scrollbar is always visible */
-html, body {
+html,
+body {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
 }

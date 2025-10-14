@@ -1,4 +1,4 @@
-import { 
+import {
   useGetAllContactsQuery, 
   useGetContactByIdQuery, 
   useGetContactsByUserEmailQuery, 
@@ -25,8 +25,8 @@ export const useContactApi = () => {
       search: params.search || '',
       sortBy: params.sortBy || 'createdAt',
       sortOrder: params.sortOrder || 'desc'
-    });
-  };
+  });
+};
 
   // Get contact by ID
   const getContactById = (id: string) => {
@@ -39,8 +39,8 @@ export const useContactApi = () => {
       userEmail,
       page,
       limit
-    });
-  };
+  });
+};
 
   // Create new contact
   const createContact = () => {

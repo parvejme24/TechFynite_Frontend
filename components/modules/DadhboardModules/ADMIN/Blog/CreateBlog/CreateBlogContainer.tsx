@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FiUpload, FiX, FiImage, FiSave } from "react-icons/fi";
+import { FiUpload, FiX, FiFileText, FiSave } from "react-icons/fi";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useCreateBlog } from "@/hooks/useBlogApi";
@@ -280,7 +280,7 @@ const StructuredContentEditor = ({
           className="px-3 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer flex items-center gap-1"
           title="Upload Image"
         >
-          <FiImage className="w-4 h-4" />
+          <FiFileText className="w-4 h-4" />
           Image
         </Label>
         <Input
@@ -298,9 +298,9 @@ const StructuredContentEditor = ({
       {/* Content Elements */}
       <div className="p-4 space-y-4 min-h-[400px]">
         {!value.sections || value.sections.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <FiImage className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Click the buttons above to add content elements</p>
+          <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+            <FiFileText className="w-12 h-12 mb-4 opacity-50" />
+            <p className="text-center">Click the buttons above to add content elements</p>
           </div>
         ) : (
           value.sections.map((section, index) => (
@@ -930,7 +930,7 @@ export default function CreateBlogContainer() {
                         onDragOver={handleFeaturedImageDragOver}
                       >
                         <div className="space-y-3">
-                          <FiImage className="w-12 h-12 mx-auto text-gray-400" />
+                          <FiFileText className="w-12 h-12 mx-auto text-gray-400" />
                           <div>
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Upload Featured Image

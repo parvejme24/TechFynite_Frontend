@@ -32,9 +32,7 @@ export const useGetAllBlogCategories = (page: number = 1, limit: number = 10) =>
   return useQuery<BlogCategoryListResponse>({
     queryKey: ['blogCategories', 'all', page, limit],
     queryFn: async () => {
-      console.log("🔍 Fetching blog categories with page:", page, "limit:", limit);
       const response = await apiClient.get(`/blog-categories?page=${page}&limit=${limit}`);
-      console.log("✅ Blog categories response:", response.data);
       return response.data;
     },
   });
@@ -77,11 +75,6 @@ export const useCreateBlogCategory = () => {
         formData.append('image', data.imageFile);
       }
 
-      // Debug: Log FormData contents
-      console.log('FormData contents:');
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
 
       const response = await apiClient.post('/blog-categories', formData, {
         headers: {

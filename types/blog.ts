@@ -1,11 +1,32 @@
-import { Blog, BlogCategory, User, BlogLike, BlogReview } from "@prisma/client";
-
 // Base Blog interface
-export interface IBlog extends Blog {
-  author?: User;
-  category?: BlogCategory;
-  blogLikes?: BlogLike[];
-  reviews?: BlogReview[];
+export interface IBlog {
+  id: string;
+  title: string;
+  categoryId: string;
+  imageUrl?: string | null;
+  description: any;
+  likes: number;
+  readingTime: number;
+  authorId: string;
+  slug?: string | null;
+  isPublished: boolean;
+  viewCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  content?: any;
+  author?: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+  category?: {
+    id: string;
+    title: string;
+    slug: string;
+  };
+  blogLikes?: any[];
+  reviews?: any[];
+  comments?: any[]; // Alias for reviews
 }
 
 // Blog creation interface

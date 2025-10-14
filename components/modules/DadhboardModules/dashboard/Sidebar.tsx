@@ -9,7 +9,6 @@ import {
   FiFileText,
   FiMail,
   FiUsers,
-  FiBarChart2,
   FiMenu,
   FiX,
   FiShoppingBag,
@@ -17,6 +16,13 @@ import {
   FiBell,
   FiSettings,
   FiDollarSign,
+  FiLayers,
+  FiGrid,
+  FiTag,
+  FiEdit3,
+  FiBookOpen,
+  FiFolder,
+  FiFolderOpen,
 } from "react-icons/fi";
 import { VscGitPullRequestGoToChanges } from "react-icons/vsc";
 
@@ -29,8 +35,18 @@ import { UserRole } from "@/types/user";
 const adminNavigation = [
   { name: "Overview", href: "/dashboard", icon: FiHome },
   { name: "Profile", href: "/dashboard/profile", icon: FiUser },
-  { name: "Templates", href: "/dashboard/templates", icon: FiFileText },
-  { name: "Blogs", href: "/dashboard/blogs", icon: FiFileText },
+  {
+    name: "Templates Categories",
+    href: "/dashboard/templates-categories",
+    icon: FiFolder,
+  },
+  { name: "Templates", href: "/dashboard/templates", icon: FiLayers },
+  {
+    name: "Blog Categories",
+    href: "/dashboard/blog-categories",
+    icon: FiTag,
+  },
+  { name: "Blogs", href: "/dashboard/blogs", icon: FiBookOpen },
   { name: "Pricing", href: "/dashboard/pricing", icon: FiDollarSign },
   { name: "Newsletter", href: "/dashboard/newsletter", icon: FiMail },
   { name: "Users", href: "/dashboard/users", icon: FiUsers },

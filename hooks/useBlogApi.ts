@@ -175,21 +175,67 @@ export const useCreateBlog = () => {
           console.log(`${key}:`, value);
         }
       }
+      
+      // Log FormData as entries to see all fields
+      console.log("📋 All FormData Entries:");
+      const entries = Array.from(formData.entries());
+      entries.forEach(([key, value]) => {
+        if (value instanceof File) {
+          console.log(`${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+        } else {
+          console.log(`${key}: ${value}`);
+        }
+      });
 
       // Log the raw request data for debugging
       console.log("🔍 Raw request data being sent:");
-      console.log("- Content-Type: multipart/form-data");
+      console.log("- Content-Type: multipart/form-data (auto-set by browser)");
       console.log("- Fields:", Object.fromEntries(formData.entries()));
+      
+      // Log FormData as a blob to see the actual structure
+      const formDataBlob = new Blob([formData as any], { type: 'multipart/form-data' });
+      console.log("📦 FormData Blob size:", formDataBlob.size);
 
       console.log("🌐 Sending request to:", '/blogs');
       try {
         const response = await apiClient.post('/blogs', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            // Don't set Content-Type manually - let the browser set it with boundary
+            // 'Content-Type': 'multipart/form-data',
           },
         });
         
         console.log("✅ Response received:", response.data);
+        console.log("🖼️ Image upload status:", {
+          hasImage: !!blogData.image,
+          imageName: blogData.image?.name,
+          responseImageUrl: response.data?.data?.imageUrl || response.data?.imageUrl,
+          fullResponse: response.data
+        });
+        
+        // Log the full response structure to debug image URL
+        console.log("🔍 Full Response Structure:", JSON.stringify(response.data, null, 2));
+        console.log("🔍 Response Data Object:", response.data?.data);
+        console.log("🔍 Response Data Keys:", Object.keys(response.data?.data || {}));
+        
+        // Check if image URL is in different possible locations
+        const possibleImageUrls = [
+          response.data?.data?.imageUrl,
+          response.data?.data?.image,
+          response.data?.data?.featuredImage,
+          response.data?.data?.imageUrl,
+          response.data?.imageUrl,
+          response.data?.image,
+          response.data?.featuredImage
+        ];
+        
+        console.log("🔍 Possible Image URLs:", possibleImageUrls.filter(url => url));
+        
+        // Check if the blog data has image information
+        if (response.data?.data) {
+          console.log("🔍 Blog Data Properties:", Object.keys(response.data.data));
+          console.log("🔍 Blog Data Values:", response.data.data);
+        }
         return response.data;
       } catch (error: any) {
         console.error("❌ Backend Error Details:");

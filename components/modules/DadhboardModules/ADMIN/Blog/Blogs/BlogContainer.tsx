@@ -2,9 +2,13 @@
 import React, { useState } from "react";
 import BlogList from "./BlogList";
 import Link from "next/link";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiPlus, FiEdit3 } from "react-icons/fi";
 import { useGetAllBlogs, useDeleteBlog } from "@/hooks/useBlogApi";
 import { useRouter } from "next/navigation";
+import { useContext } from "react";
+import { AuthContext } from "@/Providers/AuthProvider";
+import { UserRole } from "@/types/user";
+import Swal from "sweetalert2";
 
 const BLOGS_PER_PAGE = 8;
 
@@ -13,6 +17,15 @@ export default function BlogContainer() {
   const [page, setPage] = useState(1);
   const { mutate: deleteBlog } = useDeleteBlog();
   const router = useRouter();
+  const { user } = useContext(AuthContext) || {};
+
+  // Permission checking
+  const userRole = user?.role;
+  const isAdmin =
+    (userRole as UserRole) === UserRole.ADMIN ||
+    (userRole as UserRole) === UserRole.SUPER_ADMIN;
+  const canDelete = isAdmin; // Only admins can delete blogs
+  const canEdit = true; // All users can edit their own blogs
 
   // Extract blogs array from response
   const blogs = blogsResponse?.data || [];
@@ -28,19 +41,67 @@ export default function BlogContainer() {
     router.push(`/dashboard/blogs/edit/${blog.id}`);
   };
 
-  const handleDeleteBlog = (blog: { id: string }) => {
-    deleteBlog(blog.id);
+  const handleDeleteBlog = async (blog: { id: string; title: string }) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `You are about to delete the blog "${blog.title}". This action cannot be undone!`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      focusCancel: true,
+      customClass: {
+        popup: "swal2-popup-custom",
+        title: "swal2-title-custom",
+        confirmButton: "swal2-confirm-custom",
+        cancelButton: "swal2-cancel-custom",
+      },
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteBlog(blog.id);
+        Swal.fire({
+          title: "Deleted!",
+          text: "The blog has been deleted successfully.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to delete the blog. Please try again.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      }
+    }
   };
 
   return (
     <div className="max-w-7xl mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Blogs</h2>
-        <Link href="/dashboard/blogs/create">
-          <button className="cursor-pointer bg-[#2B7FFF] hover:bg-blue-700 text-white font-semibold px-4 py-3 rounded-lg shadow">
-            Create New Blog
-          </button>
-        </Link>
+      {/* blog header   */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <div className="flex-1">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            Blogs
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base">
+            Manage and create your blog posts
+          </p>
+        </div>
+        <div className="flex-shrink-0">
+          <Link href="/dashboard/blogs/create" className="cursor-pointer">
+            <button className="cursor-pointer group relative inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 w-full sm:w-auto justify-center">
+              <FiPlus className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-200" />
+              <span className="text-sm sm:text-base">Create New Blog</span>
+            </button>
+          </Link>
+        </div>
       </div>
       <div className="">
         {error ? (
@@ -52,6 +113,8 @@ export default function BlogContainer() {
               onEdit={handleEditBlog}
               onDelete={handleDeleteBlog}
               loading={isLoading}
+              canEdit={canEdit}
+              canDelete={canDelete}
             />
             {/* Show pagination only if total blogs > BLOGS_PER_PAGE */}
             {blogs.length > BLOGS_PER_PAGE && (

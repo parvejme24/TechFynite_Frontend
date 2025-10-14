@@ -1,6 +1,5 @@
-import React from 'react';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { useDispatch } from 'react-redux';
+import { useSession, signIn, signOut } from "next-auth/react";
+import { useDispatch } from "react-redux";
 import {
   useRegisterMutation,
   useVerifyOtpMutation,
@@ -22,7 +21,7 @@ import {
   useTrashUserMutation,
   useRestoreUserMutation,
   useChangeUserRoleMutation,
-} from '@/redux/services/authApi';
+} from "@/redux/services/authApi";
 import {
   IUser,
   IRegisterUser,
@@ -34,17 +33,16 @@ import {
   IUpdateProfile,
   IUserQuery,
   UserRole,
-} from '@/types/auth';
+} from "@/types/auth";
 
 // Main useAuth hook - provides authentication state and common operations
 export const useAuth = () => {
   const { data: session, status } = useSession();
   const dispatch = useDispatch();
 
-
   return {
     user: session?.user as IUser | undefined,
-    isLoading: status === 'loading',
+    isLoading: status === "loading",
     isAuthenticated: !!session?.user,
     session,
     isAdmin: session?.user?.role === UserRole.ADMIN,
@@ -68,7 +66,7 @@ export const useRegister = () => {
       const result = await registerMutation(userData).unwrap();
       if (result.success && result.data?.nextAuthSecret) {
         // Store the session secret
-        localStorage.setItem('nextAuthSecret', result.data.nextAuthSecret);
+        localStorage.setItem("nextAuthSecret", result.data.nextAuthSecret);
       }
       return result;
     } catch (err) {
@@ -86,13 +84,14 @@ export const useRegister = () => {
 
 // OTP verification hook
 export const useVerifyOtp = () => {
-  const [verifyOtpMutation, { isLoading, error, data }] = useVerifyOtpMutation();
+  const [verifyOtpMutation, { isLoading, error, data }] =
+    useVerifyOtpMutation();
 
   const verifyOtp = async (otpData: IVerifyOtp) => {
     try {
       const result = await verifyOtpMutation(otpData).unwrap();
       if (result.success && result.data?.nextAuthSecret) {
-        localStorage.setItem('nextAuthSecret', result.data.nextAuthSecret);
+        localStorage.setItem("nextAuthSecret", result.data.nextAuthSecret);
       }
       return result;
     } catch (err) {
@@ -110,7 +109,8 @@ export const useVerifyOtp = () => {
 
 // Resend OTP hook
 export const useResendOtp = () => {
-  const [resendOtpMutation, { isLoading, error, data }] = useResendOtpMutation();
+  const [resendOtpMutation, { isLoading, error, data }] =
+    useResendOtpMutation();
 
   const resendOtp = async (email: string) => {
     try {
@@ -137,7 +137,7 @@ export const useLogin = () => {
     try {
       const result = await loginMutation(credentials).unwrap();
       if (result.success && result.data?.nextAuthSecret) {
-        localStorage.setItem('nextAuthSecret', result.data.nextAuthSecret);
+        localStorage.setItem("nextAuthSecret", result.data.nextAuthSecret);
       }
       return result;
     } catch (err) {
@@ -155,13 +155,14 @@ export const useLogin = () => {
 
 // Google login hook
 export const useGoogleLogin = () => {
-  const [googleLoginMutation, { isLoading, error, data }] = useGoogleLoginMutation();
+  const [googleLoginMutation, { isLoading, error, data }] =
+    useGoogleLoginMutation();
 
   const googleLogin = async (googleData: IGoogleLogin) => {
     try {
       const result = await googleLoginMutation(googleData).unwrap();
       if (result.success && result.data?.nextAuthSecret) {
-        localStorage.setItem('nextAuthSecret', result.data.nextAuthSecret);
+        localStorage.setItem("nextAuthSecret", result.data.nextAuthSecret);
       }
       return result;
     } catch (err) {
@@ -179,7 +180,8 @@ export const useGoogleLogin = () => {
 
 // Session validation hook
 export const useValidateSession = () => {
-  const [validateSessionMutation, { isLoading, error, data }] = useValidateSessionMutation();
+  const [validateSessionMutation, { isLoading, error, data }] =
+    useValidateSessionMutation();
 
   const validateSession = async (nextAuthSecret: string) => {
     try {
@@ -204,18 +206,18 @@ export const useLogout = () => {
 
   const logout = async () => {
     try {
-      const nextAuthSecret = localStorage.getItem('nextAuthSecret');
+      const nextAuthSecret = localStorage.getItem("nextAuthSecret");
       if (nextAuthSecret) {
         await logoutMutation({ nextAuthSecret }).unwrap();
       }
       // Clear stored session
-      localStorage.removeItem('nextAuthSecret');
+      localStorage.removeItem("nextAuthSecret");
       // Sign out from NextAuth
       signOut();
       return { success: true };
     } catch (err) {
       // Even if logout fails on server, clear local storage
-      localStorage.removeItem('nextAuthSecret');
+      localStorage.removeItem("nextAuthSecret");
       signOut();
       throw err;
     }
@@ -231,7 +233,8 @@ export const useLogout = () => {
 
 // Change password hook
 export const useChangePassword = () => {
-  const [changePasswordMutation, { isLoading, error, data }] = useChangePasswordMutation();
+  const [changePasswordMutation, { isLoading, error, data }] =
+    useChangePasswordMutation();
 
   const changePassword = async (passwordData: IChangePassword) => {
     try {
@@ -252,7 +255,8 @@ export const useChangePassword = () => {
 
 // Update profile hook
 export const useUpdateProfile = () => {
-  const [updateProfileMutation, { isLoading, error, data }] = useUpdateProfileMutation();
+  const [updateProfileMutation, { isLoading, error, data }] =
+    useUpdateProfileMutation();
 
   const updateProfile = async (profileData: IUpdateProfile) => {
     try {
@@ -273,12 +277,13 @@ export const useUpdateProfile = () => {
 
 // Update avatar hook - using separate Cloudinary upload endpoint
 export const useUpdateAvatar = () => {
-  const [updateAvatarMutation, { isLoading, error, data }] = useUpdateAvatarImageMutation();
+  const [updateAvatarMutation, { isLoading, error, data }] =
+    useUpdateAvatarImageMutation();
 
   const updateAvatar = async (file: File) => {
     try {
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append("image", file);
       const result = await updateAvatarMutation(formData).unwrap();
       return result;
     } catch (err) {
@@ -314,7 +319,8 @@ export const useGetUserById = (id: string) => {
 };
 
 export const useDeleteUser = () => {
-  const [deleteUserMutation, { isLoading, error, data }] = useDeleteUserMutation();
+  const [deleteUserMutation, { isLoading, error, data }] =
+    useDeleteUserMutation();
 
   const deleteUser = async (id: string) => {
     try {
@@ -354,7 +360,8 @@ export const useBanUser = () => {
 };
 
 export const useUnbanUser = () => {
-  const [unbanUserMutation, { isLoading, error, data }] = useUnbanUserMutation();
+  const [unbanUserMutation, { isLoading, error, data }] =
+    useUnbanUserMutation();
 
   const unbanUser = async (id: string) => {
     try {
@@ -374,7 +381,8 @@ export const useUnbanUser = () => {
 };
 
 export const useTrashUser = () => {
-  const [trashUserMutation, { isLoading, error, data }] = useTrashUserMutation();
+  const [trashUserMutation, { isLoading, error, data }] =
+    useTrashUserMutation();
 
   const trashUser = async (id: string) => {
     try {
@@ -394,7 +402,8 @@ export const useTrashUser = () => {
 };
 
 export const useRestoreUser = () => {
-  const [restoreUserMutation, { isLoading, error, data }] = useRestoreUserMutation();
+  const [restoreUserMutation, { isLoading, error, data }] =
+    useRestoreUserMutation();
 
   const restoreUser = async (id: string) => {
     try {
@@ -414,9 +423,10 @@ export const useRestoreUser = () => {
 };
 
 export const useChangeUserRole = () => {
-  const [changeUserRoleMutation, { isLoading, error, data }] = useChangeUserRoleMutation();
+  const [changeUserRoleMutation, { isLoading, error, data }] =
+    useChangeUserRoleMutation();
 
-  const changeUserRole = async (id: string, role: 'ADMIN' | 'USER') => {
+  const changeUserRole = async (id: string, role: "ADMIN" | "USER") => {
     try {
       const result = await changeUserRoleMutation({ id, role }).unwrap();
       return result;
@@ -436,13 +446,13 @@ export const useChangeUserRole = () => {
 // Google OAuth functions (for NextAuth integration)
 export const useGoogleSignIn = () => {
   return () => {
-    signIn('google', { callbackUrl: '/' });
+    signIn("google", { callbackUrl: "/" });
   };
 };
 
 export const useCredentialsSignIn = () => {
   return (credentials: ILoginUser) => {
-    return signIn('credentials', {
+    return signIn("credentials", {
       email: credentials.email,
       password: credentials.password,
       redirect: false,
@@ -453,7 +463,7 @@ export const useCredentialsSignIn = () => {
 // Utility hook for checking authentication status
 export const useAuthStatus = () => {
   const { user, isLoading, isAuthenticated, isAdmin } = useAuth();
-  
+
   return {
     user,
     isLoading,
@@ -463,4 +473,3 @@ export const useAuthStatus = () => {
     isLoggedIn: isAuthenticated,
   };
 };
-
