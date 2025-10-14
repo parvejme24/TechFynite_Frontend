@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import QueryProvider from "@/Providers/QueryProvider";
 import ReduxProvider from "@/Providers/ReduxProvider";
 import ThemeInitializer from "@/components/ThemeInitializer";
+import { ScrollbarFix } from "@/components/ui/scrollbar-fix";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,6 +50,7 @@ export default function RootLayout({
                 forcedTheme={undefined}
               >
                 <ThemeInitializer />
+                <ScrollbarFix />
                 <Toaster richColors position="top-right" />
                 {children}
               </ThemeProvider>

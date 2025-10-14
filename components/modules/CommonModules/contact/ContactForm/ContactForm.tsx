@@ -2,7 +2,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useCreateContact } from "@/hooks/useContactApi";
+import { useContactApi } from "@/hooks/useContactApi";
 import { useAuth } from "@/hooks/useAuth";
 import Swal from "sweetalert2";
 
@@ -24,80 +24,52 @@ export default function ContactForm() {
     formState: { errors },
   } = useForm<FormValues>();
 
-  const { mutateAsync: createContact, isPending: isCreating } = useCreateContact();
+  const contactApi = useContactApi();
+  const [createContact, { isLoading: isCreating }] = contactApi.createContact();
 
   const onSubmit = async (data: FormValues) => {
-    // Show confirmation dialog
-    const result = await Swal.fire({
-      title: 'Submit Service Request?',
-      html: `
-        <div class="text-left">
-          <p><strong>Name:</strong> ${data.fullName}</p>
-          <p><strong>Email:</strong> ${data.email}</p>
-          <p><strong>Company:</strong> ${data.companyName}</p>
-          <p><strong>Service:</strong> ${data.serviceRequired.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}</p>
-          <p><strong>Budget:</strong> ${data.budget}</p>
-          <hr class="my-3">
-          <p><strong>Project Details:</strong></p>
-          <p class="text-sm text-gray-600">${data.projectDetails.substring(0, 100)}${data.projectDetails.length > 100 ? '...' : ''}</p>
-        </div>
-      `,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#0F58BB',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, Submit Request',
-      cancelButtonText: 'Cancel',
-      reverseButtons: true,
-      focusCancel: true,
-      width: '500px'
-    });
-
-    if (!result.isConfirmed) {
-      return;
-    }
-
     try {
       const contactData = {
         ...data,
         userId: user?.id, // Include user ID if logged in
       };
       
-      await createContact(contactData);
+      await createContact(contactData).unwrap();
       
       // Show success alert
       Swal.fire({
         title: 'Request Submitted Successfully!',
-        html: `
-          <div class="text-center">
-            <p class="mb-3">Thank you <strong>${data.fullName}</strong>!</p>
-            <p class="mb-3">We've received your service request and will get back to you within 24 hours.</p>
-            <p class="text-sm text-gray-600">A confirmation email has been sent to <strong>${data.email}</strong></p>
-          </div>
-        `,
+        text: 'Thank you for your submission. We will get back to you soon.',
         icon: 'success',
         confirmButtonColor: '#10B981',
-        confirmButtonText: 'Great!',
-        width: '450px'
+        confirmButtonText: 'OK',
+        width: '400px'
       });
       
       reset();
     } catch (error: any) {
       console.error('Contact form submission error:', error);
       
-      // Show error alert
+      // Get specific error message
+      const errorMessage = error?.data?.message || 
+                          error?.message || 
+                          'Unknown error occurred';
+      
+      
+      // Show error alert with specific error
       Swal.fire({
         title: 'Submission Failed',
         html: `
           <div class="text-center">
             <p class="mb-3">Sorry <strong>${data.fullName}</strong>, we couldn't send your message right now.</p>
+            <p class="text-sm text-red-600 mb-3"><strong>Error:</strong> ${errorMessage}</p>
             <p class="text-sm text-gray-600">Please try again or contact us directly at <strong>support@techfynite.com</strong></p>
           </div>
         `,
         icon: 'error',
         confirmButtonColor: '#EF4444',
         confirmButtonText: 'Try Again',
-        width: '450px'
+        width: '500px'
       });
     }
   };

@@ -15,7 +15,7 @@ export default function BlogContainer() {
   const router = useRouter();
 
   // Extract blogs array from response
-  const blogs = blogsResponse?.blogs || [];
+  const blogs = blogsResponse?.data || [];
 
   // Pagination logic - only if blogs > BLOGS_PER_PAGE
   const totalPages = Math.ceil(blogs.length / BLOGS_PER_PAGE);
@@ -25,7 +25,7 @@ export default function BlogContainer() {
       : blogs;
 
   const handleEditBlog = (blog: { id: string }) => {
-    router.push(`/dashboard/ADMIN/blogs/edit/${blog.id}`);
+    router.push(`/dashboard/blogs/edit/${blog.id}`);
   };
 
   const handleDeleteBlog = (blog: { id: string }) => {
@@ -36,7 +36,7 @@ export default function BlogContainer() {
     <div className="max-w-7xl mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Blogs</h2>
-        <Link href="/dashboard/ADMIN/blogs/create">
+        <Link href="/dashboard/blogs/create">
           <button className="cursor-pointer bg-[#2B7FFF] hover:bg-blue-700 text-white font-semibold px-4 py-3 rounded-lg shadow">
             Create New Blog
           </button>

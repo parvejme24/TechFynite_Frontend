@@ -1,7 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FiSearch, FiBell, FiSun, FiMoon, FiLogOut, FiUser, FiSettings, FiMenu, FiX } from "react-icons/fi";
+import {
+  FiSearch,
+  FiBell,
+  FiSun,
+  FiMoon,
+  FiLogOut,
+  FiUser,
+  FiSettings,
+  FiMenu,
+  FiX,
+} from "react-icons/fi";
 import { useTheme } from "next-themes";
 import {
   DropdownMenu,
@@ -24,7 +34,10 @@ interface TopbarProps {
   isMenuOpen?: boolean;
 }
 
-export default function Topbar({ onMenuToggle, isMenuOpen = false }: TopbarProps) {
+export default function Topbar({
+  onMenuToggle,
+  isMenuOpen = false,
+}: TopbarProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -35,7 +48,6 @@ export default function Topbar({ onMenuToggle, isMenuOpen = false }: TopbarProps
   const { user: nextAuthUser, isAuthenticated } = useAuth();
   const user = nextAuthUser || authContext?.user;
   const router = useRouter();
-
 
   // Only show theme toggle after mounting to avoid hydration mismatch
   useEffect(() => {
@@ -69,32 +81,32 @@ export default function Topbar({ onMenuToggle, isMenuOpen = false }: TopbarProps
   };
 
   const getDisplayName = () => {
-    if (!user) return 'User';
-    
+    if (!user) return "User";
+
     // Check multiple possible name fields
     if (user.fullName) return user.fullName;
     if ((user as any).name) return (user as any).name;
     if ((user as any).displayName) return (user as any).displayName;
-    
+
     // Fallback to email if no name is available
     if (user.email) {
-      const emailName = user.email.split('@')[0];
+      const emailName = user.email.split("@")[0];
       return emailName.charAt(0).toUpperCase() + emailName.slice(1);
     }
-    
-    return 'User';
+
+    return "User";
   };
 
   const getInitials = () => {
     const displayName = getDisplayName();
-    if (displayName && displayName !== 'User') {
-      const names = displayName.trim().split(' ');
+    if (displayName && displayName !== "User") {
+      const names = displayName.trim().split(" ");
       if (names.length >= 2) {
         return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
       }
       return displayName[0].toUpperCase();
     }
-    return 'U';
+    return "U";
   };
 
   const hasProfilePicture = () => {
@@ -133,18 +145,7 @@ export default function Topbar({ onMenuToggle, isMenuOpen = false }: TopbarProps
         {/* Left Section - Menu Toggle & Date/Time */}
         <div className="flex items-center space-x-4">
           {/* Mobile Menu Toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onMenuToggle}
-            className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-          >
-            {isMenuOpen ? (
-              <FiX className="w-5 h-5" />
-            ) : (
-              <FiMenu className="w-5 h-5" />
-            )}
-          </Button>
+          <div></div>
 
           {/* Date and Time */}
           <div className="hidden sm:block">
@@ -198,8 +199,8 @@ export default function Topbar({ onMenuToggle, isMenuOpen = false }: TopbarProps
           >
             <FiBell className="w-4 h-4" />
             {notifications > 0 && (
-              <Badge 
-                variant="destructive" 
+              <Badge
+                variant="destructive"
                 className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
               >
                 {notifications > 9 ? "9+" : notifications}
@@ -208,7 +209,11 @@ export default function Topbar({ onMenuToggle, isMenuOpen = false }: TopbarProps
           </Button>
 
           {/* User Menu */}
-          <DropdownMenu modal={false} open={dropdownOpen} onOpenChange={setDropdownOpen}>
+          <DropdownMenu
+            modal={false}
+            open={dropdownOpen}
+            onOpenChange={setDropdownOpen}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
@@ -216,12 +221,12 @@ export default function Topbar({ onMenuToggle, isMenuOpen = false }: TopbarProps
               >
                 <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center cursor-pointer">
                   {hasProfilePicture() ? (
-                    <Image 
-                      src={getPhotoUrl() || "/placeholder.jpg"} 
-                      alt="User" 
-                      width={32} 
-                      height={32} 
-                      className="rounded-full object-cover" 
+                    <Image
+                      src={getPhotoUrl() || "/placeholder.jpg"}
+                      alt="User"
+                      width={32}
+                      height={32}
+                      className="rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
@@ -251,21 +256,27 @@ export default function Topbar({ onMenuToggle, isMenuOpen = false }: TopbarProps
                 )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              
-              <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+
+              <DropdownMenuItem
+                onClick={handleProfileClick}
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
                 <FiUser className="w-4 h-4 mr-2" />
                 Profile
               </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={handleSettingsClick} className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+
+              <DropdownMenuItem
+                onClick={handleSettingsClick}
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
                 <FiSettings className="w-4 h-4 mr-2" />
                 Settings
               </DropdownMenuItem>
-              
+
               <DropdownMenuSeparator />
-              
-              <DropdownMenuItem 
-                className="text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20" 
+
+              <DropdownMenuItem
+                className="text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20"
                 onClick={async () => {
                   await signOut({ callbackUrl: "/" });
                 }}
@@ -279,4 +290,4 @@ export default function Topbar({ onMenuToggle, isMenuOpen = false }: TopbarProps
       </div>
     </div>
   );
-} 
+}

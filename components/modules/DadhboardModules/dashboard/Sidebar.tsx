@@ -34,7 +34,6 @@ const adminNavigation = [
   { name: "Pricing", href: "/dashboard/pricing", icon: FiDollarSign },
   { name: "Newsletter", href: "/dashboard/newsletter", icon: FiMail },
   { name: "Users", href: "/dashboard/users", icon: FiUsers },
-  { name: "Analytics", href: "/dashboard/analytics", icon: FiBarChart2 },
   {
     name: "Service Request",
     href: "/dashboard/service-request",

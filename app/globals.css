@@ -186,8 +186,48 @@ html {
 }
 
 body {
-  overflow-y: scroll;
+  overflow-y: scroll !important;
   scroll-behavior: smooth;
+}
+
+/* Fix for Shadcn dropdowns hiding scrollbars */
+body[style*="overflow: hidden"] {
+  overflow-y: scroll !important;
+  padding-right: 0 !important;
+}
+
+/* Ensure scrollbar is always visible */
+html, body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+/* Webkit scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 /* Fix dropdown menu positioning to prevent layout shift */
@@ -206,8 +246,8 @@ body {
   overflow: hidden;
 }
 
-/* Ensure body maintains scrollbar */
-body.dropdown-open {
-  padding-right: 0 !important;
+/* Force scrollbar to always be visible */
+body {
   overflow-y: scroll !important;
+  scrollbar-gutter: stable both-edges;
 }
