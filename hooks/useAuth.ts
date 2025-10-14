@@ -284,7 +284,24 @@ export const useUpdateAvatar = () => {
     try {
       const formData = new FormData();
       formData.append("image", file);
-      const result = await updateAvatarMutation(formData).unwrap();
+      
+      // Use direct fetch instead of RTK Query
+      const token = localStorage.getItem('nextAuthSecret');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile/avatar`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData - let browser set it automatically
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      const result = await response.json();
       return result;
     } catch (err) {
       throw err;

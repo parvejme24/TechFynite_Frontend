@@ -9,8 +9,6 @@ import {
   FiLogOut,
   FiUser,
   FiSettings,
-  FiMenu,
-  FiX,
 } from "react-icons/fi";
 import { useTheme } from "next-themes";
 import {
@@ -22,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AuthContext } from "@/Providers/AuthProvider";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useCurrentUser } from "@/hooks/useAuth";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -46,7 +44,10 @@ export default function Topbar({
   const [notifications, setNotifications] = useState(3); // Mock notification count
   const authContext = React.useContext(AuthContext);
   const { user: nextAuthUser, isAuthenticated } = useAuth();
-  const user = nextAuthUser || authContext?.user;
+  const { data: currentUserData } = useCurrentUser();
+
+  // Prioritize fresh API data over cached data
+  const user = currentUserData?.data?.user || nextAuthUser || authContext?.user;
   const router = useRouter();
 
   // Only show theme toggle after mounting to avoid hydration mismatch
@@ -110,10 +111,11 @@ export default function Topbar({
   };
 
   const hasProfilePicture = () => {
-    return !!(user && user.profile?.avatarUrl);
+    return !!(user && ((user as any).avatarUrl || user.profile?.avatarUrl));
   };
 
   const getPhotoUrl = () => {
+    if (user && (user as any).avatarUrl) return (user as any).avatarUrl;
     if (user && user.profile?.avatarUrl) return user.profile.avatarUrl;
     return undefined;
   };
@@ -219,20 +221,31 @@ export default function Topbar({
                 variant="ghost"
                 className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
               >
-                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center cursor-pointer">
+                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center cursor-pointer ring-2 ring-transparent hover:ring-blue-500 transition-all duration-200">
                   {hasProfilePicture() ? (
                     <Image
                       src={getPhotoUrl() || "/placeholder.jpg"}
-                      alt="User"
-                      width={32}
-                      height={32}
-                      className="rounded-full object-cover"
+                      alt="User Avatar"
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to initials if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                        const fallback =
+                          target.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
                     />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
-                      {getInitials()}
-                    </div>
-                  )}
+                  ) : null}
+                  <div
+                    className={`w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm ${
+                      hasProfilePicture() ? "hidden" : ""
+                    }`}
+                  >
+                    {getInitials()}
+                  </div>
                 </div>
               </Button>
             </DropdownMenuTrigger>

@@ -308,7 +308,6 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (error) {
-      console.error('Google login error:', error);
       return null;
     }
   };
@@ -317,7 +316,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await logoutHook();
     } catch (error) {
-      console.error('Logout error:', error);
+      // Logout error handled silently
     }
   };
 
@@ -336,7 +335,6 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (error) {
-      console.error('Email verification error:', error);
       return null;
     }
   };
@@ -407,7 +405,6 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (error) {
-      console.error('Change password error:', error);
       return null;
     }
   };
@@ -440,7 +437,6 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (error) {
-      console.error('Update profile error:', error);
       return null;
     }
   };
@@ -456,7 +452,6 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (error) {
-      console.error('Upload profile photo error:', error);
       return null;
     }
   };
@@ -472,13 +467,12 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (result?.data) {
         return {
-          users: result.data.users,
-          total: result.data.pagination?.total || 0,
+          users: result.data,
+          total: result.data.length,
         };
       }
       return null;
     } catch (error) {
-      console.error('Get all users error:', error);
       return null;
     }
   };
@@ -495,7 +489,6 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (error) {
-      console.error('Update user role error:', error);
       return null;
     }
   };
@@ -514,7 +507,6 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (error) {
-      console.error('Update user status error:', error);
       return null;
     }
   };
@@ -530,7 +522,6 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (error) {
-      console.error('Delete user error:', error);
       return null;
     }
   };

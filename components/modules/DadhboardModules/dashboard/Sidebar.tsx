@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   FiHome,
   FiUser,
-  FiFileText,
   FiMail,
   FiUsers,
   FiMenu,
@@ -17,12 +16,11 @@ import {
   FiSettings,
   FiDollarSign,
   FiLayers,
-  FiGrid,
   FiTag,
-  FiEdit3,
   FiBookOpen,
   FiFolder,
-  FiFolderOpen,
+  FiChevronDown,
+  FiChevronRight,
 } from "react-icons/fi";
 import { VscGitPullRequestGoToChanges } from "react-icons/vsc";
 
@@ -32,21 +30,43 @@ import { AuthContext } from "@/Providers/AuthProvider";
 import { useContext } from "react";
 import { UserRole } from "@/types/user";
 
-const adminNavigation = [
+interface NavigationItem {
+  name: string;
+  href?: string;
+  icon: any;
+  isDropdown?: boolean;
+  children?: NavigationItem[];
+}
+
+const adminNavigation: NavigationItem[] = [
   { name: "Overview", href: "/dashboard", icon: FiHome },
   { name: "Profile", href: "/dashboard/profile", icon: FiUser },
   {
-    name: "Templates Categories",
-    href: "/dashboard/templates-categories",
-    icon: FiFolder,
+    name: "Templates",
+    icon: FiLayers,
+    isDropdown: true,
+    children: [
+      {
+        name: "Templates Categories",
+        href: "/dashboard/templates-categories",
+        icon: FiFolder,
+      },
+      { name: "Templates", href: "/dashboard/templates", icon: FiLayers },
+    ],
   },
-  { name: "Templates", href: "/dashboard/templates", icon: FiLayers },
   {
-    name: "Blog Categories",
-    href: "/dashboard/blog-categories",
-    icon: FiTag,
+    name: "Blogs",
+    icon: FiBookOpen,
+    isDropdown: true,
+    children: [
+      {
+        name: "Blog Categories",
+        href: "/dashboard/blog-categories",
+        icon: FiTag,
+      },
+      { name: "Blogs", href: "/dashboard/blogs", icon: FiBookOpen },
+    ],
   },
-  { name: "Blogs", href: "/dashboard/blogs", icon: FiBookOpen },
   { name: "Pricing", href: "/dashboard/pricing", icon: FiDollarSign },
   { name: "Newsletter", href: "/dashboard/newsletter", icon: FiMail },
   { name: "Users", href: "/dashboard/users", icon: FiUsers },
@@ -57,7 +77,7 @@ const adminNavigation = [
   },
 ];
 
-const userNavigation = [
+const userNavigation: NavigationItem[] = [
   { name: "Profile", href: "/dashboard/profile", icon: FiUser },
   { name: "My Purchases", href: "/dashboard/purchases", icon: FiShoppingBag },
   { name: "Payment History", href: "/dashboard/payment", icon: FiCreditCard },
@@ -73,10 +93,27 @@ const userNavigation = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
   const { user, loading } = useContext(AuthContext) || {};
   const role = (user as { role?: UserRole })?.role;
   const isAdmin = role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
   const isUser = role === UserRole.USER;
+
+  const toggleDropdown = (itemName: string) => {
+    setOpenDropdowns((prev) =>
+      prev.includes(itemName)
+        ? prev.filter((name) => name !== itemName)
+        : [...prev, itemName]
+    );
+  };
+
+  const isDropdownOpen = (itemName: string) => {
+    return openDropdowns.includes(itemName);
+  };
+
+  const isChildActive = (children: NavigationItem[] | undefined) => {
+    return children?.some((child) => pathname === child.href) || false;
+  };
 
   return (
     <>
@@ -173,28 +210,91 @@ export default function Sidebar() {
             ) : (
               (isAdmin ? adminNavigation : isUser ? userNavigation : []).map(
                 (item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                        isActive
-                          ? "bg-[#0F5BBD] text-white"
-                          : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#718096]"
-                      }`}
-                    >
-                      <item.icon
-                        className={`mr-3 h-5 w-5 ${
+                  if (item.isDropdown) {
+                    const isOpen = isDropdownOpen(item.name);
+                    const hasActiveChild = isChildActive(item.children);
+
+                    return (
+                      <div key={item.name}>
+                        <button
+                          onClick={() => toggleDropdown(item.name)}
+                          className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                            hasActiveChild
+                              ? "bg-[#0F5BBD] text-white"
+                              : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#718096]"
+                          }`}
+                        >
+                          <div className="flex items-center">
+                            <item.icon
+                              className={`mr-3 h-5 w-5 ${
+                                hasActiveChild
+                                  ? "text-white"
+                                  : "text-gray-400 dark:text-gray-300"
+                              }`}
+                            />
+                            {item.name}
+                          </div>
+                          {isOpen ? (
+                            <FiChevronDown className="h-4 w-4" />
+                          ) : (
+                            <FiChevronRight className="h-4 w-4" />
+                          )}
+                        </button>
+
+                        {isOpen && item.children && (
+                          <div className="ml-4 mt-1 space-y-1">
+                            {item.children.map((child) => {
+                              const isChildActive = pathname === child.href;
+                              return (
+                                <Link
+                                  key={child.name}
+                                  href={child.href || "#"}
+                                  onClick={() => setIsMobileMenuOpen(false)}
+                                  className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                    isChildActive
+                                      ? "bg-[#0F5BBD] text-white"
+                                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#718096]"
+                                  }`}
+                                >
+                                  <child.icon
+                                    className={`mr-3 h-4 w-4 ${
+                                      isChildActive
+                                        ? "text-white"
+                                        : "text-gray-400 dark:text-gray-300"
+                                    }`}
+                                  />
+                                  {child.name}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  } else {
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href || "#"}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                           isActive
-                            ? "text-white"
-                            : "text-gray-400 dark:text-gray-300"
+                            ? "bg-[#0F5BBD] text-white"
+                            : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#718096]"
                         }`}
-                      />
-                      {item.name}
-                    </Link>
-                  );
+                      >
+                        <item.icon
+                          className={`mr-3 h-5 w-5 ${
+                            isActive
+                              ? "text-white"
+                              : "text-gray-400 dark:text-gray-300"
+                          }`}
+                        />
+                        {item.name}
+                      </Link>
+                    );
+                  }
                 }
               )
             )}

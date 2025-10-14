@@ -17,10 +17,12 @@ import { IUser, IUpdateProfile } from "@/types/auth";
 import { Camera, X } from "lucide-react";
 import Image from "next/image";
 import { useContext } from "react";
-import { useUpdateProfile, useUpdateAvatar, useCurrentUser } from "@/hooks/useAuth";
-import { useQueryClient } from '@tanstack/react-query';
-
-
+import {
+  useUpdateProfile,
+  useUpdateAvatar,
+  useCurrentUser,
+} from "@/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProfileFormValues {
   fullName: string;
@@ -38,14 +40,13 @@ const ProfileEditForm: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [removeExistingImage, setRemoveExistingImage] = useState(false);
   const { user, loading: authLoading } = useContext(AuthContext) || {};
-  
-  
+
   // Use the proper hooks for profile and avatar updates
   const { updateProfile, isLoading: profileUpdateLoading } = useUpdateProfile();
   const { updateAvatar, isLoading: avatarUpdateLoading } = useUpdateAvatar();
   const { refetch: refetchCurrentUser } = useCurrentUser();
   const queryClient = useQueryClient();
-  
+
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<ProfileFormValues>({
@@ -117,12 +118,11 @@ const ProfileEditForm: React.FC = () => {
       await refetchCurrentUser();
 
       // Also invalidate the cache to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ['getCurrentUser'] });
+      queryClient.invalidateQueries({ queryKey: ["getCurrentUser"] });
 
       toast.success("Profile updated successfully!");
 
       // Don't clear the form - keep the updated values
-
     } catch (err: any) {
       const errorMessage = err?.message || "Profile update failed!";
       setError(errorMessage);
@@ -138,28 +138,29 @@ const ProfileEditForm: React.FC = () => {
       setError(null);
 
       // Validate file
-      if (selectedImage.size > 5 * 1024 * 1024) { // 5MB limit
+      if (selectedImage.size > 5 * 1024 * 1024) {
+        // 5MB limit
         toast.error("Image size must be less than 5MB");
         return;
       }
-      
-      if (!selectedImage.type.startsWith('image/')) {
+
+      if (!selectedImage.type.startsWith("image/")) {
         toast.error("Please select a valid image file");
         return;
       }
-      
+
       // Check if token is expired
       const expiresAt = (user as any)?.expiresAt;
       if (expiresAt) {
         const expirationDate = new Date(expiresAt);
         const now = new Date();
-        
+
         if (now > expirationDate) {
           toast.error("Session expired. Please log in again.");
           return;
         }
       }
-      
+
       // Test if current user endpoint works first
       try {
         await refetchCurrentUser();
@@ -168,7 +169,7 @@ const ProfileEditForm: React.FC = () => {
         return;
       }
 
-      // Upload avatar using separate API
+      // Upload avatar using backend API
       await updateAvatar(selectedImage);
 
       // Refresh current user data to get updated information
@@ -180,11 +181,10 @@ const ProfileEditForm: React.FC = () => {
       setSelectedImage(null);
       setPreviewUrl(null);
       setRemoveExistingImage(false);
-
     } catch (err: any) {
       // Try to get more specific error information
       let errorMessage = "Avatar update failed!";
-      
+
       if (err?.data?.message) {
         errorMessage = err.data.message;
       } else if (err?.data?.error) {
@@ -200,7 +200,7 @@ const ProfileEditForm: React.FC = () => {
       } else if (err?.status === 415) {
         errorMessage = "Invalid file type. Please select a valid image.";
       }
-      
+
       setError(errorMessage);
       toast.error(errorMessage);
     }
@@ -208,8 +208,8 @@ const ProfileEditForm: React.FC = () => {
 
   // Show loading state while fetching user data
   if (authLoading) {
-  return (
-    <div className="shadow p-6 flex-1 bg-white dark:bg-[#1A1D37] rounded-md">
+    return (
+      <div className="shadow p-6 flex-1 bg-white dark:bg-[#1A1D37] rounded-md">
         <div className="space-y-6">
           <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -233,7 +233,9 @@ const ProfileEditForm: React.FC = () => {
     return (
       <div className="shadow p-6 flex-1 bg-white dark:bg-[#1A1D37] rounded-md">
         <div className="flex flex-col items-center justify-center h-64">
-          <p className="text-red-500 text-center">Failed to load user data. Please try again.</p>
+          <p className="text-red-500 text-center">
+            Failed to load user data. Please try again.
+          </p>
         </div>
       </div>
     );
@@ -242,15 +244,16 @@ const ProfileEditForm: React.FC = () => {
   return (
     <div className="shadow p-6 flex-1 bg-white dark:bg-[#1A1D37] rounded-md">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Edit Profile</h2>
-        <p className="text-gray-600 dark:text-gray-400">Update your personal information and profile picture</p>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          Edit Profile
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          Update your personal information and profile picture
+        </p>
       </div>
-      
+
       <Form {...form}>
-        <form
-          className="space-y-6"
-          onSubmit={form.handleSubmit(handleUpdate)}
-        >
+        <form className="space-y-6" onSubmit={form.handleSubmit(handleUpdate)}>
           {/* Image Upload Section */}
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
@@ -263,15 +266,16 @@ const ProfileEditForm: React.FC = () => {
                     height={128}
                     className="w-full h-full object-cover"
                   />
-                ) : (user as any)?.profile?.avatarUrl && !removeExistingImage ? (
+                ) : (user as any)?.profile?.avatarUrl &&
+                  !removeExistingImage ? (
                   <Image
                     src={(user as any).profile.avatarUrl}
-                     alt="Current profile"
-                     width={128}
-                     height={128}
-                     className="w-full h-full object-cover"
-                   />
-                 ) : (
+                    alt="Current profile"
+                    width={128}
+                    height={128}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-300">
                     <Camera className="w-12 h-12 text-gray-500" />
                   </div>
@@ -289,22 +293,24 @@ const ProfileEditForm: React.FC = () => {
                 />
               </label>
 
-                             {/* Remove Button */}
-                {(previewUrl || ((user as any)?.profile?.avatarUrl && !removeExistingImage)) && (
-                 <button
-                   type="button"
-                   onClick={removeImage}
-                   className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full cursor-pointer hover:bg-red-600 transition-colors"
-                 >
-                   <X className="w-3 h-3" />
-                 </button>
-               )}
+              {/* Remove Button */}
+              {(previewUrl ||
+                ((user as any)?.profile?.avatarUrl &&
+                  !removeExistingImage)) && (
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full cursor-pointer hover:bg-red-600 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
             </div>
 
             <p className="text-sm text-gray-500 text-center">
               Click the camera icon to upload a new profile picture
             </p>
-            
+
             {/* Save Avatar Button - Only show when image is selected */}
             {selectedImage && (
               <div className="flex justify-center">
@@ -312,7 +318,7 @@ const ProfileEditForm: React.FC = () => {
                   type="button"
                   onClick={handleAvatarUpdate}
                   disabled={avatarUpdateLoading}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md transition-colors"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-md transition-all duration-200 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   {avatarUpdateLoading ? (
                     <>
@@ -329,116 +335,116 @@ const ProfileEditForm: React.FC = () => {
 
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <FormField
-            control={form.control}
-            name="fullName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Full Name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Email"
-                    type="email"
-                    {...field}
-                    disabled
-                    className="bg-gray-100 cursor-not-allowed"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <FormControl>
-                  <Input placeholder="Phone" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="designation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Designation</FormLabel>
-                <FormControl>
-                  <Input placeholder="Designation" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Country</FormLabel>
-                <FormControl>
-                  <Input placeholder="Country" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>City</FormLabel>
-                <FormControl>
-                  <Input placeholder="City" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="stateOrRegion"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>State/Region</FormLabel>
-                <FormControl>
-                  <Input placeholder="State or Region" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="postCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Post Code</FormLabel>
-                <FormControl>
-                  <Input placeholder="Post Code" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Full Name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Email"
+                      type="email"
+                      {...field}
+                      disabled
+                      className="bg-gray-100 cursor-not-allowed"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Phone" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="designation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Designation</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Designation" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Country" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input placeholder="City" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="stateOrRegion"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State/Region</FormLabel>
+                  <FormControl>
+                    <Input placeholder="State or Region" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="postCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Post Code</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Post Code" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
           <div className="flex justify-end">
             <Button

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import React, { useContext, useState } from "react";
 import { AuthContext } from "@/Providers/AuthProvider";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useCurrentUser } from "@/hooks/useAuth";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -26,15 +26,17 @@ interface NavActionsProps {
 export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
   const authContext = useContext(AuthContext);
   const { user: nextAuthUser, isAuthenticated } = useAuth();
-  const user = nextAuthUser || authContext?.user;
+  const { data: currentUserData } = useCurrentUser();
+  
+  // Prioritize fresh API data over cached data
+  const user = currentUserData?.data?.user || nextAuthUser || authContext?.user;
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
 
   const getPhotoUrl = () => {
-    if (user && user.profile?.avatarUrl) {
-      return user.profile.avatarUrl;
-    }
+    if (user && (user as any).avatarUrl) return (user as any).avatarUrl;
+    if (user && user.profile?.avatarUrl) return user.profile.avatarUrl;
     return undefined;
   };
 
@@ -57,7 +59,7 @@ export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
   };
 
   const hasProfilePicture = () => {
-    return !!(user && user.profile?.avatarUrl);
+    return !!(user && ((user as any).avatarUrl || user.profile?.avatarUrl));
   };
 
   function getImageUrl(imageUrl?: string) {
