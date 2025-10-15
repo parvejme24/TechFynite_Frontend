@@ -1,55 +1,74 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-// Mock template hook - in real app, this would be imported from your API hooks
-const useTemplate = (id: string) => {
-  return {
-    data: {
-      id: id,
-      title: "Sample Template",
-      imageUrl: "/placeholder.jpg",
-      categoryId: "1",
-      pages: 5,
-      price: 29.99,
-      description: "This is a sample template description.",
-      shortDescription: "A modern and responsive template for your next project.",
-      whatsIncluded: ["Feature 1", "Feature 2", "Feature 3"],
-      keyFeatures: [
-        { title: "Responsive Design", description: "Works on all devices" },
-        { title: "Modern UI", description: "Clean and contemporary design" },
-        { title: "Easy to Customize", description: "Simple to modify and extend" }
-      ],
-      screenshots: ["/placeholder.jpg", "/placeholder.jpg"],
-      previewLink: "https://example.com/preview",
-      views: 150,
-      tags: ["React", "Next.js", "TypeScript"],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    } as any, // Mock data for now
-    isLoading: false,
-    error: null,
-  };
-};
+import { useGetTemplateById } from "@/hooks/useTemplateApi";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TemplateDetailsSkeleton from "./TemplateDetailsSkeleton";
 
 export default function TemplateDetailsContainer({ id }: { id: string }) {
-  const { data: template, isLoading, error } = useTemplate(id);
+  const { 
+    data: templateData, 
+    isLoading, 
+    error 
+  } = useGetTemplateById(id);
   const router = useRouter();
 
-  if (isLoading) return <TemplateDetailsSkeleton />;
-  if (error)
-    return <div className="text-red-500">{(error as Error).message}</div>;
-  if (!template) return <div>No template found.</div>;
+  const template = templateData;
+
+  // Debug logging
+  console.log('Template Details - ID:', id);
+  console.log('Template Details - Loading:', isLoading);
+  console.log('Template Details - Error:', error);
+  console.log('Template Details - Data:', templateData);
+
+  if (isLoading) {
+    return <TemplateDetailsSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 lg:px-0 py-10">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Error Loading Template
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {(error as Error).message || "Failed to load template data. Please try again."}
+          </p>
+          <Button onClick={() => router.push('/template')} className="cursor-pointer">
+            Back to Templates
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!template) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 lg:px-0 py-10">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Template Not Found
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            The template you're looking for doesn't exist or has been removed.
+          </p>
+          <Button onClick={() => router.push('/template')} className="cursor-pointer">
+            Back to Templates
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const {
     title,
     imageUrl,
-    categoryId,
+    category,
     pages,
-    views,
+    price,
     previewLink,
     shortDescription,
     description,
@@ -57,6 +76,10 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
     keyFeatures,
     screenshots,
     updatedAt,
+    version,
+    downloads,
+    totalPurchase,
+    createdAt,
   } = template;
 
   return (
@@ -64,29 +87,48 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
       <div className="container mx-auto max-w-7xl px-4 lg:px-0 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <div>
-            <h2 className="text-lg font-semibold text-gray-500 mb-2">
-              Category: {categoryId}
-            </h2>
-            <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Category:</span>
+              <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded">
+                {category?.title || 'React.JS'}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
               <span>Updated: {new Date(updatedAt).toLocaleDateString()}</span>
               <span>{pages} pages</span>
-              <span>{views} views</span>
+              <span>v{version}</span>
             </div>
-            <h2 className="text-3xl font-bold mb-2">{title}</h2>
-            <p className="mb-4 text-gray-700 dark:text-gray-300">
+            
+            <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
+              {title}
+            </h1>
+            
+            <div className="mb-6">
+              <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+                ${price}
+              </div>
+              <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                <span>{downloads} downloads</span>
+                <span>{totalPurchase} purchases</span>
+              </div>
+            </div>
+            
+            <p className="mb-6 text-gray-700 dark:text-gray-300 leading-relaxed">
               {shortDescription}
             </p>
-            <div className="space-y-2">
+            
+            <div className="space-y-3">
               <Button 
                 onClick={() => router.push(`/checkout/${id}`)}
-                className="cursor-pointer bg-[#0F35A7] hover:bg-[#0F35A7]/80 text-white w-full h-[45px]"
+                className="cursor-pointer bg-[#0F35A7] hover:bg-[#0F35A7]/80 text-white w-full h-[45px] text-lg font-semibold"
               >
-                Buy Now
+                Buy Now - ${price}
               </Button>
               <div className="w-full grid grid-cols-2 gap-2">
                 <Button
                   variant="outline"
-                  className="cursor-pointer h-[45px] border border-[#0F35A7] bg-transparent"
+                  className="cursor-pointer h-[45px] border border-[#0F35A7] bg-transparent hover:bg-[#0F35A7]/10"
                   disabled={!previewLink}
                 >
                   {previewLink ? (
@@ -94,6 +136,7 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
                       href={previewLink}
                       target="_blank"
                       rel="noopener noreferrer"
+                      className="flex items-center justify-center w-full"
                     >
                       Preview
                     </Link>
@@ -103,37 +146,34 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
                 </Button>
                 <Button
                   variant="outline"
-                  className="cursor-pointer h-[45px] border border-[#0F35A7] bg-transparent"
+                  className="cursor-pointer h-[45px] border border-[#0F35A7] bg-transparent hover:bg-[#0F35A7]/10"
                 >
                   Download
                 </Button>
               </div>
             </div>
           </div>
+          
           <div>
             <Image
               src={imageUrl}
               alt={title}
               width={1000}
               height={1000}
-              className="rounded-lg w-full h-80 object-cover"
+              className="rounded-lg w-full h-80 object-cover shadow-lg"
             />
           </div>
         </div>
 
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-10">
           <div>
-            <h4 className="text-xl font-semibold mb-2">Description</h4>
-            <p className="mb-6 text-gray-700 dark:text-gray-300">
-              {description}
-            </p>
-
-            <h4 className="text-xl font-semibold mb-2">What&apos;s Included</h4>
-            <ul className="list-disc list-inside mb-6">
+            <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">What's Included</h3>
+            <ul className="space-y-3">
               {whatsIncluded && whatsIncluded.length > 0 ? (
                 whatsIncluded.map((item: string, idx: number) => (
-                  <li key={idx} className="text-gray-700 dark:text-gray-300">
-                    {item}
+                  <li key={idx} className="flex items-start gap-3 text-gray-700 dark:text-gray-300">
+                    <span className="text-green-500 mt-1">✓</span>
+                    <span>{item}</span>
                   </li>
                 ))
               ) : (
@@ -143,46 +183,47 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
           </div>
 
           <div>
-            <h4 className="text-xl font-semibold mb-2">Key Features</h4>
-            <ul className="space-y-2">
+            <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Key Features</h3>
+            <div className="space-y-3">
               {keyFeatures && keyFeatures.length > 0 ? (
-                keyFeatures.map((item: unknown, idx: number) => {
-                  const feature = (item as { feature: string }).feature;
-                  return (
-                    <li
-                      key={feature + idx}
-                      className="bg-white dark:bg-[#1A1D37] text-gray-700 dark:text-gray-300 px-4 py-3 rounded"
-                    >
-                      {feature}
-                    </li>
-                  );
-                })
+                keyFeatures.map((feature: { title: string; description: string }, idx: number) => (
+                  <div
+                    key={feature.title + idx}
+                    className="bg-white dark:bg-[#1A1D37] border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                  >
+                    <div className="font-semibold text-gray-900 dark:text-white mb-1">
+                      {feature.title}
+                    </div>
+                    <div className="text-gray-600 dark:text-gray-300 text-sm">
+                      {feature.description}
+                    </div>
+                  </div>
+                ))
               ) : (
-                <li className="text-gray-500 dark:text-gray-400">No key features available</li>
+                <div className="text-gray-500 dark:text-gray-400">No key features available</div>
               )}
-            </ul>
+            </div>
           </div>
         </div>
 
-        <div>
-          <h4 className="text-xl font-semibold mb-2">Screenshots</h4>
-          <div className="flex flex-wrap gap-4">
-            {screenshots && screenshots.length > 0 ? (
-              screenshots.map((url: string, idx: number) => (
+
+        {screenshots && screenshots.length > 0 && (
+          <div className="mt-10">
+            <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Screenshots</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {screenshots.map((url: string, idx: number) => (
                 <Image
                   key={url + idx}
                   src={url}
                   alt={`Screenshot ${idx + 1}`}
-                  width={200}
-                  height={120}
-                  className="rounded border w-48 h-32 object-cover"
+                  width={300}
+                  height={200}
+                  className="rounded-lg border border-gray-200 dark:border-gray-700 w-full h-48 object-cover"
                 />
-              ))
-            ) : (
-              <p className="text-gray-500 dark:text-gray-400">No screenshots available</p>
-            )}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
