@@ -1,4 +1,5 @@
-import TemplateContainer from "@/components/modules/DadhboardModules/ADMIN/Template/TemplateContainer";
+
+import TemplatesContainer from "@/components/modules/CommonModules/template/TemplateContainer";
 import PageHeader from "@/components/shared/PageHeader/PageHeader";
 import React from "react";
 
@@ -10,7 +11,7 @@ export default function TemplatesPage() {
         subTitle="Explore the best premium themes and plugins available for sale. Our unique collection is hand-curated by experts. Find and buy the perfect premium theme."
         value="58000"
       />
-      <TemplateContainer />
+      <TemplatesContainer />
     </div>
   );
 }

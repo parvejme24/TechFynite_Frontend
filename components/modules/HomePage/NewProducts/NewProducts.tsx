@@ -1,67 +1,44 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import TemplateCard from "../../CommonModules/template/TemplateCard";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-
-// TypeScript interface for template data
-interface Template {
-  id: string;
-  title: string;
-  image: string;
-  price: string;
-  category: string;
-  version: string;
-  downloads: string;
-  publishedDate: string;
-  pages: string;
-  views: string;
-  previewLink: string;
-  shortDescription: string;
-  description: string;
-  whatsIncluded: string[];
-  keyFeatures: Array<{
-    feature: string;
-    featureDescription: string;
-  }>;
-  screenshots: string[];
-}
+import { useGetAllTemplates } from "@/hooks/useTemplateApi";
+import { Template } from "@/types/template";
 
 export default function NewProducts() {
-  const [templates, setTemplates] = useState<Template[]>([]);
   const [activeTab, setActiveTab] = useState("All Items");
-  const [loading, setLoading] = useState(true);
 
-  // Fetch templates data
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      try {
-        const response = await fetch("/templates.json");
-        const data = await response.json();
-        setTemplates(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching templates:", error);
-        setLoading(false);
-      }
-    };
+  // Fetch templates data from API
+  const { data: templatesData, isLoading: loading, error } = useGetAllTemplates({
+    page: 1,
+    limit: 50, // Get more templates for the home page
+    sortBy: "createdAt",
+    sortOrder: "desc"
+  });
 
-    fetchTemplates();
-  }, []);
+  const templates = templatesData?.data || [];
 
   // Get unique categories from templates
-  const categories = [
-    "All Items",
-    ...Array.from(new Set(templates.map((template) => template.category))),
-  ];
+  const categories = useMemo(() => {
+    const categoryNames = templates.map((template) => template.category?.title || template.categoryId);
+    return [
+      "All Items",
+      ...Array.from(new Set(categoryNames.filter(Boolean))),
+    ];
+  }, [templates]);
 
   // Filter templates based on active tab
-  const filteredTemplates =
-    activeTab === "All Items"
-      ? templates
-      : templates.filter((template) => template.category === activeTab);
+  const filteredTemplates = useMemo(() => {
+    if (activeTab === "All Items") {
+      return templates;
+    }
+    return templates.filter((template) => 
+      template.category?.title === activeTab || template.categoryId === activeTab
+    );
+  }, [templates, activeTab]);
 
   const handleTabClick = (category: string) => {
     setActiveTab(category);
@@ -94,6 +71,42 @@ export default function NewProducts() {
             >
               Loading products...
             </motion.p>
+          </motion.div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (error) {
+    return (
+      <motion.div 
+        className="py-14 bg-gradient-to-b from-[#FAFCFF] dark:from-[#000424] to-[#FAFCFF] dark:to-[#000424]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="container mx-auto max-w-7xl px-5 lg:px-0">
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+                opacity: [0.7, 1, 0.7]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <p className="text-red-500 text-lg">
+                Error loading products. Please try again later.
+              </p>
+            </motion.div>
           </motion.div>
         </div>
       </motion.div>

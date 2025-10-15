@@ -4,8 +4,7 @@ import { AuthContext } from "@/Providers/AuthProvider";
 import { UserRole } from "@/types/user";
 import React, { useContext } from "react";
 import { useContactApi } from "@/hooks/useContactApi";
-import ServiceRequestContainer from "@/components/modules/DadhboardModules/ADMIN/ServiceRequest/ServiceRequestContainer";
-import UserServiceRequestContainer from "@/components/modules/DadhboardModules/USER/ServiceRequest/UserServiceRequestContainer";
+import ServiceRequestContainer from "@/components/modules/DadhboardModules/service-request/ServiceRequestContainer";
 
 export default function ServiceRequestPage() {
   const { user } = useContext(AuthContext) || {};
@@ -24,10 +23,8 @@ export default function ServiceRequestPage() {
 
   return (
     <div>
-      {isAdmin ? (
-        <ServiceRequestContainer />
-      ) : isUser ? (
-        <UserServiceRequestContainer />
+      {isAdmin || isUser ? (
+        <ServiceRequestContainer userRole={role as string} />
       ) : (
         <div className="min-h-screen py-8">
           <div className="container mx-auto max-w-7xl px-4">

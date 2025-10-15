@@ -1,10 +1,8 @@
-import TemplateContainer from "@/components/modules/DadhboardModules/ADMIN/Template/TemplateContainer";
+"use client";
+
+import TemplatesContainer from "@/components/modules/DadhboardModules/Templates/TemplatesContainer";
 import React from "react";
 
-export default function page() {
-  return (
-    <div>
-      <TemplateContainer />
-    </div>
-  );
+export default function TemplatesPage() {
+  return <TemplatesContainer />;
 }

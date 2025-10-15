@@ -1,5 +1,5 @@
 "use client";
-import EditBlogContainer from "@/components/modules/DadhboardModules/ADMIN/Blog/EditBlog/EditBlogContainer";
+import EditBlogContainer from "@/components/modules/DadhboardModules/Blog/EditBlog/EditBlogContainer";
 
 interface EditBlogPageProps {
   params: {

@@ -1,4 +1,4 @@
-import OverviewContainer from "@/components/modules/DadhboardModules/ADMIN/Overview/OverviewContainer";
+import OverviewContainer from "@/components/modules/DadhboardModules/Overview/OverviewContainer";
 import React from "react";
 
 export default function DashboardHomePage() {

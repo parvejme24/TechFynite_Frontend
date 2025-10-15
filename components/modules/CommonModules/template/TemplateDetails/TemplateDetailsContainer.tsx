@@ -12,8 +12,16 @@ const useTemplate = (id: string) => {
       pages: 5,
       price: 29.99,
       description: "This is a sample template description.",
+      shortDescription: "A modern and responsive template for your next project.",
       whatsIncluded: ["Feature 1", "Feature 2", "Feature 3"],
-      features: ["Responsive Design", "Modern UI", "Easy to Customize"],
+      keyFeatures: [
+        { title: "Responsive Design", description: "Works on all devices" },
+        { title: "Modern UI", description: "Clean and contemporary design" },
+        { title: "Easy to Customize", description: "Simple to modify and extend" }
+      ],
+      screenshots: ["/placeholder.jpg", "/placeholder.jpg"],
+      previewLink: "https://example.com/preview",
+      views: 150,
       tags: ["React", "Next.js", "TypeScript"],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -79,14 +87,19 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
                 <Button
                   variant="outline"
                   className="cursor-pointer h-[45px] border border-[#0F35A7] bg-transparent"
+                  disabled={!previewLink}
                 >
-                  <Link
-                    href={previewLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Preview
-                  </Link>
+                  {previewLink ? (
+                    <Link
+                      href={previewLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Preview
+                    </Link>
+                  ) : (
+                    "Preview"
+                  )}
                 </Button>
                 <Button
                   variant="outline"
@@ -117,28 +130,36 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
 
             <h4 className="text-xl font-semibold mb-2">What&apos;s Included</h4>
             <ul className="list-disc list-inside mb-6">
-              {whatsIncluded.map((item: string, idx: number) => (
-                <li key={idx} className="text-gray-700 dark:text-gray-300">
-                  {item}
-                </li>
-              ))}
+              {whatsIncluded && whatsIncluded.length > 0 ? (
+                whatsIncluded.map((item: string, idx: number) => (
+                  <li key={idx} className="text-gray-700 dark:text-gray-300">
+                    {item}
+                  </li>
+                ))
+              ) : (
+                <li className="text-gray-500 dark:text-gray-400">No items included</li>
+              )}
             </ul>
           </div>
 
           <div>
             <h4 className="text-xl font-semibold mb-2">Key Features</h4>
             <ul className="space-y-2">
-              {keyFeatures.map((item: unknown, idx: number) => {
-                const feature = (item as { feature: string }).feature;
-                return (
-                  <li
-                    key={feature + idx}
-                    className="bg-white dark:bg-[#1A1D37] text-gray-700 dark:text-gray-300 px-4 py-3 rounded"
-                  >
-                    {feature}
-                  </li>
-                );
-              })}
+              {keyFeatures && keyFeatures.length > 0 ? (
+                keyFeatures.map((item: unknown, idx: number) => {
+                  const feature = (item as { feature: string }).feature;
+                  return (
+                    <li
+                      key={feature + idx}
+                      className="bg-white dark:bg-[#1A1D37] text-gray-700 dark:text-gray-300 px-4 py-3 rounded"
+                    >
+                      {feature}
+                    </li>
+                  );
+                })
+              ) : (
+                <li className="text-gray-500 dark:text-gray-400">No key features available</li>
+              )}
             </ul>
           </div>
         </div>
@@ -146,16 +167,20 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
         <div>
           <h4 className="text-xl font-semibold mb-2">Screenshots</h4>
           <div className="flex flex-wrap gap-4">
-            {screenshots.map((url: string, idx: number) => (
-              <Image
-                key={url + idx}
-                src={url}
-                alt={`Screenshot ${idx + 1}`}
-                width={200}
-                height={120}
-                className="rounded border w-48 h-32 object-cover"
-              />
-            ))}
+            {screenshots && screenshots.length > 0 ? (
+              screenshots.map((url: string, idx: number) => (
+                <Image
+                  key={url + idx}
+                  src={url}
+                  alt={`Screenshot ${idx + 1}`}
+                  width={200}
+                  height={120}
+                  className="rounded border w-48 h-32 object-cover"
+                />
+              ))
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">No screenshots available</p>
+            )}
           </div>
         </div>
       </div>

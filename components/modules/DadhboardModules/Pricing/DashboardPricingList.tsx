@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { FiPlus, FiDollarSign } from "react-icons/fi";
 import Link from "next/link";
 import PricingCard from "./PricingCard/PricingCard";
-import DashboardPricingCardSkeleton from "../../../CommonModules/pricing/pricingList/DashboardPricingCardSkeleton";
+import DashboardPricingCardSkeleton from "../../CommonModules/pricing/pricingList/DashboardPricingCardSkeleton";
 
 export default function DashboardPricingList() {
   const { data: pricingPlans = [], isLoading, error } = usePricing();

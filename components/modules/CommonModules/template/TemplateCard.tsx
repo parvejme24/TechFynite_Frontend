@@ -2,15 +2,7 @@ import Link from "next/link";
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-
-interface Template {
-  id: string;
-  title: string;
-  category: string;
-  price: string;
-  image: string;
-  previewLink: string;
-}
+import { Template } from "@/types/template";
 
 interface TemplateCardProps {
   template: Template;
@@ -20,7 +12,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
   return (
     <div className="p-3 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-[#1A1D37]">
       <Image
-        src={template.image}
+        src={template.imageUrl || "/placeholder.png"}
         alt={template.title}
         width={400}
         height={300}
@@ -74,13 +66,19 @@ export default function TemplateCard({ template }: TemplateCardProps) {
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.2 }}
           >
-            <Link
-              href={template.previewLink}
-              target="_blank"
-              className="bg-gradient-to-r text-white from-[#0F59BC] to-[#0F35A7] w-full h-full py-2 flex justify-center items-center rounded-lg"
-            >
-              Live Demo
-            </Link>
+            {template.previewLink ? (
+              <Link
+                href={template.previewLink}
+                target="_blank"
+                className="bg-gradient-to-r text-white from-[#0F59BC] to-[#0F35A7] w-full h-full py-2 flex justify-center items-center rounded-lg"
+              >
+                Live Demo
+              </Link>
+            ) : (
+              <span className="bg-gray-400 text-white w-full h-full py-2 flex justify-center items-center rounded-lg cursor-not-allowed">
+                No Preview
+              </span>
+            )}
           </motion.span>
         </div>
       </div>
