@@ -1,5 +1,5 @@
 import React from 'react';
-import PaymentContainer from '@/components/modules/DadhboardModules/USER/Payment/PaymentContainer';
+import PaymentContainer from '@/components/modules/DadhboardModules/dashboard/PaymentContainer';
 
 export default function PaymentPage() {
   return (
