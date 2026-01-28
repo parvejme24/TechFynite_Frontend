@@ -14,24 +14,6 @@
 
 </div>
 
----
-
-## 📋 Table of Contents
-
-- [🎯 Overview](#-overview)
-- [✨ Features](#-features)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [🚀 Quick Start](#-quick-start)
-- [📱 Screenshots](#-screenshots)
-- [🏗️ Architecture](#️-architecture)
-- [🔧 API Integration](#-api-integration)
-- [📦 Key Components](#-key-components)
-- [🎨 UI/UX Features](#-uiux-features)
-- [🚀 Deployment](#-deployment)
-- [📈 Performance](#-performance)
-- [🤝 Contributing](#-contributing)
-
----
 
 ## 🎯 Overview
 
@@ -392,7 +374,7 @@ npm run analyze
 
 <div align="center">
 
-**Built with ❤️ by [Your Name]**
+**Built with ❤️ by [Md Parvej]**
 
 [![Portfolio](https://img.shields.io/badge/🌐_Portfolio-Visit_Site-blue?style=for-the-badge)](https://yourportfolio.com)
 [![LinkedIn](https://img.shields.io/badge/💼_LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/yourprofile)

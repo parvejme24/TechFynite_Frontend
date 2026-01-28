@@ -10,25 +10,25 @@ interface TemplateCardProps {
 
 export default function TemplateCard({ template }: TemplateCardProps) {
   return (
-    <div className="p-3 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-[#1A1D37]">
+    <div className="h-full flex flex-col p-3 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-[#1A1D37]">
       <Image
         src={template.imageUrl || "/placeholder.png"}
         alt={template.title}
         width={400}
         height={300}
-        className="w-full h-[250px] object-cover rounded-lg"
+        className="w-full h-[250px] object-cover rounded-lg flex-shrink-0"
       />
-      <div>
-        <div className="flex justify-between items-center py-3">
+      <div className="flex flex-col flex-grow">
+        <div className="flex justify-between items-center py-3 flex-shrink-0">
           <motion.h3 
-            className="text-[14px] font-semibold mb-2 dark:text-gray-300"
+            className="text-[14px] font-semibold mb-2 dark:text-gray-300 line-clamp-2 flex-1"
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
           >
             {template.title}
           </motion.h3>
           <motion.span 
-            className="text-lg font-bold text-primary"
+            className="text-lg font-bold text-primary flex-shrink-0 ml-2"
             animate={{
               color: ["#1e40af", "#3b82f6", "#1e40af"]
             }}
@@ -46,7 +46,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
           </motion.span>
         </div>
 
-        <div className="grid grid-cols-2 gap-5 border-t border-[#c5c5c5] dark:border-[#686868] pt-5">
+        <div className="grid grid-cols-2 gap-5 border-t border-[#c5c5c5] dark:border-[#686868] pt-5 mt-auto flex-shrink-0">
           <motion.span 
             className="w-full bg-gradient-to-r from-[#BDD9FE] to-[#8AACDA] rounded-lg p-[2px]"
             whileHover={{ scale: 1.05 }}

@@ -18,16 +18,16 @@ interface TemplateCardProps {
 
 export default function TemplateCard({ template }: TemplateCardProps) {
   return (
-    <div className="p-3 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-[#1A1D37]">
+    <div className="h-full flex flex-col p-3 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-[#1A1D37]">
       <Image
         src={template.image}
         alt={template.title}
         width={400}
         height={300}
-        className="w-full h-[250px] object-cover rounded-lg"
+        className="w-full h-[250px] object-cover rounded-lg flex-shrink-0"
       />
-      <div className="p-4">
-        <div className="mb-3">
+      <div className="flex flex-col flex-grow p-4">
+        <div className="mb-3 flex-shrink-0">
           <motion.h3
             className="text-lg font-semibold mb-2 dark:text-gray-300 line-clamp-2"
             whileHover={{ scale: 1.02 }}
@@ -37,7 +37,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
           </motion.h3>
         </div>
 
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 flex-shrink-0">
           <motion.span
             className="text-xl font-bold text-green-600 flex items-center gap-1"
             whileHover={{
@@ -47,7 +47,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
           ></motion.span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 border-t border-[#c5c5c5] dark:border-[#686868] pt-4">
+        <div className="grid grid-cols-2 gap-3 border-t border-[#c5c5c5] dark:border-[#686868] pt-4 mt-auto flex-shrink-0">
           <motion.div
             className="w-full bg-gradient-to-r from-[#BDD9FE] to-[#8AACDA] rounded-lg p-[2px]"
             whileHover={{ scale: 1.05 }}

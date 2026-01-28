@@ -27,20 +27,36 @@ export interface TemplateCategoryListResponse {
 
 export interface CreateTemplateCategoryData {
   title: string;
-  slug: string;
+  slug?: string; // Optional - backend will auto-generate if not provided
   imageFile?: File;
 }
 
-export interface UpdateTemplateCategoryData extends Partial<CreateTemplateCategoryData> {
+export interface UpdateTemplateCategoryData {
   id: string;
+  title?: string;
+  slug?: string; // Optional - backend will auto-generate from title if not provided
+  imageFile?: File;
 }
 
-// Get all template categories
-export const useGetAllTemplateCategories = (page: number = 1, limit: number = 10) => {
+// Get all template categories with search and sorting support
+export const useGetAllTemplateCategories = (
+  page: number = 1, 
+  limit: number = 10, 
+  search?: string,
+  sortBy: string = 'createdAt',
+  sortOrder: string = 'desc'
+) => {
   return useQuery<TemplateCategoryListResponse>({
-    queryKey: ['templateCategories', 'all', page, limit],
+    queryKey: ['templateCategories', 'all', page, limit, search, sortBy, sortOrder],
     queryFn: async () => {
-      const response = await apiClient.get(`/template-categories?page=${page}&limit=${limit}`);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        sortBy,
+        sortOrder,
+      });
+      if (search) params.append('search', search);
+      const response = await apiClient.get(`/template-categories?${params.toString()}`);
       return response.data;
     },
   });
@@ -72,7 +88,7 @@ export const useTemplateCategory = (id: string) => {
 // Get template category stats
 export const useTemplateCategoryStats = () => {
   return useQuery({
-    queryKey: ['templateCategories', 'stats'],
+    queryKey: ['templateCategories', 'categoryStats'],
     queryFn: async () => {
       const response = await apiClient.get('/template-categories/stats');
       return response.data;
@@ -88,12 +104,13 @@ export const useCreateTemplateCategory = () => {
     mutationFn: async (data) => {
       const formData = new FormData();
       formData.append('title', data.title);
-      formData.append('slug', data.slug);
+      if (data.slug) {
+        formData.append('slug', data.slug);
+      }
       
       if (data.imageFile) {
         formData.append('image', data.imageFile);
       }
-
 
       const response = await apiClient.post('/template-categories', formData, {
         headers: {
@@ -102,10 +119,24 @@ export const useCreateTemplateCategory = () => {
       });
       return response.data.data;
     },
-    onSuccess: () => {
-      // Invalidate all template category queries to ensure stats update
+    onSuccess: (newCategory) => {
+      // Invalidate all template category queries to ensure instant updates
       queryClient.invalidateQueries({ queryKey: ['templateCategories'] });
       queryClient.invalidateQueries({ queryKey: ['templateCategory'] });
+      queryClient.invalidateQueries({ queryKey: ['templateCategories', 'categoryStats'] });
+      
+      // Optimistically update the stats query
+      queryClient.setQueryData(['templateCategories', 'stats'], (oldData: TemplateCategoryListResponse | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          data: [newCategory, ...oldData.data],
+          pagination: {
+            ...oldData.pagination,
+            total: oldData.pagination.total + 1,
+          },
+        };
+      });
     },
   });
 };
@@ -129,11 +160,25 @@ export const useUpdateTemplateCategory = () => {
       });
       return response.data.data;
     },
-    onSuccess: (data) => {
-      // Invalidate all template category queries to ensure stats update
+    onSuccess: (updatedCategory) => {
+      // Update the specific category cache
+      queryClient.setQueryData(['templateCategory', updatedCategory.id], updatedCategory);
+      
+      // Invalidate all template category list queries to ensure instant updates
       queryClient.invalidateQueries({ queryKey: ['templateCategories'] });
       queryClient.invalidateQueries({ queryKey: ['templateCategory'] });
-      queryClient.invalidateQueries({ queryKey: ['templateCategory', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['templateCategories', 'categoryStats'] });
+      
+      // Optimistically update the stats query
+      queryClient.setQueryData(['templateCategories', 'stats'], (oldData: TemplateCategoryListResponse | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          data: oldData.data.map((cat) => 
+            cat.id === updatedCategory.id ? updatedCategory : cat
+          ),
+        };
+      });
     },
   });
 };
@@ -146,10 +191,27 @@ export const useDeleteTemplateCategory = () => {
     mutationFn: async (id) => {
       await apiClient.delete(`/template-categories/${id}`);
     },
-    onSuccess: () => {
-      // Invalidate all template category queries to ensure stats update
+    onSuccess: (_, deletedId) => {
+      // Remove the specific category from cache
+      queryClient.removeQueries({ queryKey: ['templateCategory', deletedId] });
+      
+      // Invalidate all template category list queries to ensure instant updates
       queryClient.invalidateQueries({ queryKey: ['templateCategories'] });
       queryClient.invalidateQueries({ queryKey: ['templateCategory'] });
+      queryClient.invalidateQueries({ queryKey: ['templateCategories', 'categoryStats'] });
+      
+      // Optimistically update the stats query
+      queryClient.setQueryData(['templateCategories', 'stats'], (oldData: TemplateCategoryListResponse | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          data: oldData.data.filter((cat) => cat.id !== deletedId),
+          pagination: {
+            ...oldData.pagination,
+            total: Math.max(0, oldData.pagination.total - 1),
+          },
+        };
+      });
     },
   });
 };

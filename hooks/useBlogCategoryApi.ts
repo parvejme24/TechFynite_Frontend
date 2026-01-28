@@ -19,20 +19,29 @@ export interface BlogCategoryListResponse {
 export interface CreateBlogCategoryData {
   title: string;
   imageUrl?: string;
-  slug: string;
+  slug?: string; // Optional - backend will auto-generate if not provided
   imageFile?: File;
 }
 
-export interface UpdateBlogCategoryData extends Partial<CreateBlogCategoryData> {
+export interface UpdateBlogCategoryData {
   id: string;
+  title?: string;
+  slug?: string; // Optional - backend will auto-generate from title if not provided
+  imageFile?: File;
+  imageUrl?: string;
 }
 
-// Get all blog categories
-export const useGetAllBlogCategories = (page: number = 1, limit: number = 10) => {
+// Get all blog categories with search support
+export const useGetAllBlogCategories = (page: number = 1, limit: number = 10, search?: string) => {
   return useQuery<BlogCategoryListResponse>({
-    queryKey: ['blogCategories', 'all', page, limit],
+    queryKey: ['blogCategories', 'all', page, limit, search],
     queryFn: async () => {
-      const response = await apiClient.get(`/blog-categories?page=${page}&limit=${limit}`);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      if (search) params.append('search', search);
+      const response = await apiClient.get(`/blog-categories?${params.toString()}`);
       return response.data;
     },
   });
@@ -69,12 +78,13 @@ export const useCreateBlogCategory = () => {
     mutationFn: async (data) => {
       const formData = new FormData();
       formData.append('title', data.title);
-      formData.append('slug', data.slug);
+      if (data.slug) {
+        formData.append('slug', data.slug);
+      }
       
       if (data.imageFile) {
         formData.append('image', data.imageFile);
       }
-
 
       const response = await apiClient.post('/blog-categories', formData, {
         headers: {
@@ -83,10 +93,23 @@ export const useCreateBlogCategory = () => {
       });
       return response.data.data;
     },
-    onSuccess: () => {
-      // Invalidate all blog category queries to ensure stats update
+    onSuccess: (newCategory) => {
+      // Invalidate all blog category queries to ensure instant updates
       queryClient.invalidateQueries({ queryKey: ['blogCategories'] });
       queryClient.invalidateQueries({ queryKey: ['blogCategory'] });
+      
+      // Optimistically update the stats query
+      queryClient.setQueryData(['blogCategories', 'stats'], (oldData: BlogCategoryListResponse | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          data: [newCategory, ...oldData.data],
+          pagination: {
+            ...oldData.pagination,
+            total: oldData.pagination.total + 1,
+          },
+        };
+      });
     },
   });
 };
@@ -110,11 +133,24 @@ export const useUpdateBlogCategory = () => {
       });
       return response.data.data;
     },
-    onSuccess: (data) => {
-      // Invalidate all blog category queries to ensure stats update
+    onSuccess: (updatedCategory) => {
+      // Update the specific category cache
+      queryClient.setQueryData(['blogCategory', updatedCategory.id], updatedCategory);
+      
+      // Invalidate all blog category list queries to ensure instant updates
       queryClient.invalidateQueries({ queryKey: ['blogCategories'] });
       queryClient.invalidateQueries({ queryKey: ['blogCategory'] });
-      queryClient.invalidateQueries({ queryKey: ['blogCategory', data.id] });
+      
+      // Optimistically update the stats query
+      queryClient.setQueryData(['blogCategories', 'stats'], (oldData: BlogCategoryListResponse | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          data: oldData.data.map((cat) => 
+            cat.id === updatedCategory.id ? updatedCategory : cat
+          ),
+        };
+      });
     },
   });
 };
@@ -127,10 +163,26 @@ export const useDeleteBlogCategory = () => {
     mutationFn: async (id) => {
       await apiClient.delete(`/blog-categories/${id}`);
     },
-    onSuccess: () => {
-      // Invalidate all blog category queries to ensure stats update
+    onSuccess: (_, deletedId) => {
+      // Remove the specific category from cache
+      queryClient.removeQueries({ queryKey: ['blogCategory', deletedId] });
+      
+      // Invalidate all blog category list queries to ensure instant updates
       queryClient.invalidateQueries({ queryKey: ['blogCategories'] });
       queryClient.invalidateQueries({ queryKey: ['blogCategory'] });
+      
+      // Optimistically update the stats query
+      queryClient.setQueryData(['blogCategories', 'stats'], (oldData: BlogCategoryListResponse | undefined) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          data: oldData.data.filter((cat) => cat.id !== deletedId),
+          pagination: {
+            ...oldData.pagination,
+            total: Math.max(0, oldData.pagination.total - 1),
+          },
+        };
+      });
     },
   });
 };

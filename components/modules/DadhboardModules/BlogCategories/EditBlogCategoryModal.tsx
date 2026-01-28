@@ -124,11 +124,6 @@ export default function EditBlogCategoryModal({
       return;
     }
 
-    if (!formData.slug.trim()) {
-      toast.error("Slug is required");
-      return;
-    }
-
     if (!category?.id) {
       toast.error("Category ID is missing");
       return;
@@ -138,7 +133,7 @@ export default function EditBlogCategoryModal({
       const updateData = {
         id: category.id,
         title: formData.title.trim(),
-        slug: formData.slug.trim(),
+        slug: formData.slug.trim() || undefined, // Backend will auto-generate if empty
         imageFile: selectedImage || undefined,
       };
 

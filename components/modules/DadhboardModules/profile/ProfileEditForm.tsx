@@ -173,7 +173,12 @@ const ProfileEditForm: React.FC = () => {
       await updateAvatar(selectedImage);
 
       // Refresh current user data to get updated information
+      // The hook already invalidates cache, but we refetch to ensure immediate update
       await refetchCurrentUser();
+      
+      // Also invalidate React Query cache to ensure all components update
+      queryClient.invalidateQueries({ queryKey: ['getCurrentUser'] });
+      queryClient.invalidateQueries({ queryKey: ['authApi', 'getCurrentUser'] });
 
       toast.success("Profile image updated successfully!");
 
@@ -311,22 +316,26 @@ const ProfileEditForm: React.FC = () => {
               Click the camera icon to upload a new profile picture
             </p>
 
-            {/* Save Avatar Button - Only show when image is selected */}
-            {selectedImage && (
+            {/* Save Avatar Button - Show when image is selected or when loading */}
+            {(selectedImage || avatarUpdateLoading) && (
               <div className="flex justify-center">
                 <Button
                   type="button"
                   onClick={handleAvatarUpdate}
-                  disabled={avatarUpdateLoading}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-md transition-all duration-200 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105"
+                  disabled={avatarUpdateLoading || !selectedImage}
+                  className={`bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-md transition-all duration-200 shadow-lg ${
+                    avatarUpdateLoading || !selectedImage
+                      ? 'cursor-not-allowed opacity-75'
+                      : 'cursor-pointer hover:shadow-xl transform hover:scale-105'
+                  }`}
                 >
                   {avatarUpdateLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Saving...
-                    </>
+                    <div className="flex items-center gap-2 min-w-[180px] justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      <span>Saving Profile Image...</span>
+                    </div>
                   ) : (
-                    "Save Profile Image"
+                    <span>Save Profile Image</span>
                   )}
                 </Button>
               </div>

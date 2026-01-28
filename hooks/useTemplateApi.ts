@@ -18,7 +18,18 @@ export const useGetAllTemplates = (query: TemplateQuery) => {
       if (query.maxPrice) params.append('maxPrice', query.maxPrice.toString());
 
       const response = await apiClient.get(`/templates?${params.toString()}`);
-      return response.data;
+      // Backend returns: { success: true, message: "...", data: templates, pagination: {...} }
+      return {
+        templates: response.data.data || [],
+        pagination: response.data.pagination || {
+          page: query.page,
+          limit: query.limit,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+      };
     },
   });
 };
@@ -28,10 +39,69 @@ export const useGetTemplateById = (id: string) => {
   return useQuery<Template>({
     queryKey: ['template', id],
     queryFn: async () => {
-      const response = await apiClient.get(`/templates/${id}`);
-      return response.data.data;
+      if (!id) {
+        throw new Error("Template ID is required");
+      }
+      
+      try {
+        const response = await apiClient.get(`/templates/${id}`);
+        
+        // Check if response has data
+        if (!response.data) {
+          throw new Error("Invalid response format from server");
+        }
+        
+        // Check if data exists in response
+        if (!response.data.data) {
+          throw new Error("Template not found");
+        }
+        
+        return response.data.data;
+      } catch (error: any) {
+        // Better error handling with detailed messages
+        console.error("Template fetch error:", {
+          id,
+          error,
+          response: error.response,
+          request: error.request,
+          message: error.message
+        });
+        
+        if (error.response) {
+          // Server responded with error status
+          const status = error.response.status;
+          const message = error.response.data?.message || error.response.data?.error;
+          
+          if (status === 404) {
+            throw new Error("Template not found");
+          } else if (status === 401) {
+            throw new Error("Unauthorized access. Please login again.");
+          } else if (status === 403) {
+            throw new Error("Access forbidden");
+          } else if (status >= 500) {
+            throw new Error("Server error. Please try again later.");
+          } else {
+            throw new Error(message || `Failed to load template (Status: ${status})`);
+          }
+        } else if (error.request) {
+          // Request made but no response received (network error)
+          throw new Error("Network Error: Unable to connect to server. Please check your internet connection.");
+        } else {
+          // Something else happened
+          throw new Error(error.message || "An unexpected error occurred while loading the template");
+        }
+      }
     },
-    enabled: !!id,
+    enabled: !!id && id.trim() !== '',
+    retry: (failureCount, error: any) => {
+      // Don't retry on 404 errors
+      if (error?.response?.status === 404) {
+        return false;
+      }
+      // Retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };
 
@@ -41,7 +111,33 @@ export const useGetTemplateStats = () => {
     queryKey: ['templates', 'stats'],
     queryFn: async () => {
       const response = await apiClient.get('/templates/stats');
+      // Backend returns: { success: true, message: "...", data: stats }
       return response.data.data;
+    },
+  });
+};
+
+// Get new arrivals templates
+export const useGetNewArrivals = (limit: number = 50) => {
+  return useQuery<PaginatedTemplates>({
+    queryKey: ['templates', 'new-arrivals', limit],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('limit', limit.toString());
+
+      const response = await apiClient.get(`/templates/new-arrivals?${params.toString()}`);
+      // Backend returns: { success: true, message: "...", data: templates, pagination: {...} }
+      return {
+        templates: response.data.data || [],
+        pagination: response.data.pagination || {
+          page: 1,
+          limit: limit,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+      };
     },
   });
 };
@@ -109,11 +205,17 @@ export const useCreateTemplate = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
+      // Backend returns: { success: true, message: "...", data: template }
       return response.data.data;
     },
-    onSuccess: () => {
+    onSuccess: (newTemplate) => {
+      // Invalidate all template queries to ensure instant updates
       queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ['template'] });
       queryClient.invalidateQueries({ queryKey: ['templates', 'stats'] });
+      
+      // Also invalidate template categories since template count changes
+      queryClient.invalidateQueries({ queryKey: ['templateCategories'] });
     },
   });
 };
@@ -180,12 +282,20 @@ export const useUpdateTemplate = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
+      // Backend returns: { success: true, message: "...", data: template }
       return response.data.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (updatedTemplate) => {
+      // Update the specific template cache
+      queryClient.setQueryData(['template', updatedTemplate.id], updatedTemplate);
+      
+      // Invalidate all template list queries to ensure instant updates
       queryClient.invalidateQueries({ queryKey: ['templates'] });
-      queryClient.invalidateQueries({ queryKey: ['template', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['template'] });
       queryClient.invalidateQueries({ queryKey: ['templates', 'stats'] });
+      
+      // Also invalidate template categories if category changed
+      queryClient.invalidateQueries({ queryKey: ['templateCategories'] });
     },
   });
 };
@@ -197,10 +307,19 @@ export const useDeleteTemplate = () => {
   return useMutation<void, Error, string>({
     mutationFn: async (id) => {
       await apiClient.delete(`/templates/${id}`);
+      // Backend returns: { success: true, message: "..." }
     },
-    onSuccess: () => {
+    onSuccess: (_, deletedId) => {
+      // Remove the specific template from cache
+      queryClient.removeQueries({ queryKey: ['template', deletedId] });
+      
+      // Invalidate all template list queries to ensure instant updates
       queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ['template'] });
       queryClient.invalidateQueries({ queryKey: ['templates', 'stats'] });
+      
+      // Also invalidate template categories since template count changes
+      queryClient.invalidateQueries({ queryKey: ['templateCategories'] });
     },
   });
 };

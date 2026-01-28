@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuth, useCurrentUser } from "@/hooks/useAuth";
+import { useGetTemplateById } from "@/hooks/useTemplateApi";
+import { FiUser, FiMail, FiPhone, FiMapPin, FiCheckCircle, FiAlertCircle, FiArrowLeft } from "react-icons/fi";
 
 interface Template {
   id: string;
@@ -13,6 +16,7 @@ interface Template {
   price: number;
   imageUrl: string;
   shortDescription: string;
+  checkoutUrl?: string | null;
   category: {
     title: string;
   };
@@ -32,9 +36,27 @@ interface CheckoutForm {
 
 export default function CheckoutContainer({ templateId }: { templateId: string }) {
   const router = useRouter();
-  const [template, setTemplate] = useState<Template | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isAuthenticated } = useAuth();
+  const { data: currentUserData } = useCurrentUser();
+  const { data: templateData, isLoading: templateLoading, error: templateError } = useGetTemplateById(templateId);
+  
   const [processing, setProcessing] = useState(false);
+  
+  // Get user profile data
+  const userProfile = currentUserData?.data?.user?.profile;
+  const fullUser = currentUserData?.data?.user || user;
+  
+  // Split fullName into firstName and lastName
+  const splitName = (fullName: string) => {
+    const parts = fullName?.split(" ") || [];
+    return {
+      firstName: parts[0] || "",
+      lastName: parts.slice(1).join(" ") || "",
+    };
+  };
+
+  const { firstName: userFirstName, lastName: userLastName } = splitName(fullUser?.fullName || "");
+
   const [formData, setFormData] = useState<CheckoutForm>({
     firstName: "",
     lastName: "",
@@ -47,22 +69,22 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
     country: "United States",
   });
 
-  // Mock template data - in real app, fetch from API
+  // Populate form with user data when logged in
   useEffect(() => {
-    const mockTemplate: Template = {
-      id: templateId,
-      title: "Eduleb - Education & LMS React Next.js Template",
-      price: 55,
-      imageUrl: "https://res.cloudinary.com/dwssxatb3/image/upload/v1760506321/techfynite/templates/ami6mebwcktimthm8tib.png",
-      shortDescription: "Eduleb is a clean, modern & 100% responsive Online Education NextJs Template.",
-      category: {
-        title: "React.JS"
-      }
-    };
-    
-    setTemplate(mockTemplate);
-    setLoading(false);
-  }, [templateId]);
+    if (isAuthenticated && fullUser) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: userFirstName || prev.firstName,
+        lastName: userLastName || prev.lastName,
+        email: fullUser.email || prev.email,
+        phone: userProfile?.phone || prev.phone,
+        city: userProfile?.city || prev.city,
+        state: userProfile?.stateOrRegion || prev.state,
+        zipCode: userProfile?.postCode || prev.zipCode,
+        country: userProfile?.country || prev.country,
+      }));
+    }
+  }, [isAuthenticated, fullUser, userProfile, userFirstName, userLastName]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -73,6 +95,23 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
   };
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Check if all mandatory fields are filled
+  const isFormValid = React.useMemo(() => {
+    const requiredFields: (keyof CheckoutForm)[] = ['firstName', 'lastName', 'email', 'address', 'city', 'state', 'zipCode'];
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    // Check all required fields are filled
+    const allFieldsFilled = requiredFields.every(field => {
+      const value = formData[field];
+      return value && value.trim() !== '';
+    });
+    
+    // Check email format
+    const emailValid = emailRegex.test(formData.email);
+    
+    return allFieldsFilled && emailValid;
+  }, [formData]);
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,18 +135,16 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
       return;
     }
 
-    try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Show success modal instead of redirecting
-      setShowSuccessModal(true);
-      setProcessing(false);
-      
-    } catch (error) {
-      toast.error("Payment failed. Please try again.");
-      setProcessing(false);
+    // Check if checkoutUrl exists
+    if (template?.checkoutUrl) {
+      // Redirect to LemonSqueezy checkout page
+      window.location.href = template.checkoutUrl;
+      return;
     }
+
+    // Fallback if no checkout URL
+    toast.error("Checkout URL not available. Please contact support.");
+    setProcessing(false);
   };
 
   const handleCloseModal = () => {
@@ -131,7 +168,20 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
     }
   };
 
-  if (loading) {
+  // Map template data to Template interface
+  const template = templateData ? {
+    id: templateData.id,
+    title: templateData.title,
+    price: templateData.price,
+    imageUrl: templateData.imageUrl || "",
+    shortDescription: templateData.shortDescription,
+    checkoutUrl: templateData.checkoutUrl,
+    category: {
+      title: templateData.category?.title || "Premium"
+    }
+  } : null;
+
+  if (templateLoading) {
     return (
       <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="animate-pulse">
@@ -150,38 +200,67 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
     );
   }
 
-  if (!template) {
+  if (templateError || !template) {
     return (
-      <div className="container mx-auto max-w-6xl px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Template not found
-          </h1>
-          <Button onClick={() => router.push('/template')}>
-            Back to Templates
-          </Button>
+      <div className="min-h-screen bg-gradient-to-b from-[#FAFCFF] dark:from-[#000424] to-[#FAFCFF] dark:to-[#000424] flex items-center justify-center">
+        <div className="container mx-auto max-w-7xl px-4 lg:px-0 py-10">
+          <div className="bg-white dark:bg-[#1A1D37] rounded-2xl shadow-xl p-8 lg:p-12 text-center max-w-2xl mx-auto">
+            <div className="w-20 h-20 bg-yellow-100 dark:bg-yellow-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FiAlertCircle className="w-10 h-10 text-yellow-600 dark:text-yellow-400" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              Template Not Found
+            </h1>
+            <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+              {templateError ? "Failed to load template. Please try again." : "The template you're looking for doesn't exist or has been removed."}
+            </p>
+            <Button
+              onClick={() => router.push('/template')}
+              className="cursor-pointer bg-gradient-to-r from-[#0F35A7] to-[#0F59BC] hover:from-[#0F35A7]/90 hover:to-[#0F59BC]/90 text-white px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <FiArrowLeft className="w-5 h-5 mr-2" />
+              Back to Templates
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-        Checkout
-      </h1>
+    <div className="min-h-screen bg-gradient-to-b from-[#FAFCFF] dark:from-[#000424] to-[#FAFCFF] dark:to-[#000424]">
+      <div className="container mx-auto max-w-7xl px-4 lg:px-0 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 
+            className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2"
+            style={{
+              background: "linear-gradient(90deg, #1f2937, #3b82f6, #8b5cf6, #1f2937)",
+              backgroundSize: "200% 100%",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text"
+            }}
+          >
+            Checkout
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Complete your purchase and get instant access to your template
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Checkout Form */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
-                Billing Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCheckout} className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Checkout Form */}
+          <div>
+            <Card className="bg-white dark:bg-[#1A1D37] rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <div className="w-1 h-6 bg-gradient-to-b from-[#0F35A7] to-[#0F59BC] rounded-full"></div>
+                  Billing Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCheckout} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="firstName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -193,7 +272,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                       value={formData.firstName}
                       onChange={handleInputChange}
                       required
-                      className="mt-1"
+                      className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
                     />
                   </div>
                   <div>
@@ -206,7 +285,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                       value={formData.lastName}
                       onChange={handleInputChange}
                       required
-                      className="mt-1"
+                      className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
                     />
                   </div>
                 </div>
@@ -222,7 +301,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="mt-1"
+                    className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
                   />
                 </div>
 
@@ -236,7 +315,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                     type="tel"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="mt-1"
+                    className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
                   />
                 </div>
 
@@ -250,7 +329,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                     value={formData.address}
                     onChange={handleInputChange}
                     required
-                    className="mt-1"
+                    className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
                   />
                 </div>
 
@@ -265,7 +344,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                       value={formData.city}
                       onChange={handleInputChange}
                       required
-                      className="mt-1"
+                      className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
                     />
                   </div>
                   <div>
@@ -278,7 +357,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                       value={formData.state}
                       onChange={handleInputChange}
                       required
-                      className="mt-1"
+                      className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
                     />
                   </div>
                   <div>
@@ -291,7 +370,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                       value={formData.zipCode}
                       onChange={handleInputChange}
                       required
-                      className="mt-1"
+                      className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
                     />
                   </div>
                 </div>
@@ -305,80 +384,80 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                     name="country"
                     value={formData.country}
                     onChange={handleInputChange}
-                    className="mt-1"
+                    className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
                   />
                 </div>
 
                 <Button
                   type="submit"
-                  disabled={processing}
-                  className="w-full bg-[#0F35A7] hover:bg-[#0F35A7]/80 text-white h-12 text-lg font-semibold"
+                  disabled={processing || !isFormValid}
+                  className={`w-full h-12 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer ${
+                    isFormValid && !processing
+                      ? "bg-gradient-to-r from-[#0F35A7] to-[#0F59BC] hover:from-[#0F35A7]/90 hover:to-[#0F59BC]/90 text-white"
+                      : "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                  }`}
                 >
                   {processing ? "Processing..." : `Complete Purchase - $${template.price}`}
                 </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+                {!isFormValid && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-2">
+                    Please fill in all required fields to continue
+                  </p>
+                )}
+                </form>
+              </CardContent>
+            </Card>
+          </div>
 
         {/* Order Summary */}
         <div>
-          <Card>
+          <Card className="bg-white dark:bg-[#1A1D37] rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
+              <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <div className="w-1 h-6 bg-gradient-to-b from-[#0F35A7] to-[#0F59BC] rounded-full"></div>
                 Order Summary
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-[#0F1419] rounded-xl">
                   <img
                     src={template.imageUrl}
                     alt={template.title}
-                    className="w-20 h-20 object-cover rounded-lg"
+                    className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700"
                   />
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
+                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">
                       {template.title}
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="inline-block px-2 py-1 bg-gradient-to-r from-[#0F35A7] to-[#0F59BC] text-white text-xs rounded-full mb-2">
                       {template.category.title}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    </span>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 line-clamp-2">
                       {template.shortDescription}
                     </p>
                   </div>
                 </div>
 
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <div className="flex justify-between items-center mb-2">
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
                     <span className="text-gray-900 dark:text-white font-semibold">
                       ${template.price}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">Tax</span>
                     <span className="text-gray-900 dark:text-white">$0.00</span>
                   </div>
-                  <div className="flex justify-between items-center text-lg font-bold border-t border-gray-200 dark:border-gray-700 pt-2">
+                  <div className="flex justify-between items-center text-xl font-bold border-t-2 border-gray-200 dark:border-gray-700 pt-3 mt-3">
                     <span className="text-gray-900 dark:text-white">Total</span>
-                    <span className="text-[#0F35A7]">${template.price}</span>
+                    <span className="bg-gradient-to-r from-[#0F35A7] to-[#0F59BC] bg-clip-text text-transparent">
+                      ${template.price}
+                    </span>
                   </div>
                 </div>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                    What's Included:
-                  </h4>
-                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                    <li>• Complete source code</li>
-                    <li>• Documentation</li>
-                    <li>• Lifetime updates</li>
-                    <li>• Commercial license</li>
-                    <li>• 24/7 support</li>
-                  </ul>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -388,11 +467,11 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+          <div className="bg-white dark:bg-[#1A1D37] rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -404,31 +483,23 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
             </div>
 
             <div className="space-y-4">
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Template Files</h4>
+              <div className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-[#0F1419] dark:to-blue-900/10 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Template Files</h4>
                 <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
+                    <div className="w-1.5 h-1.5 bg-gradient-to-r from-[#0F35A7] to-[#0F59BC] rounded-full"></div>
                     <span>Complete source code</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
+                    <div className="w-1.5 h-1.5 bg-gradient-to-r from-[#0F35A7] to-[#0F59BC] rounded-full"></div>
                     <span>Documentation</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
+                    <div className="w-1.5 h-1.5 bg-gradient-to-r from-[#0F35A7] to-[#0F59BC] rounded-full"></div>
                     <span>License information</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
+                    <div className="w-1.5 h-1.5 bg-gradient-to-r from-[#0F35A7] to-[#0F59BC] rounded-full"></div>
                     <span>Setup instructions</span>
                   </div>
                 </div>
@@ -437,7 +508,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
               <div className="flex gap-3">
                 <Button
                   onClick={handleDownloadTemplate}
-                  className="flex-1 bg-[#0F35A7] hover:bg-[#0F35A7]/80 text-white"
+                  className="flex-1 bg-gradient-to-r from-[#0F35A7] to-[#0F59BC] hover:from-[#0F35A7]/90 hover:to-[#0F59BC]/90 text-white shadow-lg"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -447,7 +518,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                 <Button
                   onClick={handleSendEmail}
                   variant="outline"
-                  className="flex-1 border-[#0F35A7] text-[#0F35A7] hover:bg-[#0F35A7]/10"
+                  className="flex-1 border-2 border-[#0F35A7] text-[#0F35A7] hover:bg-[#0F35A7] hover:text-white transition-all duration-200"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -467,6 +538,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -71,11 +71,13 @@ export default function BlogCategoriesContainer() {
   };
 
   const handleCreateSuccess = () => {
-    refetch();
+    // Cache invalidation is handled automatically by the hook
+    // No need to manually refetch - React Query will update automatically
   };
 
   const handleEditSuccess = () => {
-    refetch();
+    // Cache invalidation is handled automatically by the hook
+    // No need to manually refetch - React Query will update automatically
   };
 
   const handleDeleteCategory = async (category: BlogCategory) => {

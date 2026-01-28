@@ -61,7 +61,7 @@ export default function TemplatesContainer() {
 
   const { deleteTemplate } = useTemplateApi();
 
-  const templates = templatesData?.data || [];
+  const templates = templatesData?.templates || [];
   const pagination = templatesData?.pagination;
   const categories = categoriesData?.data || [];
 
@@ -105,7 +105,8 @@ export default function TemplatesContainer() {
       try {
         await deleteTemplate(template.id);
         toast.success("Template deleted successfully!");
-        refetch();
+        // Cache invalidation is handled automatically by the hook
+        // No need to manually refetch - React Query will update automatically
       } catch (error) {
         console.error("Delete template error:", error);
         toast.error("Failed to delete template. Please try again.");
@@ -151,7 +152,7 @@ export default function TemplatesContainer() {
             <div className="flex items-center gap-2">
               <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-40 animate-pulse"></div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(8)].map((_, i) => (
                 <div
                   key={i}
@@ -303,9 +304,9 @@ export default function TemplatesContainer() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTemplates.map((template: Template) => (
-                <div key={template.id} className="relative group">
+                <div key={template.id} className="relative group h-full">
                   <TemplateCard
                     template={{
                       id: template.id,

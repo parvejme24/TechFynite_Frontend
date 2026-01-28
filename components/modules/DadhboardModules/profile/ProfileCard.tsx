@@ -7,9 +7,14 @@ import { IoCheckmarkCircleSharp } from "react-icons/io5";
 import { AuthContext } from "@/Providers/AuthProvider";
 import { RiAdminLine } from "react-icons/ri";
 import { IUser } from "@/types/auth";
+import { useCurrentUser } from "@/hooks/useAuth";
 
 const ProfileCard: React.FC = () => {
-  const { user, loading, error } = useContext(AuthContext) || {};
+  const { user: authContextUser, loading, error } = useContext(AuthContext) || {};
+  const { data: currentUserData } = useCurrentUser();
+  
+  // Prioritize fresh API data over cached context data
+  const user = currentUserData?.data?.user || authContextUser;
   
   
   const displayName = user?.fullName || (user as any)?.name || "N/A";

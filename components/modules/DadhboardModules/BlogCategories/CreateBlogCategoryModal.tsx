@@ -106,15 +106,10 @@ export default function CreateBlogCategoryModal({
       return;
     }
 
-    if (!formData.slug.trim()) {
-      toast.error("Slug is required");
-      return;
-    }
-
     try {
       const categoryData = {
         title: formData.title.trim(),
-        slug: formData.slug.trim(),
+        slug: formData.slug.trim() || undefined, // Backend will auto-generate if empty
         imageFile: selectedImage || undefined,
       };
 

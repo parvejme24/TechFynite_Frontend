@@ -11,7 +11,7 @@ export interface Template {
   previewLink?: string | null;
   sourceFiles: string[];
   shortDescription: string;
-  description: string;
+  description: string | string[];
   whatsIncluded: string[];
   keyFeatures: Array<{ title: string; description: string }>;
   version: number;
@@ -95,9 +95,7 @@ export interface TemplateQuery {
 }
 
 export interface PaginatedTemplates {
-  success: boolean;
-  message: string;
-  data: Template[];
+  templates: Template[];
   pagination: {
     page: number;
     limit: number;

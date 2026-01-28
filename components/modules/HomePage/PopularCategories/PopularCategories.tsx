@@ -1,107 +1,123 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import { GoArrowRight } from "react-icons/go";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-
-import FramerIcon from "@/assets/tech-icons/framer.png";
-import FigmaIcon from "@/assets/tech-icons/figma.png";
-import WebflowIcon from "@/assets/tech-icons/webflow.png";
-import JsIcon from "@/assets/tech-icons/js.png";
-import ReactIcon from "@/assets/tech-icons/react.png";
-import PhpIcon from "@/assets/tech-icons/php.png";
-import HtmlIcon from "@/assets/tech-icons/html.png";
-import NodejsIcon from "@/assets/tech-icons/nodejs.png";
-import CssIcon from "@/assets/tech-icons/css.png";
-import BootstrapIcon from "@/assets/tech-icons/bootstrap.png";
-import WordpressIcon from "@/assets/tech-icons/wordpress.png";
-
-interface CategoriesData {
-  id: string;
-  name: string;
-  icon: any;
-  count: number;
-}
-
-const categories: CategoriesData[] = [
-  {
-    id: "figma",
-    name: "Figma",
-    icon: FigmaIcon,
-    count: 24,
-  },
-  {
-    id: "framer",
-    name: "Framer",
-    icon: FramerIcon,
-    count: 24,
-  },
-  {
-    id: "webflow",
-    name: "WebFlow",
-    icon: WebflowIcon,
-    count: 18,
-  },
-  {
-    id: "JS",
-    name: "JS",
-    icon: JsIcon,
-    count: 32,
-  },
-  {
-    id: "nodejs",
-    name: "NodeJS",
-    icon: NodejsIcon,
-    count: 15,
-  },
-  {
-    id: "bootstrap",
-    name: "Bootstrap",
-    icon: BootstrapIcon,
-    count: 28,
-  },
-  {
-    id: "html",
-    name: "HTML",
-    icon: HtmlIcon,
-    count: 20,
-  },
-  {
-    id: "css",
-    name: "CSS",
-    icon: CssIcon,
-    count: 16,
-  },
-  {
-    id: "wordpress",
-    name: "WordPress",
-    icon: WordpressIcon,
-    count: 22,
-  },
-  {
-    id: "react",
-    name: "React",
-    icon: ReactIcon,
-    count: 22,
-  },
-  {
-    id: "php",
-    name: "PHP",
-    icon: PhpIcon,
-    count: 22,
-  },
-];
-
 import Image from "next/image";
+import { useGetAllTemplateCategoriesForStats } from "@/hooks/useTemplateCategoryApi";
 
 export default function Categories() {
   const router = useRouter();
 
+  // Fetch dynamic categories from API
+  const {
+    data: categoriesData,
+    isLoading,
+    error,
+  } = useGetAllTemplateCategoriesForStats();
+
+  // Get categories sorted by template count (most popular first) and limit to top 12
+  // Show all categories, but prioritize those with templates
+  const categories = useMemo(() => {
+    if (!categoriesData?.data) return [];
+    return categoriesData.data
+      .sort((a, b) => {
+        // First sort by template count (categories with templates first)
+        if (b.templateCount !== a.templateCount) {
+          return b.templateCount - a.templateCount;
+        }
+        // Then sort by creation date (newest first)
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      })
+      .slice(0, 12); // Limit to top 12 categories
+  }, [categoriesData]);
+
   const handleExploreMore = () => {
     router.push("/template");
   };
+
+  const handleCategoryClick = (categoryId: string) => {
+    router.push(`/template?categoryId=${categoryId}`);
+  };
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <motion.div
+        className="py-14 bg-gradient-to-b from-[#FAFCFF] dark:from-[#000424] to-[#FAFCFF] dark:to-[#000424]"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="container mx-auto max-w-7xl px-5 lg:px-0">
+          <motion.div
+            className="flex justify-between items-center"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          </motion.div>
+          <div className="mt-5">
+            <Swiper
+              spaceBetween={20}
+              slidesPerView={2}
+              breakpoints={{
+                640: { slidesPerView: 3 },
+                768: { slidesPerView: 4 },
+                1024: { slidesPerView: 6 },
+              }}
+              className="categories-swiper"
+            >
+              {[...Array(6)].map((_, index) => (
+                <SwiperSlide key={index}>
+                  <div className="p-[1px] bg-gradient-to-t from-[#87A9D6] dark:from-[#04010B] to-[#ABCFFF] dark:to-[#16073F] rounded-xl">
+                    <div className="bg-[#F5F9FF] dark:bg-[#1A1D37] border border-[#ABCFFE] dark:border-[#16073E] rounded-xl px-6 py-10">
+                      <div className="flex justify-center items-center">
+                        <div className="bg-gray-200 dark:bg-gray-700 rounded-full w-[67px] h-[67px] animate-pulse" />
+                      </div>
+                      <div className="mt-3">
+                        <div className="h-5 w-20 bg-gray-200 dark:bg-gray-700 rounded mx-auto mb-2 animate-pulse" />
+                        <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded mx-auto animate-pulse" />
+                      </div>
+                    </div>
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <motion.div
+        className="py-14 bg-gradient-to-b from-[#FAFCFF] dark:from-[#000424] to-[#FAFCFF] dark:to-[#000424]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="container mx-auto max-w-7xl px-5 lg:px-0">
+          <div className="text-center text-red-500">
+            Failed to load categories. Please try again later.
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Empty state
+  if (categories.length === 0) {
+    return null;
+  }
 
   return (
     <motion.div
@@ -180,8 +196,8 @@ export default function Categories() {
             }}
             className="categories-swiper"
           >
-            {categories.map((item, index) => (
-              <SwiperSlide key={item.id}>
+            {categories.map((category, index) => (
+              <SwiperSlide key={category.id}>
                 <motion.div
                   initial={{ opacity: 0, y: 20, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -203,6 +219,7 @@ export default function Categories() {
                         scale: 0.98,
                         transition: { duration: 0.2 },
                       }}
+                      onClick={() => handleCategoryClick(category.id)}
                     >
                       <motion.div
                         className="flex justify-center items-center"
@@ -210,15 +227,27 @@ export default function Categories() {
                         transition={{ duration: 0.2 }}
                       >
                         <motion.span
-                          className="bg-[#FFFFFF] dark:bg-[#000424] rounded-full p-4 text-3xl w-[67px] h-[67px] flex justify-center items-center"
+                          className="bg-[#FFFFFF] dark:bg-[#000424] rounded-full p-4 text-3xl w-[67px] h-[67px] flex justify-center items-center overflow-hidden"
                           whileHover={{ rotate: 5 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <Image
-                            src={item.icon}
-                            alt="category image"
-                            className="w-[40px] h-auto"
-                          />
+                          {category.image ? (
+                            <Image
+                              src={category.image}
+                              alt={category.title}
+                              width={40}
+                              height={40}
+                              className="w-[40px] h-[40px] object-contain"
+                              onError={(e) => {
+                                // Fallback to initial if image fails to load
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = "none";
+                                const fallback =
+                                  target.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = "flex";
+                              }}
+                            />
+                          ) : null}
                         </motion.span>
                       </motion.div>
                       <motion.div
@@ -228,11 +257,11 @@ export default function Categories() {
                         transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
                       >
                         <motion.h4
-                          className="font-bold text-center text-lg"
+                          className="font-bold text-center text-lg dark:text-white"
                           whileHover={{ scale: 0.95 }}
                           transition={{ duration: 0.2 }}
                         >
-                          {item.name}
+                          {category.title}
                         </motion.h4>
                         <motion.p
                           className="text-center font-semibold text-[16px]"
@@ -247,7 +276,7 @@ export default function Categories() {
                           }}
                           whileHover={{ scale: 0.9 }}
                         >
-                          {item.count}
+                          {category.templateCount}
                         </motion.p>
                       </motion.div>
                     </motion.div>

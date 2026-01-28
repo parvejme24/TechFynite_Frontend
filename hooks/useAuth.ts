@@ -1,5 +1,7 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useDispatch } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
+import { authApi } from "@/redux/services/authApi";
 import {
   useRegisterMutation,
   useVerifyOtpMutation,
@@ -64,12 +66,40 @@ export const useRegister = () => {
   const register = async (userData: IRegisterUser) => {
     try {
       const result = await registerMutation(userData).unwrap();
+      
+      // Check if registration was successful
+      if (!result.success) {
+        // Extract error message from response
+        const errorMessage = result.error || result.message || "Registration failed";
+        const error = new Error(errorMessage) as any;
+        error.data = result;
+        error.status = 400;
+        throw error;
+      }
+      
       if (result.success && result.data?.nextAuthSecret) {
         // Store the session secret
         localStorage.setItem("nextAuthSecret", result.data.nextAuthSecret);
       }
       return result;
-    } catch (err) {
+    } catch (err: any) {
+      // If it's already an error object with proper structure, rethrow it
+      if (err?.data?.success === false) {
+        const errorMessage = err.data.error || err.data.message || "Registration failed";
+        const error = new Error(errorMessage) as any;
+        error.data = err.data;
+        error.status = err.status || 400;
+        throw error;
+      }
+      // If it's a standard RTK Query error
+      if (err?.data) {
+        const errorMessage = err.data.error || err.data.message || "Registration failed";
+        const error = new Error(errorMessage) as any;
+        error.data = err.data;
+        error.status = err.status || 400;
+        throw error;
+      }
+      // Otherwise, rethrow as-is
       throw err;
     }
   };
@@ -257,10 +287,18 @@ export const useChangePassword = () => {
 export const useUpdateProfile = () => {
   const [updateProfileMutation, { isLoading, error, data }] =
     useUpdateProfileMutation();
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
 
   const updateProfile = async (profileData: IUpdateProfile) => {
     try {
       const result = await updateProfileMutation(profileData).unwrap();
+      
+      // RTK Query automatically invalidates 'Me' tag (defined in API)
+      // But we also invalidate React Query cache if used
+      queryClient.invalidateQueries({ queryKey: ['getCurrentUser'] });
+      queryClient.invalidateQueries({ queryKey: ['authApi', 'getCurrentUser'] });
+      
       return result;
     } catch (err) {
       throw err;
@@ -279,15 +317,18 @@ export const useUpdateProfile = () => {
 export const useUpdateAvatar = () => {
   const [updateAvatarMutation, { isLoading, error, data }] =
     useUpdateAvatarImageMutation();
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
 
   const updateAvatar = async (file: File) => {
     try {
       const formData = new FormData();
       formData.append("image", file);
       
-      // Use direct fetch instead of RTK Query
+      // Use direct fetch instead of RTK Query (due to FormData handling)
       const token = localStorage.getItem('nextAuthSecret');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/profile/avatar`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tech-fynite-backend.vercel.app/api/v1';
+      const response = await fetch(`${baseUrl}/auth/profile/avatar`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -298,10 +339,20 @@ export const useUpdateAvatar = () => {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP ${response.status}`);
+        throw new Error(errorData.message || errorData.error || `HTTP ${response.status}`);
       }
       
       const result = await response.json();
+      
+      // Invalidate RTK Query cache using dispatch
+      // This ensures navbar, profile page, and all components update instantly
+      // RTK Query will automatically refetch all queries that provide the 'Me' tag
+      dispatch(authApi.util.invalidateTags(['Me']));
+      
+      // Also invalidate React Query cache if used
+      queryClient.invalidateQueries({ queryKey: ['getCurrentUser'] });
+      queryClient.invalidateQueries({ queryKey: ['authApi', 'getCurrentUser'] });
+      
       return result;
     } catch (err) {
       throw err;
