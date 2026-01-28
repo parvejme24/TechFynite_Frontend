@@ -102,12 +102,20 @@ export const newsletterApi = createApi({
     }),
 
     // Get newsletter statistics
-    getNewsletterStats: builder.query<NewsletterStatsResponse, NewsletterStatsQuery | void>({
-      query: (params) => ({
-        url: '/newsletter/stats',
-        method: 'GET',
-        params: params || undefined,
-      }),
+    getNewsletterStats: builder.query<NewsletterStatsResponse, NewsletterStatsQuery | undefined>({
+      query: (params) => {
+        if (!params) {
+          return {
+            url: '/newsletter/stats',
+            method: 'GET',
+          };
+        }
+        return {
+          url: '/newsletter/stats',
+          method: 'GET',
+          params: params as Record<string, any>,
+        };
+      },
       providesTags: ['NewsletterStats'],
     }),
 

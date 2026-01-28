@@ -131,12 +131,25 @@ export const serviceRequestApi = createApi({
     }),
     
     // Get contact stats
-    getContactStats: builder.query({
-      query: ({ period, startDate, endDate } = {}) => ({
-        url: '/contacts/stats',
-        method: 'GET',
-        params: { period, startDate, endDate },
-      }),
+    getContactStats: builder.query<any, { period?: string; startDate?: string; endDate?: string } | undefined>({
+      query: (params) => {
+        if (!params) {
+          return {
+            url: '/contacts/stats',
+            method: 'GET',
+          };
+        }
+        const queryParams: Record<string, any> = {};
+        if (params.period) queryParams.period = params.period;
+        if (params.startDate) queryParams.startDate = params.startDate;
+        if (params.endDate) queryParams.endDate = params.endDate;
+        
+        return {
+          url: '/contacts/stats',
+          method: 'GET',
+          ...(Object.keys(queryParams).length > 0 && { params: queryParams }),
+        };
+      },
       providesTags: ['ServiceRequest'],
     }),
   }),
