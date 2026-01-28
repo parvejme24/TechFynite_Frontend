@@ -21,6 +21,7 @@ import {
   FiFolder,
   FiChevronDown,
   FiChevronRight,
+  FiPackage,
 } from "react-icons/fi";
 import { VscGitPullRequestGoToChanges } from "react-icons/vsc";
 
@@ -70,6 +71,7 @@ const adminNavigation: NavigationItem[] = [
   { name: "Pricing", href: "/dashboard/pricing", icon: FiDollarSign },
   { name: "Newsletter", href: "/dashboard/newsletter", icon: FiMail },
   { name: "Users", href: "/dashboard/users", icon: FiUsers },
+  { name: "Orders", href: "/dashboard/orders", icon: FiPackage },
   {
     name: "Service Request",
     href: "/dashboard/service-request",
@@ -79,6 +81,7 @@ const adminNavigation: NavigationItem[] = [
 
 const userNavigation: NavigationItem[] = [
   { name: "Profile", href: "/dashboard/profile", icon: FiUser },
+  { name: "My Orders", href: "/dashboard/orders", icon: FiPackage },
   { name: "My Purchases", href: "/dashboard/purchases", icon: FiShoppingBag },
   { name: "Payment History", href: "/dashboard/payment", icon: FiCreditCard },
   {

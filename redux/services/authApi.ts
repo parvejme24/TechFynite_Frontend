@@ -99,15 +99,18 @@ export const authApi = createApi({
 
     // Admin routes (admin authentication required)
     getAllUsers: builder.query<IApiResponse<IUser[]> & { pagination: any }, IUserQuery | void>({
-      query: (params = {}) => ({ 
-        url: '/auth/users', 
-        method: 'GET', 
-        params: {
-          page: (params as IUserQuery)?.page || 1,
-          limit: (params as IUserQuery)?.limit || 10,
-          ...(params as IUserQuery)
-        }
-      }),
+      query: (params) => {
+        const queryParams = params || {};
+        return { 
+          url: '/auth/users', 
+          method: 'GET', 
+          params: {
+            page: (queryParams as IUserQuery)?.page || 1,
+            limit: (queryParams as IUserQuery)?.limit || 10,
+            ...(queryParams as IUserQuery)
+          }
+        };
+      },
       providesTags: ['Users'],
     }),
     

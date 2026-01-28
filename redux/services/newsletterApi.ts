@@ -103,10 +103,10 @@ export const newsletterApi = createApi({
 
     // Get newsletter statistics
     getNewsletterStats: builder.query<NewsletterStatsResponse, NewsletterStatsQuery | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/newsletter/stats',
         method: 'GET',
-        params,
+        params: params || undefined,
       }),
       providesTags: ['NewsletterStats'],
     }),

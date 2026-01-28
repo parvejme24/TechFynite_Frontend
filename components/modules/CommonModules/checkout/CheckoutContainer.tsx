@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth, useCurrentUser } from "@/hooks/useAuth";
 import { useGetTemplateById } from "@/hooks/useTemplateApi";
+import { useCreateOrder } from "@/hooks/useOrderApi";
 import { FiUser, FiMail, FiPhone, FiMapPin, FiCheckCircle, FiAlertCircle, FiArrowLeft } from "react-icons/fi";
 
 interface Template {
@@ -39,6 +40,7 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
   const { user, isAuthenticated } = useAuth();
   const { data: currentUserData } = useCurrentUser();
   const { data: templateData, isLoading: templateLoading, error: templateError } = useGetTemplateById(templateId);
+  const createOrderMutation = useCreateOrder();
   
   const [processing, setProcessing] = useState(false);
   
@@ -135,16 +137,76 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
       return;
     }
 
-    // Check if checkoutUrl exists
-    if (template?.checkoutUrl) {
-      // Redirect to LemonSqueezy checkout page
-      window.location.href = template.checkoutUrl;
+    if (!template) {
+      toast.error("Template not found");
+      setProcessing(false);
       return;
     }
 
-    // Fallback if no checkout URL
-    toast.error("Checkout URL not available. Please contact support.");
-    setProcessing(false);
+    try {
+      // Check if checkoutUrl exists first
+      if (!template.checkoutUrl) {
+        toast.error("Checkout URL not available. Please contact support.");
+        setProcessing(false);
+        return;
+      }
+
+      // Generate temporary LemonSqueezy order ID (will be updated with actual ID after payment)
+      const tempOrderId = `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Prepare order data according to backend schema
+      const orderData = {
+        templateId: template.id,
+        lemonsqueezyOrderId: tempOrderId, // Temporary ID, will be updated via webhook
+        totalAmount: template.price,
+        currency: "USD",
+        licenseType: "SINGLE" as const,
+        customerEmail: formData.email,
+        customerName: `${formData.firstName} ${formData.lastName}`,
+        billingAddress: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone || "",
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          country: formData.country,
+        },
+      };
+
+      // Store order data in sessionStorage for reference
+      sessionStorage.setItem('pendingOrder', JSON.stringify({
+        ...orderData,
+        templateTitle: template.title,
+        timestamp: new Date().toISOString(),
+      }));
+
+      // Create order in database before redirecting to LemonSqueezy
+      // Note: This requires admin authentication. If you need user-facing order creation,
+      // you may need to create a separate endpoint or handle via webhook
+      try {
+        await createOrderMutation.mutateAsync(orderData);
+        toast.success("Order created successfully. Redirecting to payment...");
+      } catch (orderError: any) {
+        console.error("Order creation error:", orderError);
+        // If order creation fails due to auth, still redirect to LemonSqueezy
+        // The webhook can create the order after payment
+        if (orderError?.response?.status === 401 || orderError?.response?.status === 403) {
+          toast.warning("Order will be created after payment confirmation");
+        } else {
+          toast.error(orderError?.response?.data?.message || "Failed to create order. Redirecting anyway...");
+        }
+      }
+      
+      // Redirect to LemonSqueezy checkout page
+      window.location.href = template.checkoutUrl;
+    } catch (error: any) {
+      console.error("Error during checkout:", error);
+      toast.error(error?.response?.data?.message || error?.message || "Failed to process checkout. Please try again.");
+      setProcessing(false);
+    }
   };
 
   const handleCloseModal = () => {

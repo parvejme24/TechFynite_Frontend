@@ -1,19 +1,37 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import React from "react";
 import { motion } from "framer-motion";
 import { FaCheck } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 interface Pricing {
-  id: number;
+  id: string | number; // Support both string (UUID) and number IDs
   title: string;
   description: string;
   price: string;
   recommended: boolean;
   features: string[];
+  templateId?: string; // Optional templateId if pricing plan is linked to a specific template
 }
 
 export default function PricingCard({ plan }: { plan: Pricing }) {
+  const router = useRouter();
+
+  const handleBuyNow = () => {
+    // If pricing plan has a templateId, redirect to that template's checkout
+    // Otherwise, redirect to billing page for pricing plan subscription
+    if (plan.templateId) {
+      router.push(`/checkout/${plan.templateId}`);
+    } else {
+      // Redirect to billing page for pricing plan subscription
+      // Convert plan.id to string (handles both string UUID and number IDs)
+      const billingId = typeof plan.id === 'string' ? plan.id : plan.id.toString();
+      router.push(`/billing/${billingId}`);
+    }
+  };
   const featureVariants = {
     hidden: { opacity: 0, x: -8 },
     show: { opacity: 1, x: 0 },
@@ -66,6 +84,7 @@ export default function PricingCard({ plan }: { plan: Pricing }) {
       <div className="p-6 w-full">
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
+            onClick={handleBuyNow}
             className={`cursor-pointer w-full py-5 ${
             plan.recommended
               ? "bg-gradient-to-b from-[#0F59BC] to-[#0F35A7] text-white"

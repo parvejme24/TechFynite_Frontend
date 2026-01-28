@@ -5,7 +5,7 @@ import StatsGrid from "./StatsGrid";
 import RevenueChart from "./RevenueChart";
 import TrafficChart from "./TrafficChart";
 import RecentActivity from "./RecentActivity";
-import UpcomingEvents from "./UpcomingEvents";
+import TopSellingTemplates from "./TopSellingTemplates";
 
 export default function OverviewPage() {
   return (
@@ -21,7 +21,7 @@ export default function OverviewPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RecentActivity />
-        <UpcomingEvents />
+        <TopSellingTemplates />
       </div>
     </div>
   );

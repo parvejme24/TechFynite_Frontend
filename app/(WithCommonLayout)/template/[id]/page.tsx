@@ -7,10 +7,11 @@ import apiClient from "@/lib/api-client";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }> | { id: string };
 }): Promise<Metadata> {
   try {
-    const { id } = await params;
+    const resolvedParams = params instanceof Promise ? await params : params;
+    const { id } = resolvedParams;
     const response = await apiClient.get(`/templates/${id}`);
     const template = response.data.data;
 
@@ -49,8 +50,9 @@ export async function generateMetadata({
 export default async function TemplateDetailsPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }> | { id: string };
 }) {
-  const { id } = await params;
+  const resolvedParams = params instanceof Promise ? await params : params;
+  const { id } = resolvedParams;
   return <TemplateDetailsContainer id={id} />;
 }
