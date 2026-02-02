@@ -1,14 +1,16 @@
+"use client";
+import { use } from "react";
 import BlogDetailsContainer from "@/components/modules/DadhboardModules/Blog/BlogDetails/BlogDetailsContainer";
-import React from "react";
 
 export default function BlogDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const resolvedParams = use(params);
   return (
     <div>
-      <BlogDetailsContainer params={params} />
+      <BlogDetailsContainer params={resolvedParams} />
     </div>
   );
 }

@@ -34,8 +34,8 @@ interface BlogLikeResponse {
   success: boolean;
   message: string;
   data: {
-    isLiked: boolean;
-    totalLikes: number;
+    liked: boolean;
+    likes: number;
   };
 }
 
@@ -46,9 +46,29 @@ export const useGetAllBlogs = (query?: IBlogQuery) => {
   return useQuery<BlogListResponse, Error>({
     queryKey: ['blogs', 'all', query],
     queryFn: async () => {
-      const response = await apiClient.get('/blogs', { params: query });
-      return response.data;
+      try {
+        // Ensure we always send valid query parameters as strings (backend expects strings)
+        const params: Record<string, string> = {
+          page: query?.page?.toString() || '1',
+          limit: query?.limit?.toString() || '10',
+        };
+        
+        if (query?.search) params.search = query.search;
+        if (query?.categoryId) params.categoryId = query.categoryId;
+        if (query?.authorId) params.authorId = query.authorId;
+        if (query?.isPublished !== undefined) params.isPublished = query.isPublished.toString();
+        if (query?.sortBy) params.sortBy = query.sortBy;
+        if (query?.sortOrder) params.sortOrder = query.sortOrder;
+
+        const response = await apiClient.get('/blogs', { params });
+        return response.data;
+      } catch (error: any) {
+        console.error('Error fetching blogs:', error);
+        console.error('Error response:', error?.response?.data);
+        throw error;
+      }
     },
+    retry: 1, // Retry once on failure
   });
 };
 
@@ -57,9 +77,30 @@ export const useGetPublishedBlogs = (query?: IBlogQuery) => {
   return useQuery<BlogListResponse, Error>({
     queryKey: ['blogs', 'published', query],
     queryFn: async () => {
-      const response = await apiClient.get('/blogs/published', { params: query });
-      return response.data;
+      try {
+        // Use the main /blogs endpoint with isPublished=true instead of /blogs/published
+        // This ensures proper validation handling on the backend
+        const params: Record<string, string> = {
+          page: query?.page?.toString() || '1',
+          limit: query?.limit?.toString() || '10',
+          isPublished: 'true', // Always fetch published blogs
+        };
+        
+        if (query?.search) params.search = query.search;
+        if (query?.categoryId) params.categoryId = query.categoryId;
+        if (query?.authorId) params.authorId = query.authorId;
+        if (query?.sortBy) params.sortBy = query.sortBy;
+        if (query?.sortOrder) params.sortOrder = query.sortOrder;
+
+        const response = await apiClient.get('/blogs', { params });
+        return response.data;
+      } catch (error: any) {
+        console.error('Error fetching published blogs:', error);
+        console.error('Error response:', error?.response?.data);
+        throw error;
+      }
     },
+    retry: 1, // Retry once on failure
   });
 };
 
@@ -68,7 +109,16 @@ export const useGetDraftBlogs = (query?: IBlogQuery) => {
   return useQuery<BlogListResponse, Error>({
     queryKey: ['blogs', 'drafts', query],
     queryFn: async () => {
-      const response = await apiClient.get('/blogs/drafts', { params: query });
+      const params = {
+        page: query?.page?.toString() || '1',
+        limit: query?.limit?.toString() || '10',
+        ...(query?.search && { search: query.search }),
+        ...(query?.categoryId && { categoryId: query.categoryId }),
+        ...(query?.authorId && { authorId: query.authorId }),
+        ...(query?.sortBy && { sortBy: query.sortBy }),
+        ...(query?.sortOrder && { sortOrder: query.sortOrder }),
+      };
+      const response = await apiClient.get('/blogs/drafts', { params });
       return response.data;
     },
   });
@@ -91,7 +141,16 @@ export const useGetBlogsByCategory = (categoryId: string, query?: IBlogQuery) =>
   return useQuery<BlogListResponse, Error>({
     queryKey: ['blogs', 'category', categoryId, query],
     queryFn: async () => {
-      const response = await apiClient.get(`/blogs/category/${categoryId}`, { params: query });
+      const params = {
+        page: query?.page?.toString() || '1',
+        limit: query?.limit?.toString() || '10',
+        ...(query?.search && { search: query.search }),
+        ...(query?.authorId && { authorId: query.authorId }),
+        ...(query?.isPublished !== undefined && { isPublished: query.isPublished.toString() }),
+        ...(query?.sortBy && { sortBy: query.sortBy }),
+        ...(query?.sortOrder && { sortOrder: query.sortOrder }),
+      };
+      const response = await apiClient.get(`/blogs/category/${categoryId}`, { params });
       return response.data;
     },
     enabled: !!categoryId,
@@ -103,7 +162,16 @@ export const useGetBlogsByAuthor = (authorId: string, query?: IBlogQuery) => {
   return useQuery<BlogListResponse, Error>({
     queryKey: ['blogs', 'author', authorId, query],
     queryFn: async () => {
-      const response = await apiClient.get(`/blogs/author/${authorId}`, { params: query });
+      const params = {
+        page: query?.page?.toString() || '1',
+        limit: query?.limit?.toString() || '10',
+        ...(query?.search && { search: query.search }),
+        ...(query?.categoryId && { categoryId: query.categoryId }),
+        ...(query?.isPublished !== undefined && { isPublished: query.isPublished.toString() }),
+        ...(query?.sortBy && { sortBy: query.sortBy }),
+        ...(query?.sortOrder && { sortOrder: query.sortOrder }),
+      };
+      const response = await apiClient.get(`/blogs/author/${authorId}`, { params });
       return response.data;
     },
     enabled: !!authorId,
@@ -127,16 +195,14 @@ export const useGetBlogStats = () => {
 export const useCreateBlog = () => {
   const queryClient = useQueryClient();
   
-  return useMutation<BlogResponse, Error, ICreateBlog & { image?: File }>({
+  return useMutation<BlogResponse, Error, ICreateBlog & { featuredImage?: File }>({
     mutationFn: async (blogData) => {
-      console.log("🔧 useBlogApi - Creating FormData from:", blogData);
-      
       const formData = new FormData();
+      
+      // Basic fields
       formData.append('title', blogData.title);
       formData.append('categoryId', blogData.categoryId);
-      if (blogData.description) {
-        formData.append('description', JSON.stringify(blogData.description));
-      }
+      formData.append('description', blogData.description || ''); // String field, not JSON
       formData.append('readingTime', blogData.readingTime.toString());
       formData.append('authorId', blogData.authorId);
       
@@ -148,103 +214,23 @@ export const useCreateBlog = () => {
         formData.append('isPublished', blogData.isPublished ? 'true' : 'false');
       }
       
+      // Content as JSON string
       if (blogData.content) {
         formData.append('content', JSON.stringify(blogData.content));
       }
       
-      if (blogData.image) {
-        formData.append('image', blogData.image);
-        console.log("📸 Image file details:", {
-          name: blogData.image.name,
-          size: blogData.image.size,
-          type: blogData.image.type,
-          lastModified: blogData.image.lastModified
-        });
+      // Featured image (main image)
+      if (blogData.featuredImage) {
+        formData.append('image', blogData.featuredImage); // Backend expects 'image' field name
       }
 
-      // Log FormData contents
-      console.log("📦 FormData Contents:");
-      for (let [key, value] of formData.entries()) {
-        if (key === 'image') {
-          console.log(`${key}:`, {
-            name: (value as File).name,
-            size: (value as File).size,
-            type: (value as File).type
-          });
-        } else {
-          console.log(`${key}:`, value);
-        }
-      }
-      
-      // Log FormData as entries to see all fields
-      console.log("📋 All FormData Entries:");
-      const entries = Array.from(formData.entries());
-      entries.forEach(([key, value]) => {
-        if (value instanceof File) {
-          console.log(`${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
-        } else {
-          console.log(`${key}: ${value}`);
-        }
+      const response = await apiClient.post('/blogs', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-
-      // Log the raw request data for debugging
-      console.log("🔍 Raw request data being sent:");
-      console.log("- Content-Type: multipart/form-data (auto-set by browser)");
-      console.log("- Fields:", Object.fromEntries(formData.entries()));
       
-      // Log FormData as a blob to see the actual structure
-      const formDataBlob = new Blob([formData as any], { type: 'multipart/form-data' });
-      console.log("📦 FormData Blob size:", formDataBlob.size);
-
-      console.log("🌐 Sending request to:", '/blogs');
-      try {
-        const response = await apiClient.post('/blogs', formData, {
-          headers: {
-            // Don't set Content-Type manually - let the browser set it with boundary
-            // 'Content-Type': 'multipart/form-data',
-          },
-        });
-        
-        console.log("✅ Response received:", response.data);
-        console.log("🖼️ Image upload status:", {
-          hasImage: !!blogData.image,
-          imageName: blogData.image?.name,
-          responseImageUrl: response.data?.data?.imageUrl || response.data?.imageUrl,
-          fullResponse: response.data
-        });
-        
-        // Log the full response structure to debug image URL
-        console.log("🔍 Full Response Structure:", JSON.stringify(response.data, null, 2));
-        console.log("🔍 Response Data Object:", response.data?.data);
-        console.log("🔍 Response Data Keys:", Object.keys(response.data?.data || {}));
-        
-        // Check if image URL is in different possible locations
-        const possibleImageUrls = [
-          response.data?.data?.imageUrl,
-          response.data?.data?.image,
-          response.data?.data?.featuredImage,
-          response.data?.data?.imageUrl,
-          response.data?.imageUrl,
-          response.data?.image,
-          response.data?.featuredImage
-        ];
-        
-        console.log("🔍 Possible Image URLs:", possibleImageUrls.filter(url => url));
-        
-        // Check if the blog data has image information
-        if (response.data?.data) {
-          console.log("🔍 Blog Data Properties:", Object.keys(response.data.data));
-          console.log("🔍 Blog Data Values:", response.data.data);
-        }
-        return response.data;
-      } catch (error: any) {
-        console.error("❌ Backend Error Details:");
-        console.error("Status:", error.response?.status);
-        console.error("Status Text:", error.response?.statusText);
-        console.error("Error Data:", error.response?.data);
-        console.error("Error Message:", error.message);
-        throw error;
-      }
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
@@ -257,18 +243,22 @@ export const useCreateBlog = () => {
 export const useUpdateBlog = () => {
   const queryClient = useQueryClient();
   
-  return useMutation<BlogResponse, Error, { id: string } & IUpdateBlog & { image?: File }>({
+  return useMutation<BlogResponse, Error, { id: string } & IUpdateBlog & { featuredImage?: File }>({
     mutationFn: async ({ id, ...blogData }) => {
       const formData = new FormData();
       
       if (blogData.title) formData.append('title', blogData.title);
       if (blogData.categoryId) formData.append('categoryId', blogData.categoryId);
-      if (blogData.description) formData.append('description', JSON.stringify(blogData.description));
+      if (blogData.description) formData.append('description', blogData.description); // String field
       if (blogData.readingTime) formData.append('readingTime', blogData.readingTime.toString());
       if (blogData.slug) formData.append('slug', blogData.slug);
       if (blogData.isPublished !== undefined) formData.append('isPublished', blogData.isPublished.toString());
       if (blogData.content) formData.append('content', JSON.stringify(blogData.content));
-      if (blogData.image) formData.append('image', blogData.image);
+      
+      // Featured image
+      if (blogData.featuredImage) {
+        formData.append('image', blogData.featuredImage);
+      }
 
       const response = await apiClient.put(`/blogs/${id}`, formData, {
         headers: {
@@ -300,19 +290,62 @@ export const useDeleteBlog = () => {
   });
 };
 
-// Toggle blog like
+// Toggle blog like (legacy - uses BlogLike model)
 export const useToggleBlogLike = () => {
   const queryClient = useQueryClient();
   
-  return useMutation<BlogLikeResponse, Error, string>({
-    mutationFn: async (id) => {
-      const response = await apiClient.post(`/blogs/${id}/toggle-like`);
+  return useMutation<BlogLikeResponse, Error, { id: string; userId: string }>({
+    mutationFn: async ({ id, userId }) => {
+      const response = await apiClient.post(`/blogs/${id}/toggle-like`, { userId });
       return response.data;
     },
-    onSuccess: (data, id) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
-      queryClient.invalidateQueries({ queryKey: ['blog', id] });
+      queryClient.invalidateQueries({ queryKey: ['blog', variables.id] });
     },
+  });
+};
+
+// Add or update blog reaction
+export const useAddBlogReaction = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<BlogResponse, Error, { id: string; userId: string; reactionType: 'LIKE' | 'LOVE' | 'HAHA' | 'WOW' | 'SAD' | 'ANGRY' }>({
+    mutationFn: async ({ id, userId, reactionType }) => {
+      const response = await apiClient.post(`/blogs/${id}/reactions`, { userId, reactionType });
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['blogs'] });
+      queryClient.invalidateQueries({ queryKey: ['blog', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['blog', variables.id, 'reactions'] });
+    },
+  });
+};
+
+// Get blog reactions
+export const useGetBlogReactions = (id: string) => {
+  return useQuery<{ success: boolean; message: string; data: any[] }, Error>({
+    queryKey: ['blog', id, 'reactions'],
+    queryFn: async () => {
+      const response = await apiClient.get(`/blogs/${id}/reactions`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+};
+
+// Get user reaction for a blog
+export const useGetUserReaction = (id: string, userId?: string) => {
+  return useQuery<{ success: boolean; message: string; data: any | null }, Error>({
+    queryKey: ['blog', id, 'reactions', 'user', userId],
+    queryFn: async () => {
+      const response = await apiClient.get(`/blogs/${id}/reactions/user`, {
+        params: { userId },
+      });
+      return response.data;
+    },
+    enabled: !!id && !!userId,
   });
 };
 
@@ -371,11 +404,11 @@ interface UseBlogResult {
   statsError: Error | null;
 
   // Mutations
-  createBlog: (data: ICreateBlog & { image?: File }) => Promise<BlogResponse>;
+  createBlog: (data: ICreateBlog & { featuredImage?: File }) => Promise<BlogResponse>;
   isCreating: boolean;
   createError: Error | null;
 
-  updateBlog: (data: { id: string } & IUpdateBlog & { image?: File }) => Promise<BlogResponse>;
+  updateBlog: (data: { id: string } & IUpdateBlog & { featuredImage?: File }) => Promise<BlogResponse>;
   isUpdating: boolean;
   updateError: Error | null;
 
@@ -383,7 +416,7 @@ interface UseBlogResult {
   isDeleting: boolean;
   deleteError: Error | null;
 
-  toggleLike: (id: string) => Promise<BlogLikeResponse>;
+  toggleLike: (data: { id: string; userId: string }) => Promise<BlogLikeResponse>;
   isTogglingLike: boolean;
   toggleLikeError: Error | null;
 

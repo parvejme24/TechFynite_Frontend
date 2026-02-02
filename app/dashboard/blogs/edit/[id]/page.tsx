@@ -1,12 +1,14 @@
 "use client";
+import { use } from "react";
 import EditBlogContainer from "@/components/modules/DadhboardModules/Blog/EditBlog/EditBlogContainer";
 
 interface EditBlogPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function EditBlogPage({ params }: EditBlogPageProps) {
-  return <EditBlogContainer blogId={params.id} />;
+  const { id } = use(params);
+  return <EditBlogContainer blogId={id} />;
 } 

@@ -59,7 +59,7 @@ const BlogList: React.FC<BlogListProps> = ({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6">
       {blogs.map((blog) => (
-        <div key={blog.id} onClick={() => onBlogClick?.(blog)}>
+        <div key={blog.id} className="h-full" onClick={() => onBlogClick?.(blog)}>
           <BlogCard
             blog={blog}
             onEdit={onEdit}

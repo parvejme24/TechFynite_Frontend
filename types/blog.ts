@@ -3,17 +3,18 @@ export interface IBlog {
   id: string;
   title: string;
   categoryId: string;
-  imageUrl?: string | null;
-  description: any;
-  likes: number;
+  featuredImageUrl?: string | null;
+  description: string; // String field for multiple paragraphs
   readingTime: number;
   authorId: string;
   slug?: string | null;
   isPublished: boolean;
   viewCount: number;
+  reactCount: number;
   createdAt: Date;
   updatedAt: Date;
-  content?: any;
+  content?: any; // JSON field for rich text editor
+  screenshots?: string[]; // Array of image URLs
   author?: {
     id: string;
     fullName: string;
@@ -25,6 +26,7 @@ export interface IBlog {
     slug: string;
   };
   blogLikes?: any[];
+  reactions?: IBlogReaction[];
   reviews?: any[];
   comments?: any[]; // Alias for reviews
 }
@@ -33,25 +35,27 @@ export interface IBlog {
 export interface ICreateBlog {
   title: string;
   categoryId: string;
-  imageUrl?: string;
-  description: any; // JSON field
+  featuredImageUrl?: string;
+  description: string; // String field
   readingTime: number;
   authorId: string;
   slug?: string;
   isPublished?: boolean;
-  content?: any; // JSON field
+  content?: any; // JSON field for rich text editor
+  screenshots?: string[]; // Array of image URLs
 }
 
 // Blog update interface
 export interface IUpdateBlog {
   title?: string;
   categoryId?: string;
-  imageUrl?: string;
-  description?: any;
+  featuredImageUrl?: string;
+  description?: string; // String field
   readingTime?: number;
   slug?: string;
   isPublished?: boolean;
-  content?: any;
+  content?: any; // JSON field for rich text editor
+  screenshots?: string[]; // Array of image URLs
 }
 
 // Blog query interface
@@ -62,8 +66,25 @@ export interface IBlogQuery {
   categoryId?: string;
   authorId?: string;
   isPublished?: boolean;
-  sortBy?: 'createdAt' | 'updatedAt' | 'likes' | 'viewCount' | 'readingTime';
+  sortBy?: 'createdAt' | 'updatedAt' | 'reactCount' | 'viewCount' | 'readingTime';
   sortOrder?: 'asc' | 'desc';
+}
+
+// Blog reaction interface
+export interface IBlogReaction {
+  id: string;
+  blogId: string;
+  userId: string;
+  reactionType: 'LIKE' | 'LOVE' | 'HAHA' | 'WOW' | 'SAD' | 'ANGRY';
+  createdAt: Date;
+  user?: {
+    id: string;
+    fullName: string;
+    email: string;
+    profile?: {
+      avatarUrl?: string;
+    };
+  };
 }
 
 // Blog response interface
@@ -88,6 +109,7 @@ export interface IBlogStats {
   draftBlogs: number;
   totalViews: number;
   totalLikes: number;
+  totalReactions: number;
   averageReadingTime: number;
   blogsByCategory: Array<{
     categoryId: string;

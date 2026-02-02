@@ -1,29 +1,31 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FiUpload, FiX, FiSave, FiImage, FiTrash2 } from "react-icons/fi";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
-  useCreateBlog,
   useDeleteBlog,
   useGetBlogById,
   useUpdateBlog,
 } from "@/hooks/useBlogApi";
 import { useGetAllBlogCategoriesForStats } from "@/hooks/useBlogCategoryApi";
 import { useAuth } from "@/hooks/useAuth";
-
-// Import organized components
-import BlogTitleSection from "./FormSections/BlogTitleSection";
-import BlogSlugSection from "./FormSections/BlogSlugSection";
-import BlogDescriptionSection from "./FormSections/BlogDescriptionSection";
-import BlogContentSection from "./FormSections/BlogContentSection";
-import PublishSettingsSection from "./Sidebar/PublishSettingsSection";
-import CategorySection from "./Sidebar/CategorySection";
-import ReadingTimeSection from "./Sidebar/ReadingTimeSection";
-import FeaturedImageSection from "./Sidebar/FeaturedImageSection";
-import ActionButtonsSection from "./Sidebar/ActionButtonsSection";
+import RichTextEditor from "../CreateBlog/RichTextEditor";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
-import { BlogContent, generateHTML } from "./StructuredContentEditor";
 
 interface EditBlogContainerProps {
   blogId?: string;
@@ -34,7 +36,6 @@ export default function EditBlogContainer({
 }: EditBlogContainerProps = {}) {
   const router = useRouter();
   const { user } = useAuth();
-  const { mutateAsync: createBlog, isPending: isCreating } = useCreateBlog();
   const { mutateAsync: updateBlog, isPending: isUpdating } = useUpdateBlog();
   const { mutateAsync: deleteBlog, isPending: isDeleting } = useDeleteBlog();
   const { data: categoriesData } = useGetAllBlogCategoriesForStats();
@@ -55,18 +56,10 @@ export default function EditBlogContainer({
     isPublished: false,
   });
 
-  const [content, setContent] = useState<BlogContent>({
-    title: "",
-    sections: [],
-    metadata: {
-      wordCount: 0,
-      readingTime: 0,
-      lastModified: new Date().toISOString(),
-    },
-  });
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [content, setContent] = useState("");
+  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [descriptionArray, setDescriptionArray] = useState<string[]>([]);
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Auto-generate slug from title
@@ -78,85 +71,123 @@ export default function EditBlogContainer({
         .replace(/\s+/g, "-")
         .replace(/-+/g, "-")
         .trim()
-        .substring(0, 200); // Ensure it doesn't exceed backend limit
+        .substring(0, 200);
       setFormData((prev) => ({ ...prev, slug }));
     }
   }, [formData.title]);
 
-  // Convert description string to array
-  useEffect(() => {
-    if (formData.description) {
-      const lines = formData.description
-        .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-      setDescriptionArray(lines);
-    }
-  }, [formData.description]);
-
   // Populate form when blog data is loaded (for editing)
+  // Note: categoryId will be set separately when categories are loaded
   useEffect(() => {
-    if (blogData?.data && blogId && categoriesData?.data) {
+    if (blogData?.data && blogId) {
       const blog = blogData.data;
 
-
-      // Update form data
-      setFormData({
+      setFormData((prev) => ({
+        ...prev,
         title: blog.title || "",
-        categoryId: blog.categoryId || "",
-        description: Array.isArray(blog.description)
+        // Don't set categoryId here - it will be set in the separate useEffect
+        description: typeof blog.description === 'string'
+          ? blog.description
+          : Array.isArray(blog.description)
           ? blog.description.join("\n")
-          : blog.description || "",
+          : "",
         readingTime: blog.readingTime || 5,
         slug: blog.slug || "",
         isPublished: blog.isPublished || false,
-      });
+      }));
 
-      // Update content if it exists
+      // Update content - handle both HTML string and structured content
       if (blog.content) {
-        setContent(blog.content);
-      }
-
-      // Set description array
-      if (Array.isArray(blog.description)) {
-        setDescriptionArray(blog.description);
+        if (typeof blog.content === 'string') {
+          // Direct HTML string
+          setContent(blog.content);
+        } else if (blog.content.html) {
+          // Structured content with HTML property
+          setContent(blog.content.html);
+        } else if (blog.content.content?.html) {
+          // Nested structured content
+          setContent(blog.content.content.html);
+        } else {
+          // Fallback: try to extract HTML from content object
+          setContent("");
+        }
+      } else {
+        setContent("");
       }
 
       // Set image preview if blog has an image
-      if (blog.imageUrl) {
-        setPreviewUrl(blog.imageUrl);
-        // Don't set selectedImage for existing images - only for new uploads
-        setSelectedImage(null);
+      if (blog.featuredImageUrl) {
+        setPreviewUrl(blog.featuredImageUrl);
+        setOriginalImageUrl(blog.featuredImageUrl); // Store original URL for preservation
+        // Don't set featuredImage for existing images - only for new uploads
+        setFeaturedImage(null);
       } else {
         setPreviewUrl(null);
+        setOriginalImageUrl(null);
       }
     }
-  }, [blogData, blogId, categoriesData]);
+  }, [blogData, blogId]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Set categoryId separately when both blog data and categories are loaded
+  useEffect(() => {
+    if (blogData?.data && categoriesData?.data && categoriesData.data.length > 0 && blogId) {
+      const blog = blogData.data;
+      const blogCategoryId = blog.categoryId;
+      
+      if (blogCategoryId) {
+        // Verify that the blog's categoryId exists in the categories list
+        const categoryExists = categoriesData.data.some(cat => cat.id === blogCategoryId);
+        
+        if (categoryExists) {
+          // Always set the categoryId from blog data
+          setFormData((prev) => ({
+            ...prev,
+            categoryId: blogCategoryId,
+          }));
+        } else {
+          console.warn(`Category ${blogCategoryId} not found in categories list. Available categories:`, categoriesData.data.map(c => c.id));
+        }
+      }
+    }
+  }, [blogData, categoriesData, blogId]);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (checked: boolean) => {
+    setFormData((prev) => ({ ...prev, isPublished: checked }));
+  };
+
+  const handleFeaturedImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      processImageFile(file);
+      processFeaturedImage(file);
     }
   };
 
-  const processImageFile = (file: File) => {
-    // Validate file type
+  const processFeaturedImage = (file: File) => {
     if (!file.type.startsWith("image/")) {
       toast.error("Please select a valid image file");
       return;
     }
 
-    // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size must be less than 5MB");
       return;
     }
 
-    setSelectedImage(file);
+    setFeaturedImage(file);
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
-    toast.success("Featured image uploaded successfully!");
+    toast.success("Featured image selected!");
   };
 
   const handleFeaturedImageDrop = (e: React.DragEvent) => {
@@ -165,7 +196,7 @@ export default function EditBlogContainer({
     const imageFiles = files.filter((file) => file.type.startsWith("image/"));
 
     if (imageFiles.length > 0) {
-      processImageFile(imageFiles[0]); // Use first image for featured image
+      processFeaturedImage(imageFiles[0]);
     } else {
       toast.error("Please drop only image files");
     }
@@ -175,12 +206,16 @@ export default function EditBlogContainer({
     e.preventDefault();
   };
 
-  const removeImage = () => {
-    setSelectedImage(null);
+  const removeFeaturedImage = () => {
+    setFeaturedImage(null);
     if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
+      // Only revoke blob URLs, not regular URLs
+      if (previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
       setPreviewUrl(null);
     }
+    setOriginalImageUrl(null); // Clear original URL to remove image on save
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -196,14 +231,12 @@ export default function EditBlogContainer({
       return;
     }
 
-    // Description is optional according to backend schema
-    // if (!formData.description.trim()) {
-    //   toast.error("Description is required");
-    //   return;
-    // }
+    if (!formData.description.trim()) {
+      toast.error("Description is required");
+      return;
+    }
 
-    // Content is optional according to backend schema, but we'll validate it for better UX
-    if (!content.sections || content.sections.length === 0) {
+    if (!content.trim()) {
       toast.error("Content is required");
       return;
     }
@@ -213,118 +246,99 @@ export default function EditBlogContainer({
       return;
     }
 
-    try {
-      // Generate HTML for dangerouslySetInnerHTML
-      const generatedHTML = generateHTML(content);
+    if (!blogId) {
+      toast.error("Blog ID is required");
+      return;
+    }
 
-      // Create a simplified content object for backend
+    try {
+      // Parse content HTML to JSON structure for backend
       const contentObject = {
-        title: formData.title.trim(),
-        content: content,
-        html: generatedHTML,
-        type: "structured",
+        html: content,
+        type: "rich-text",
+        version: "1.0",
       };
 
-
-      const blogData = {
+      const blogData: any = {
         title: formData.title.trim(),
         categoryId: formData.categoryId,
-        description: descriptionArray.length > 0 ? descriptionArray : undefined, // Optional field
-        readingTime: Number(formData.readingTime), // Ensure it's a number
-        authorId: user.id,
-        slug: formData.slug.trim(),
-        isPublished: Boolean(formData.isPublished), // Ensure it's a boolean
-        content: content, // Send the BlogContent object directly
-        image: selectedImage || undefined, // File for upload (only if new image selected)
-        // For editing, always preserve existing image URL if no new image is selected
-        ...(blogId && !selectedImage && previewUrl && { imageUrl: previewUrl }),
+        description: formData.description.trim(), // String field
+        readingTime: Number(formData.readingTime),
+        slug: formData.slug.trim() || undefined,
+        isPublished: Boolean(formData.isPublished),
+        content: contentObject, // JSON object
       };
 
-
-      if (blogId) {
-        // Update existing blog - filter out null values
-        const updateData = { ...blogData };
-        if (updateData.imageUrl === null) {
-          delete updateData.imageUrl;
-        }
-        await updateBlog({ id: blogId, ...updateData });
-        toast.success("Blog updated successfully!");
-      } else {
-        // Create new blog
-      await createBlog(blogData);
-      toast.success("Blog created successfully!");
+      // Only include featuredImage if a new file is selected
+      // If no new image is selected, preserve the original image URL
+      if (featuredImage) {
+        blogData.featuredImage = featuredImage;
+      } else if (originalImageUrl && !featuredImage) {
+        // Preserve existing image URL if no new image is selected
+        blogData.featuredImageUrl = originalImageUrl;
       }
 
+      await updateBlog({ id: blogId, ...blogData });
+      toast.success("Blog updated successfully!");
       router.push("/dashboard/blogs");
     } catch (error: any) {
-      console.error("Create blog error:", error);
-      toast.error(error?.message || "Failed to create blog. Please try again.");
+      console.error("Update blog error:", error);
+      toast.error(
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to update blog. Please try again."
+      );
     }
   };
 
   const handleSaveDraft = async () => {
-    if (!formData.title.trim() || !formData.categoryId || !user?.id) {
+    if (!formData.title.trim() || !formData.categoryId || !user?.id || !blogId) {
       toast.error("Title and category are required for draft");
       return;
     }
 
     try {
-      // Generate HTML for dangerouslySetInnerHTML
-      const generatedHTML = generateHTML(content);
-
-      // Create a structured content object
       const contentObject = {
-        title: formData.title.trim(),
-        content: content || { sections: [], metadata: {} },
-        html: generatedHTML,
-        type: "structured",
+        html: content || "",
+        type: "rich-text",
+        version: "1.0",
       };
 
-
-      const draftData = {
+      const draftData: any = {
         title: formData.title.trim(),
         categoryId: formData.categoryId,
-        description:
-          descriptionArray.length > 0
-            ? descriptionArray
-            : [formData.description], // Will be JSON.stringify'd in the hook
-        readingTime: Number(formData.readingTime), // Ensure it's a number
-        authorId: user.id,
-        slug: formData.slug.trim(),
+        description: formData.description.trim() || "",
+        readingTime: Number(formData.readingTime),
+        slug: formData.slug.trim() || undefined,
         isPublished: false,
-        content: content, // Will be JSON.stringify'd in the hook
-        image: selectedImage || undefined, // File for upload
-        // For editing, always preserve existing image URL if no new image is selected
-        ...(blogId && !selectedImage && previewUrl && { imageUrl: previewUrl }),
+        content: contentObject,
       };
 
-
-      if (blogId) {
-        // Update existing blog as draft - filter out null values
-        const updateDraftData = { ...draftData };
-        if (updateDraftData.imageUrl === null) {
-          delete updateDraftData.imageUrl;
-        }
-        await updateBlog({ id: blogId, ...updateDraftData });
-        toast.success("Draft updated successfully!");
-      } else {
-        // Create new draft
-      await createBlog(draftData);
-      toast.success("Draft saved successfully!");
+      // Only include featuredImage if a new file is selected
+      // If no new image is selected, preserve the original image URL
+      if (featuredImage) {
+        draftData.featuredImage = featuredImage;
+      } else if (originalImageUrl && !featuredImage) {
+        // Preserve existing image URL if no new image is selected
+        draftData.featuredImageUrl = originalImageUrl;
       }
 
+      await updateBlog({ id: blogId, ...draftData });
+      toast.success("Draft updated successfully!");
       router.push("/dashboard/blogs");
     } catch (error: any) {
       console.error("Save draft error:", error);
-      toast.error(error?.message || "Failed to save draft. Please try again.");
+      toast.error(
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to save draft. Please try again."
+      );
     }
   };
 
   const handleDeleteBlog = async () => {
     if (!blogId) {
-      toast.info(
-        "Delete functionality is only available when editing existing blogs"
-      );
+      toast.info("Delete functionality is only available when editing existing blogs");
       setShowDeleteModal(false);
       return;
     }
@@ -340,6 +354,15 @@ export default function EditBlogContainer({
       setShowDeleteModal(false);
     }
   };
+
+  // Cleanup preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   // Show loading state when fetching blog data
   if (blogId && isLoadingBlog) {
@@ -389,12 +412,10 @@ export default function EditBlogContainer({
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {blogId ? "Edit Blog Post" : "Create New Blog Post"}
+            Edit Blog Post
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {blogId
-              ? "Update your blog post"
-              : "Write and publish your blog post"}
+            Update your blog post
           </p>
         </div>
 
@@ -402,74 +423,292 @@ export default function EditBlogContainer({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
-              <BlogTitleSection
-                title={formData.title}
-                onTitleChange={(title) =>
-                  setFormData((prev) => ({ ...prev, title }))
-                }
-              />
+              {/* Title */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Blog Title</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Input
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    placeholder="Enter blog title"
+                    required
+                    className="cursor-text"
+                  />
+                </CardContent>
+              </Card>
 
-              <BlogSlugSection
-                slug={formData.slug}
-                onSlugChange={(slug) =>
-                  setFormData((prev) => ({ ...prev, slug }))
-                }
-              />
+              {/* Slug */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>URL Slug</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Input
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleInputChange}
+                    placeholder="url-friendly-slug"
+                    className="cursor-text font-mono"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Auto-generated from title (editable)
+                  </p>
+                </CardContent>
+              </Card>
 
-              <BlogDescriptionSection
-                description={formData.description}
-                onDescriptionChange={(description) =>
-                  setFormData((prev) => ({ ...prev, description }))
-                }
-              />
+              {/* Description */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Description</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Enter blog description (this will be displayed as a summary)"
+                    rows={4}
+                    required
+                    className="cursor-text"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    A brief summary of your blog post
+                  </p>
+                </CardContent>
+              </Card>
 
-              <BlogContentSection
-                content={content}
-                onContentChange={setContent}
-              />
+              {/* Content - Rich Text Editor */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Blog Content</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <RichTextEditor content={content} onChange={setContent} />
+                </CardContent>
+              </Card>
             </div>
 
             {/* Sidebar */}
             <div className="space-y-6">
-              <PublishSettingsSection
-                isPublished={formData.isPublished}
-                onPublishChange={(isPublished) =>
-                  setFormData((prev) => ({ ...prev, isPublished }))
-                }
-              />
+              {/* Publish Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Publish Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="isPublished"
+                      checked={formData.isPublished}
+                      onCheckedChange={handleCheckboxChange}
+                    />
+                    <Label htmlFor="isPublished" className="cursor-pointer">
+                      Publish immediately
+                    </Label>
+                  </div>
+                </CardContent>
+              </Card>
 
-              <CategorySection
-                categoryId={formData.categoryId}
-                onCategoryChange={(categoryId) =>
-                  setFormData((prev) => ({ ...prev, categoryId }))
-                }
-                categories={categoriesData?.data || []}
-              />
+              {/* Category */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Category</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {categoriesData?.data && categoriesData.data.length > 0 ? (
+                    <Select
+                      key={`category-select-${formData.categoryId || 'empty'}`}
+                      value={formData.categoryId || undefined}
+                      onValueChange={(value) =>
+                        handleSelectChange("categoryId", value)
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categoriesData.data.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      Loading categories...
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-              <ReadingTimeSection
-                readingTime={formData.readingTime}
-                onReadingTimeChange={(readingTime) =>
-                  setFormData((prev) => ({ ...prev, readingTime }))
-                }
-              />
+              {/* Reading Time */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Reading Time</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Input
+                    name="readingTime"
+                    type="number"
+                    value={formData.readingTime}
+                    onChange={handleInputChange}
+                    min="1"
+                    max="60"
+                    className="cursor-text"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Estimated reading time in minutes
+                  </p>
+                </CardContent>
+              </Card>
 
-              <FeaturedImageSection
-                selectedImage={selectedImage}
-                previewUrl={previewUrl}
-                onImageChange={handleImageChange}
-                onImageDrop={handleFeaturedImageDrop}
-                onImageDragOver={handleFeaturedImageDragOver}
-                onRemoveImage={removeImage}
-              />
+              {/* Featured Image */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Featured Image</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {previewUrl ? (
+                    <div className="space-y-3">
+                      <div
+                        className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 cursor-pointer"
+                        onClick={() =>
+                          document.getElementById("featured-image-upload")?.click()
+                        }
+                        onDrop={handleFeaturedImageDrop}
+                        onDragOver={handleFeaturedImageDragOver}
+                      >
+                        <img
+                          src={previewUrl}
+                          alt="Featured Image Preview"
+                          className="w-full h-full object-contain"
+                        />
+                        <div className="absolute inset-0 transition-all duration-200 flex items-center justify-center">
+                          <div className="opacity-0 hover:opacity-100 transition-opacity duration-200 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-xs">
+                            Click to change or drag new image
+                          </div>
+                        </div>
+                      </div>
 
-              <ActionButtonsSection
-                isCreating={isCreating || isUpdating}
-                isPublished={formData.isPublished}
-                onSubmit={handleSubmit}
-                onSaveDraft={handleSaveDraft}
-                onDelete={() => setShowDeleteModal(true)}
-                isEditMode={!!blogId}
-              />
+                      <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                        <p>Recommended: 1200x630px (16:9 ratio)</p>
+                        <p>Max size: 5MB</p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Label
+                          htmlFor="featured-image-upload"
+                          className="flex-1 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm inline-flex items-center justify-center gap-2"
+                        >
+                          <FiUpload className="w-4 h-4" />
+                          Change Image
+                        </Label>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={removeFeaturedImage}
+                          className="cursor-pointer"
+                        >
+                          <FiX className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <Input
+                        id="featured-image-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFeaturedImageChange}
+                        className="hidden"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div
+                        className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-blue-400 dark:hover:border-blue-500 transition-colors duration-200 cursor-pointer"
+                        onClick={() =>
+                          document.getElementById("featured-image-upload")?.click()
+                        }
+                        onDrop={handleFeaturedImageDrop}
+                        onDragOver={handleFeaturedImageDragOver}
+                      >
+                        <div className="space-y-3">
+                          <FiImage className="w-12 h-12 mx-auto text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Upload Featured Image
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              Drag & drop or click to browse
+                            </p>
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                            <p>Recommended: 1200x630px (16:9 ratio)</p>
+                            <p>Supports: JPG, PNG, WebP</p>
+                            <p>Max size: 5MB</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Input
+                        id="featured-image-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFeaturedImageChange}
+                        className="hidden"
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Action Buttons */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="space-y-3">
+                    <Button
+                      type="submit"
+                      disabled={isUpdating}
+                      className="w-full cursor-pointer bg-blue-600 hover:bg-blue-700"
+                    >
+                      <FiSave className="w-4 h-4 mr-2" />
+                      {isUpdating
+                        ? "Updating..."
+                        : formData.isPublished
+                        ? "Update & Publish"
+                        : "Update Draft"}
+                    </Button>
+
+                    {!formData.isPublished && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleSaveDraft}
+                        disabled={isUpdating}
+                        className="w-full cursor-pointer"
+                      >
+                        <FiSave className="w-4 h-4 mr-2" />
+                        Save as Draft
+                      </Button>
+                    )}
+
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => setShowDeleteModal(true)}
+                      disabled={isUpdating || isDeleting}
+                      className="w-full cursor-pointer"
+                    >
+                      <FiTrash2 className="w-4 h-4 mr-2" />
+                      {isDeleting ? "Deleting..." : "Delete Blog"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </form>

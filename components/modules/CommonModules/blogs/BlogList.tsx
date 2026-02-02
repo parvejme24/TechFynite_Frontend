@@ -1,11 +1,11 @@
 import React from "react";
 import BlogCard from "./BlogCard";
-import type { BlogCardProps } from "./BlogCard";
 import BlogCardSkeleton from "./BlogCardSkeleton";
+import { IBlog } from "@/types/blog";
 
 interface BlogListProps {
-  blogs: Array<BlogCardProps['blog']>;
-  onBlogClick?: (blog: BlogCardProps['blog']) => void;
+  blogs: IBlog[];
+  onBlogClick?: (blog: IBlog) => void;
   loading?: boolean;
 }
 
@@ -16,7 +16,7 @@ const BlogList: React.FC<BlogListProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {[...Array(8)].map((_, index) => (
           <BlogCardSkeleton key={index} delay={index * 100} />
         ))}
@@ -26,20 +26,26 @@ const BlogList: React.FC<BlogListProps> = ({
 
   if (blogs.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="text-gray-500 dark:text-gray-400 text-lg">No blogs found.</div>
+      <div className="flex flex-col items-center justify-center py-16 px-4">
+        <div className="text-gray-500 dark:text-gray-400 text-lg mb-2">
+          No blogs found.
+        </div>
+        <p className="text-gray-400 dark:text-gray-500 text-sm text-center">
+          Check back later for new blog posts!
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6 mt-10">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {blogs.map((blog) => (
-        <BlogCard
-          key={blog.id}
-          blog={blog}
-          onClick={() => onBlogClick?.(blog)}
-        />
+        <div key={blog.id} className="h-full">
+          <BlogCard
+            blog={blog}
+            onClick={() => onBlogClick?.(blog)}
+          />
+        </div>
       ))}
     </div>
   );

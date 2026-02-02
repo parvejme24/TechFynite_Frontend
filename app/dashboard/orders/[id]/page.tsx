@@ -2,35 +2,18 @@
 
 import { AuthContext } from "@/Providers/AuthProvider";
 import { UserRole } from "@/types/user";
-import React, { useContext } from "react";
+import { use } from "react";
+import { useContext } from "react";
 import OrderDetailsContainer from "@/components/modules/DadhboardModules/Orders/OrderDetailsContainer";
 
-export default function OrderDetailsPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+export default function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { user } = useContext(AuthContext) || {};
   const role = (user as { role?: UserRole })?.role;
   const isAdmin = role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
   const isUser = role === UserRole.USER;
 
-  // Handle async params for Next.js 15
-  const [orderId, setOrderId] = React.useState<string>("");
-
-  React.useEffect(() => {
-    if (params instanceof Promise) {
-      params.then((resolvedParams) => {
-        setOrderId(resolvedParams.id);
-      });
-    } else {
-      setOrderId(params.id);
-    }
-  }, [params]);
-
-  if (!orderId) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#0F5BBD] border-t-transparent"></div>
-      </div>
-    );
-  }
+  // Unwrap params Promise using React.use() for Next.js 15
+  const { id: orderId } = use(params);
 
   return (
     <div>

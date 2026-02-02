@@ -42,7 +42,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
   canEdit = true,
 }) => {
   const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState<number>(blog.likes || 0);
+  const [likeCount, setLikeCount] = useState<number>(blog.reactCount || 0);
   const router = useRouter();
 
 
@@ -52,11 +52,13 @@ const BlogCard: React.FC<BlogCardProps> = ({
     return text.slice(0, maxLength) + "...";
   };
 
-  const imageSrc = (blog.imageUrl as string) || (placeholderImage as any);
+  const imageSrc = (blog.featuredImageUrl as string) || (placeholderImage as any);
   const categoryTitle = blog.category?.title;
-  const snippet = Array.isArray(blog.description)
+  const snippet = typeof blog.description === 'string' 
+    ? blog.description 
+    : Array.isArray(blog.description)
     ? blog.description[0] || ""
-    : (blog.description as string) || "";
+    : "";
 
 
   // Handle view details
@@ -74,7 +76,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
 
   return (
     <div
-      className="bg-white dark:bg-[#0B1026] rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white dark:bg-[#0B1026] rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col"
       onClick={handleViewDetails}
       role="button"
       tabIndex={0}
@@ -82,22 +84,24 @@ const BlogCard: React.FC<BlogCardProps> = ({
         if (e.key === "Enter") handleViewDetails();
       }}
     >
-      <Image
-        src={imageSrc}
-        alt={blog.title}
-        width={640}
-        height={360}
-        className="w-full h-60 object-cover"
-        onError={(e) => {
-          // Image failed to load, will use placeholder
-        }}
-        onLoad={() => {
-          // Image loaded successfully
-        }}
-      />
+      <div className="w-full h-48 flex-shrink-0 overflow-hidden">
+        <Image
+          src={imageSrc}
+          alt={blog.title}
+          width={640}
+          height={360}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            // Image failed to load, will use placeholder
+          }}
+          onLoad={() => {
+            // Image loaded successfully
+          }}
+        />
+      </div>
 
-      <div className="p-5">
-        <div className="flex items-center justify-between mb-2">
+      <div className="p-5 flex flex-col flex-grow">
+        <div className="flex items-center justify-between mb-2 flex-shrink-0">
           {categoryTitle ? (
             <span className="inline-block text-xs font-medium text-[#0F59BC] bg-[#E9F2FF] dark:bg-[#132955] dark:text-[#9CC2FF] px-2 py-1 rounded">
               {categoryTitle}
@@ -157,13 +161,13 @@ const BlogCard: React.FC<BlogCardProps> = ({
         </div>
 
         <div
-          className="mt-2 text-left text-lg font-semibold"
+          className="mt-2 text-left text-lg font-semibold line-clamp-2 flex-grow"
           title={blog.title}
         >
           {truncateText(blog.title, 72)}
         </div>
 
-        <div className="mt-5 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div className="mt-5 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
           <span className="inline-flex items-center gap-1">
             <FiClock className="w-4 h-4" />
             {blog.readingTime ? `${blog.readingTime} min read` : ""}

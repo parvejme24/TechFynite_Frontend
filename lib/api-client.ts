@@ -32,6 +32,25 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Log error details for debugging
+    if (error.response) {
+      console.error('API Error Response:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+        url: error.config?.url,
+        method: error.config?.method,
+        params: error.config?.params,
+      });
+    } else if (error.request) {
+      console.error('API Request Error:', {
+        message: 'No response received',
+        url: error.config?.url,
+      });
+    } else {
+      console.error('API Error:', error.message);
+    }
+
     if (error.response?.status === 401) {
       // Clear auth data and redirect to login
       if (typeof window !== 'undefined') {

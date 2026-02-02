@@ -105,7 +105,27 @@ export default function BlogContainer() {
       </div>
       <div className="">
         {error ? (
-          <div className="text-red-500">{(error as Error).message}</div>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <h3 className="text-red-800 dark:text-red-200 font-semibold mb-2">
+              Error Loading Blogs
+            </h3>
+            <p className="text-red-600 dark:text-red-300 text-sm">
+              {(error as any)?.response?.data?.message || 
+               (error as any)?.response?.data?.error || 
+               (error as Error).message || 
+               'Failed to load blogs. Please try again later.'}
+            </p>
+            {(error as any)?.response?.data?.error && (
+              <details className="mt-2">
+                <summary className="text-red-600 dark:text-red-300 text-xs cursor-pointer">
+                  View error details
+                </summary>
+                <pre className="mt-2 text-xs bg-red-100 dark:bg-red-900/40 p-2 rounded overflow-auto">
+                  {JSON.stringify((error as any)?.response?.data, null, 2)}
+                </pre>
+              </details>
+            )}
+          </div>
         ) : (
           <>
             <BlogList
