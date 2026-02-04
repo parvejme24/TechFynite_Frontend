@@ -25,18 +25,23 @@ export default function StarRating({
   readOnly = false,
   name = "rating",
 }: StarRatingProps) {
-  return (
-    <StarRatings
-      rating={rating}
-      changeRating={changeRating}
-      numberOfStars={5}
-      starRatedColor={starRatedColor}
-      starEmptyColor={starEmptyColor}
-      starHoverColor={starHoverColor}
-      starDimension={`${size}px`}
-      starSpacing={`${spacing}px`}
-      name={name}
-      readOnly={readOnly}
-    />
-  );
+  // react-star-ratings doesn't have a readOnly prop
+  // It becomes read-only when changeRating is not provided
+  const starRatingProps: any = {
+    rating,
+    numberOfStars: 5,
+    starRatedColor,
+    starEmptyColor,
+    starHoverColor,
+    starDimension: `${size}px`,
+    starSpacing: `${spacing}px`,
+    name,
+  };
+
+  // Only add changeRating if not read-only and changeRating is provided
+  if (!readOnly && changeRating) {
+    starRatingProps.changeRating = changeRating;
+  }
+
+  return <StarRatings {...starRatingProps} />;
 }
