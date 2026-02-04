@@ -300,7 +300,12 @@ export const useUpdateBlogReview = () => {
 export const useHideBlogReview = () => {
   const queryClient = useQueryClient();
   
-  return useMutation<BlogReviewResponse, Error, { reviewId: string; blogId?: string }>({
+  return useMutation<
+    BlogReviewResponse, 
+    Error, 
+    { reviewId: string; blogId?: string },
+    { previousData: Array<[any[], any]> | null }
+  >({
     mutationFn: async ({ reviewId }) => {
       const response = await apiClient.patch(`/blog-reviews/${reviewId}/hide`);
       return response.data;
@@ -371,7 +376,12 @@ export const useHideBlogReview = () => {
 export const useUnhideBlogReview = () => {
   const queryClient = useQueryClient();
   
-  return useMutation<BlogReviewResponse, Error, { reviewId: string; blogId?: string }>({
+  return useMutation<
+    BlogReviewResponse, 
+    Error, 
+    { reviewId: string; blogId?: string },
+    { previousData: Array<[any[], any]> | null }
+  >({
     mutationFn: async ({ reviewId }) => {
       const response = await apiClient.patch(`/blog-reviews/${reviewId}/unhide`);
       return response.data;
