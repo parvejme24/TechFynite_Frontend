@@ -304,7 +304,7 @@ export const useHideBlogReview = () => {
     BlogReviewResponse, 
     Error, 
     { reviewId: string; blogId?: string },
-    { previousData: Array<[any[], any]> | null }
+    { previousData: Array<[readonly unknown[], unknown]> | null }
   >({
     mutationFn: async ({ reviewId }) => {
       const response = await apiClient.patch(`/blog-reviews/${reviewId}/hide`);
@@ -380,7 +380,7 @@ export const useUnhideBlogReview = () => {
     BlogReviewResponse, 
     Error, 
     { reviewId: string; blogId?: string },
-    { previousData: Array<[any[], any]> | null }
+    { previousData: Array<[readonly unknown[], unknown]> | null }
   >({
     mutationFn: async ({ reviewId }) => {
       const response = await apiClient.patch(`/blog-reviews/${reviewId}/unhide`);
