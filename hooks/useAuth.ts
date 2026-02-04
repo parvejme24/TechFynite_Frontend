@@ -528,7 +528,7 @@ export const useCredentialsSignIn = () => {
   };
 };
 
-// Utility hook for checking authentication status
+// Utility hook for checking authentication status--
 export const useAuthStatus = () => {
   const { user, isLoading, isAuthenticated, isAdmin } = useAuth();
 
