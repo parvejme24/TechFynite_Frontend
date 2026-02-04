@@ -322,10 +322,10 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleCheckout} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="firstName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <form onSubmit={handleCheckout} className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                       First Name *
                     </Label>
                     <Input
@@ -334,11 +334,12 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                       value={formData.firstName}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
+                      placeholder="Enter your first name"
+                      className="h-11 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white transition-all duration-200"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="lastName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                       Last Name *
                     </Label>
                     <Input
@@ -347,13 +348,14 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                       value={formData.lastName}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
+                      placeholder="Enter your last name"
+                      className="h-11 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white transition-all duration-200"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Email Address *
                   </Label>
                   <Input
@@ -363,12 +365,13 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
+                    placeholder="your.email@example.com"
+                    className="h-11 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white transition-all duration-200"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="phone" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Phone Number
                   </Label>
                   <Input
@@ -377,12 +380,13 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                     type="tel"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
+                    placeholder="+1 (555) 123-4567"
+                    className="h-11 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white transition-all duration-200"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="address" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div className="space-y-2">
+                  <Label htmlFor="address" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Street Address *
                   </Label>
                   <Input
@@ -391,13 +395,14 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                     value={formData.address}
                     onChange={handleInputChange}
                     required
-                    className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
+                    placeholder="123 Main Street"
+                    className="h-11 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white transition-all duration-200"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="city" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="city" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                       City *
                     </Label>
                     <Input
@@ -406,11 +411,12 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                       value={formData.city}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
+                      placeholder="New York"
+                      className="h-11 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white transition-all duration-200"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="state" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <div className="space-y-2">
+                    <Label htmlFor="state" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                       State *
                     </Label>
                     <Input
@@ -419,11 +425,12 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                       value={formData.state}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
+                      placeholder="NY"
+                      className="h-11 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white transition-all duration-200"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="zipCode" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <div className="space-y-2">
+                    <Label htmlFor="zipCode" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                       ZIP Code *
                     </Label>
                     <Input
@@ -432,13 +439,14 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                       value={formData.zipCode}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
+                      placeholder="10001"
+                      className="h-11 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white transition-all duration-200"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="country" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div className="space-y-2">
+                  <Label htmlFor="country" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Country
                   </Label>
                   <Input
@@ -446,7 +454,8 @@ export default function CheckoutContainer({ templateId }: { templateId: string }
                     name="country"
                     value={formData.country}
                     onChange={handleInputChange}
-                    className="mt-1 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white"
+                    placeholder="United States"
+                    className="h-11 bg-white dark:bg-[#0F1419] border-2 border-gray-300 dark:border-gray-600 focus:border-[#0F35A7] dark:focus:border-[#0F59BC] text-gray-900 dark:text-white transition-all duration-200"
                   />
                 </div>
 

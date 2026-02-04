@@ -63,14 +63,14 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, onClick }) => {
 
       <div className="p-5 flex flex-col flex-grow">
         {categoryTitle && (
-          <span className="inline-block text-xs font-medium text-[#0F59BC] bg-[#E9F2FF] dark:bg-[#132955] dark:text-[#9CC2FF] px-2 py-1 rounded mb-2 flex-shrink-0">
+          <span className="inline-block w-fit self-start text-xs font-medium text-[#0F59BC] bg-[#E9F2FF] dark:bg-[#132955] dark:text-[#9CC2FF] px-2 py-1 rounded mb-2 flex-shrink-0">
             {categoryTitle}
           </span>
         )}
         
         <Link
           href={`/blogs/${blog.id}`}
-          className="mt-2 text-left text-lg font-semibold line-clamp-2 flex-grow hover:text-[#0F59BC] dark:hover:text-[#9CC2FF] transition-colors"
+          className="mt-2 text-left text-lg font-semibold line-clamp-2 hover:text-[#0F59BC] dark:hover:text-[#9CC2FF] hover:underline cursor-pointer transition-colors"
           title={blog.title}
           onClick={(e) => {
             // Stop propagation to prevent card click
@@ -79,6 +79,12 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, onClick }) => {
         >
           {truncateText(blog.title, 72)}
         </Link>
+
+        {description && (
+          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 flex-grow">
+            {description.length > 75 ? description.slice(0, 75) + "......" : description}
+          </p>
+        )}
 
         <div className="mt-5 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
           <span className="inline-flex items-center gap-1">

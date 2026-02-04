@@ -125,7 +125,14 @@ export const NavActions = ({ isOpen, setIsOpen }: NavActionsProps) => {
               </div>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}
+            <DropdownMenuItem 
+              onClick={() => router.push("/dashboard")}
+              className="cursor-pointer"
+            >
+              Dashboard
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => router.push("/dashboard/profile")}
               className="cursor-pointer"
             >
               Profile

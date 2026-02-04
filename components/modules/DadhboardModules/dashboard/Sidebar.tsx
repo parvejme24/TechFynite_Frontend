@@ -68,7 +68,6 @@ const adminNavigation: NavigationItem[] = [
       { name: "Blogs", href: "/dashboard/blogs", icon: FiBookOpen },
     ],
   },
-  { name: "Pricing", href: "/dashboard/pricing", icon: FiDollarSign },
   { name: "Newsletter", href: "/dashboard/newsletter", icon: FiMail },
   { name: "Users", href: "/dashboard/users", icon: FiUsers },
   { name: "Orders", href: "/dashboard/orders", icon: FiPackage },

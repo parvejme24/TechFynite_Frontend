@@ -71,14 +71,14 @@ export default function BlogReactions({ blogId, reactCount = 0 }: BlogReactionsP
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3 sm:gap-4">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
           React to this blog:
         </span>
       </div>
       
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
         {(Object.keys(REACTION_EMOJIS) as ReactionType[]).map((reactionType) => {
           const isSelected = selectedReaction === reactionType;
           return (
@@ -87,9 +87,9 @@ export default function BlogReactions({ blogId, reactCount = 0 }: BlogReactionsP
               onClick={() => handleReactionClick(reactionType)}
               disabled={addReactionMutation.isPending}
               className={`
-                flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all
+                flex items-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2 rounded-full border-2 transition-all
                 ${isSelected
-                  ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400 scale-110'
+                  ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400 scale-105 sm:scale-110'
                   : 'bg-white dark:bg-[#0B1026] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }
                 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
@@ -97,8 +97,8 @@ export default function BlogReactions({ blogId, reactCount = 0 }: BlogReactionsP
               `}
               title={REACTION_LABELS[reactionType]}
             >
-              <span className="text-2xl">{REACTION_EMOJIS[reactionType]}</span>
-              <span className={`text-sm font-medium ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+              <span className="text-lg sm:text-2xl">{REACTION_EMOJIS[reactionType]}</span>
+              <span className={`text-xs sm:text-sm font-medium ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
                 {REACTION_LABELS[reactionType]}
               </span>
             </button>
