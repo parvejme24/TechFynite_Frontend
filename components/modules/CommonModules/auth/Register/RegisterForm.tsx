@@ -112,7 +112,13 @@ export default function RegisterForm() {
               animate={{ scale: 1, rotate: 0 }}
               transition={{ duration: 0.6, delay: 0.3, type: "spring", stiffness: 200 }}
             >
-              <Image src={LOGO} alt="TechFynite Logo" />
+              <Image 
+                src={LOGO} 
+                alt="TechFynite Logo" 
+                width={40} 
+                height={40} 
+                style={{ width: 'auto', height: 'auto' }}
+              />
             </motion.div>
             <motion.span
               initial={{ opacity: 0, x: -20 }}

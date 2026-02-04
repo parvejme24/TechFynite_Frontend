@@ -92,7 +92,7 @@ export default function BlogReactions({ blogId, reactCount = 0 }: BlogReactionsP
                   ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400 scale-110'
                   : 'bg-white dark:bg-[#0B1026] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }
-                disabled:opacity-50 disabled:cursor-not-allowed
+                disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
                 hover:scale-105 active:scale-95
               `}
               title={REACTION_LABELS[reactionType]}

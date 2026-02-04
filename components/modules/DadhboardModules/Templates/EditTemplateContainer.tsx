@@ -46,6 +46,7 @@ export default function EditTemplateContainer({ templateId }: EditTemplateContai
     version: 1.0,
     pages: 1,
     checkoutUrl: "",
+    previewLink: "",
     lemonsqueezyProductId: "",
     lemonsqueezyVariantId: "",
     lemonsqueezyPermalink: "",
@@ -82,6 +83,7 @@ export default function EditTemplateContainer({ templateId }: EditTemplateContai
         version: templateData.version,
         pages: templateData.pages,
         checkoutUrl: templateData.checkoutUrl || "",
+        previewLink: templateData.previewLink || "",
         lemonsqueezyProductId: templateData.lemonsqueezyProductId || "",
         lemonsqueezyVariantId: templateData.lemonsqueezyVariantId || "",
         lemonsqueezyPermalink: templateData.lemonsqueezyPermalink || "",
@@ -221,6 +223,7 @@ export default function EditTemplateContainer({ templateId }: EditTemplateContai
         version: formData.version,
         pages: formData.pages,
         checkoutUrl: formData.checkoutUrl,
+        previewLink: formData.previewLink,
         lemonsqueezyProductId: formData.lemonsqueezyProductId,
         lemonsqueezyVariantId: formData.lemonsqueezyVariantId,
         lemonsqueezyPermalink: formData.lemonsqueezyPermalink,
@@ -528,6 +531,21 @@ export default function EditTemplateContainer({ templateId }: EditTemplateContai
                     />
                     <p className="text-xs text-gray-500">
                       Direct checkout link for this template (optional)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="previewLink">Preview Link</Label>
+                    <Input
+                      id="previewLink"
+                      type="url"
+                      value={formData.previewLink || ""}
+                      onChange={(e) => handleInputChange("previewLink", e.target.value)}
+                      placeholder="https://example.com/preview"
+                      disabled={updateTemplateMutation.isPending}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Link to preview or demo of the template (optional)
                     </p>
                   </div>
 

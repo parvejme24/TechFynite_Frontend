@@ -7,6 +7,7 @@ import { AuthContext } from "@/Providers/AuthProvider";
 import { useContext } from "react";
 import { toast } from "sonner";
 import { useCreateBlogReview } from "@/hooks/useBlogReviewApi";
+import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 
 interface BlogReviewFormProps {
@@ -15,6 +16,7 @@ interface BlogReviewFormProps {
 
 export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
   const { user, loading } = useContext(AuthContext) || {};
+  const queryClient = useQueryClient();
   const createReviewMutation = useCreateBlogReview();
   const [formData, setFormData] = useState({
     fullName: "",
@@ -24,7 +26,6 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
 
   // Auto-populate user data when component mounts or userData changes
   useEffect(() => {
-    console.log("useEffect triggered with user:", user);
     if (user) {
       setFormData((prev) => ({
         ...prev,
@@ -86,7 +87,17 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
         commentText: "",
         email: user?.email || "",
       });
+      
       toast.success("Review posted successfully!");
+      
+      // Force immediate refetch of reviews to ensure UI updates
+      // Use exact: false to match all query variations (with different query params)
+      setTimeout(() => {
+        queryClient.refetchQueries({ 
+          queryKey: ['blog-reviews', blogId],
+          exact: false 
+        });
+      }, 300);
     } catch (error: any) {
       console.error("Review creation error:", error);
       const errorMessage = error?.response?.data?.message || error?.response?.data?.error || error?.message || "Failed to post review. Please try again.";
@@ -211,7 +222,7 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
                 type="submit"
                 disabled={!isFormValid || createReviewMutation.isPending}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 h-8 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 h-8 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {createReviewMutation.isPending ? "Posting..." : "Post"}
               </Button>

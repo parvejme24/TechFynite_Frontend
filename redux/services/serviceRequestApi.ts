@@ -1,8 +1,18 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+// Determine base URL - use proxy in development, direct URL in production
+const getBaseURL = () => {
+  // In development, use relative URL to go through Next.js proxy (bypasses CORS)
+  if (process.env.NODE_ENV === 'development') {
+    return '/api/v1';
+  }
+  // In production, use the full backend URL
+  return process.env.NEXT_PUBLIC_API_URL || 'https://tech-fynite-backend.vercel.app/api/v1';
+};
+
 // Define the base query with authentication
 const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://tech-fynite-backend.vercel.app/api/v1',
+  baseUrl: getBaseURL(),
   prepareHeaders: (headers, { getState }) => {
     // Get token from localStorage - check for nextAuthSecret first
     const token = localStorage.getItem('nextAuthSecret') ||

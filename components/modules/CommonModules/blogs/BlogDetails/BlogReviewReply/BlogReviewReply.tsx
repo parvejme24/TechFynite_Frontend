@@ -19,6 +19,7 @@ const formatDate = (date: Date | string): string => {
 
 interface BlogReviewReplyProps {
   reviewId: string;
+  blogId?: string; // Add blogId prop for proper query invalidation
   replies?: BlogReviewReplyType[];
   onReplyAdded?: () => void;
   showButtonOnly?: boolean;
@@ -26,7 +27,7 @@ interface BlogReviewReplyProps {
   onFormClose?: () => void;
 }
 
-export default function BlogReviewReply({ reviewId, replies = [], onReplyAdded, showButtonOnly = false, showFormOnly = false, onFormClose }: BlogReviewReplyProps) {
+export default function BlogReviewReply({ reviewId, blogId, replies = [], onReplyAdded, showButtonOnly = false, showFormOnly = false, onFormClose }: BlogReviewReplyProps) {
   const { user } = useContext(AuthContext) || {};
   const queryClient = useQueryClient();
   const createReplyMutation = useCreateBlogReviewReply();
@@ -85,14 +86,36 @@ export default function BlogReviewReply({ reviewId, replies = [], onReplyAdded, 
     }
 
     try {
-      await createReplyMutation.mutateAsync({
+      // Optimistically update the UI before API call
+      const tempReplyId = `temp-${Date.now()}`;
+      const newReply = {
+        id: tempReplyId,
         reviewId,
-        userId: user?.id,
         replyText: formData.replyText.trim(),
         fullName: formData.fullName.trim(),
         email: formData.email.trim(),
-      });
+        userId: user?.id || null,
+        photoUrl: (user as any)?.photoUrl || (user as any)?.avatarUrl || null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
 
+      // Optimistically add reply to cache if blogId is available
+      if (blogId) {
+        queryClient.setQueryData(['blog-reviews', blogId], (oldData: any) => {
+          if (!oldData?.data) return oldData;
+          return {
+            ...oldData,
+            data: oldData.data.map((review: any) =>
+              review.id === reviewId
+                ? { ...review, replies: [...(review.replies || []), newReply] }
+                : review
+            ),
+          };
+        });
+      }
+
+      // Clear form immediately for better UX
       setFormData({
         replyText: "",
         fullName: user?.fullName || "",
@@ -102,13 +125,35 @@ export default function BlogReviewReply({ reviewId, replies = [], onReplyAdded, 
       if (onFormClose) {
         onFormClose();
       }
+      
+      // Make API call
+      await createReplyMutation.mutateAsync({
+        reviewId,
+        blogId, // Pass blogId for proper query invalidation
+        userId: user?.id,
+        replyText: formData.replyText.trim(),
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim(),
+      });
+
       toast.success("Reply posted successfully!");
       
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['blog-reviews'] });
+      // Invalidate queries to refresh data with server response
+      if (blogId) {
+        queryClient.invalidateQueries({ queryKey: ['blog-reviews', blogId] });
+      } else {
+        // Fallback: invalidate all blog-reviews queries
+        queryClient.invalidateQueries({ queryKey: ['blog-reviews'] });
+      }
       onReplyAdded?.();
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || "Failed to post reply. Please try again.";
+      // Revert optimistic update on error
+      if (blogId) {
+        queryClient.invalidateQueries({ queryKey: ['blog-reviews', blogId] });
+      }
+      
+      const errorMessage = error?.response?.data?.message || error?.response?.data?.error || error?.message || "Failed to post reply. Please try again.";
+      console.error("Reply creation error:", error);
       toast.error(errorMessage);
     }
   };
@@ -118,7 +163,7 @@ export default function BlogReviewReply({ reviewId, replies = [], onReplyAdded, 
     return (
       <button
         onClick={() => setShowReplyForm(true)}
-        className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium flex items-center gap-1 transition-colors"
+        className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium flex items-center gap-1 transition-colors cursor-pointer"
         title="Reply"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,7 +180,7 @@ export default function BlogReviewReply({ reviewId, replies = [], onReplyAdded, 
       {!showReplyForm && !showFormOnly && (
         <button
           onClick={() => setShowReplyForm(true)}
-          className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium flex items-center gap-1 transition-colors"
+          className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium flex items-center gap-1 transition-colors cursor-pointer"
           title="Reply"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -287,7 +332,7 @@ export default function BlogReviewReply({ reviewId, replies = [], onReplyAdded, 
                     type="submit"
                     disabled={!formData.replyText.trim() || createReplyMutation.isPending}
                     size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 h-7 text-xs font-medium disabled:opacity-50"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 h-7 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {createReplyMutation.isPending ? "Posting..." : "Reply"}
                   </Button>

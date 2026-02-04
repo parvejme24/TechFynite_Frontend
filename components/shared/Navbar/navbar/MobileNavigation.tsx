@@ -57,7 +57,14 @@ export const MobileNavigation = ({
             </div>
 
             <div className="flex items-center px-5">
-              <Image src={Logo} alt="Techfyite Logo" className="w-8" />
+              <Image 
+                src={Logo} 
+                alt="Techfyite Logo" 
+                width={32} 
+                height={32} 
+                className="w-8" 
+                style={{ width: '2rem', height: 'auto' }}
+              />
               <h3 className="font-extrabold text-xl">TechFynite</h3>
             </div>
 

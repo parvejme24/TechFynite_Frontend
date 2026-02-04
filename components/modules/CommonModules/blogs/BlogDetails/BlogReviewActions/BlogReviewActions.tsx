@@ -17,14 +17,26 @@ import Swal from "sweetalert2";
 
 interface BlogReviewActionsProps {
   review: BlogReview;
+  blogId?: string; // Add blogId for proper cache invalidation
   onUpdated?: () => void;
   onDeleted?: () => void;
+  isEditing?: boolean;
+  onEditStart?: () => void;
+  onEditCancel?: () => void;
+  editData?: UpdateBlogReview;
+  onEditDataChange?: (data: UpdateBlogReview) => void;
 }
 
 export default function BlogReviewActions({
   review,
+  blogId,
   onUpdated,
   onDeleted,
+  isEditing: externalIsEditing,
+  onEditStart,
+  onEditCancel,
+  editData: externalEditData,
+  onEditDataChange,
 }: BlogReviewActionsProps) {
   const { user } = useContext(AuthContext) || {};
   const updateReviewMutation = useUpdateBlogReview();
@@ -32,12 +44,36 @@ export default function BlogReviewActions({
   const hideReviewMutation = useHideBlogReview();
   const unhideReviewMutation = useUnhideBlogReview();
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState<UpdateBlogReview>({
+  const [internalIsEditing, setInternalIsEditing] = useState(false);
+  const [internalEditData, setInternalEditData] = useState<UpdateBlogReview>({
     commentText: review.commentText,
     fullName: review.fullName,
     email: review.email,
   });
+
+  // Use external state if provided, otherwise use internal state
+  const isEditing = externalIsEditing !== undefined ? externalIsEditing : internalIsEditing;
+  const editData = externalEditData !== undefined ? externalEditData : internalEditData;
+  
+  const setIsEditing = (value: boolean) => {
+    if (externalIsEditing === undefined) {
+      setInternalIsEditing(value);
+    }
+    if (value && onEditStart) {
+      onEditStart();
+    } else if (!value && onEditCancel) {
+      onEditCancel();
+    }
+  };
+
+  const setEditData = (data: UpdateBlogReview | ((prev: UpdateBlogReview) => UpdateBlogReview)) => {
+    if (externalEditData === undefined) {
+      setInternalEditData(data);
+    } else if (onEditDataChange) {
+      const newData = typeof data === 'function' ? data(externalEditData) : data;
+      onEditDataChange(newData);
+    }
+  };
 
   // Check if user can edit/delete this review
   const isOwner = user?.id === review.userId;
@@ -84,7 +120,7 @@ export default function BlogReviewActions({
     }
 
     try {
-      await deleteReviewMutation.mutateAsync(review.id);
+      await deleteReviewMutation.mutateAsync({ reviewId: review.id, blogId });
       Swal.fire({
         title: "Deleted!",
         text: "The review has been deleted successfully.",
@@ -105,7 +141,7 @@ export default function BlogReviewActions({
 
   const handleHide = async () => {
     try {
-      await hideReviewMutation.mutateAsync(review.id);
+      await hideReviewMutation.mutateAsync({ reviewId: review.id, blogId });
       toast.success("Review hidden successfully!");
       onUpdated?.();
     } catch (error: any) {
@@ -115,7 +151,7 @@ export default function BlogReviewActions({
 
   const handleUnhide = async () => {
     try {
-      await unhideReviewMutation.mutateAsync(review.id);
+      await unhideReviewMutation.mutateAsync({ reviewId: review.id, blogId });
       toast.success("Review unhidden successfully!");
       onUpdated?.();
     } catch (error: any) {
@@ -127,94 +163,104 @@ export default function BlogReviewActions({
     return null;
   }
 
+  // Return only action buttons - edit form will be handled by parent
   return (
-    <div>
-      {isEditing ? (
-        <div className="mt-2 space-y-2">
-          <div className="bg-gray-100 dark:bg-[#0B1026] rounded-2xl px-3 py-2">
-            <Textarea
-              value={editData.commentText || ""}
-              onChange={(e) =>
-                setEditData({ ...editData, commentText: e.target.value })
-              }
-              placeholder="Edit your comment..."
-              className="bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none min-h-[60px] text-sm text-gray-900 dark:text-gray-200"
-              rows={2}
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = 'auto';
-                target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
-              }}
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={handleUpdate}
-              disabled={updateReviewMutation.isPending}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 h-7 text-xs font-medium"
-            >
-              {updateReviewMutation.isPending ? "Saving..." : "Save"}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsEditing(false);
-                setEditData({
-                  commentText: review.commentText,
-                  fullName: review.fullName,
-                  email: review.email,
-                });
-              }}
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center gap-3">
-          {canEdit && (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
-            >
-              Edit
-            </button>
-          )}
-          {canDelete && (
-            <button
-              onClick={handleDelete}
-              disabled={deleteReviewMutation.isPending}
-              className="text-xs text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 font-medium transition-colors disabled:opacity-50"
-            >
-              Delete
-            </button>
-          )}
-          {canHide && (
-            <>
-              {review.isHidden ? (
-                <button
-                  onClick={handleUnhide}
-                  disabled={unhideReviewMutation.isPending}
-                  className="text-xs text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 font-medium transition-colors disabled:opacity-50"
-                >
-                  Unhide
-                </button>
-              ) : (
-                <button
-                  onClick={handleHide}
-                  disabled={hideReviewMutation.isPending}
-                  className="text-xs text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 font-medium transition-colors disabled:opacity-50"
-                >
-                  Hide
-                </button>
-              )}
-            </>
-          )}
-        </div>
+    <div className="flex items-center gap-3">
+      {canEdit && (
+        <button
+          onClick={() => setIsEditing(true)}
+          className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors cursor-pointer"
+        >
+          Edit
+        </button>
       )}
+      {canDelete && (
+        <button
+          onClick={handleDelete}
+          disabled={deleteReviewMutation.isPending}
+          className="text-xs text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          Delete
+        </button>
+      )}
+      {canHide && (
+        <>
+          {review.isHidden ? (
+            <button
+              onClick={handleUnhide}
+              disabled={unhideReviewMutation.isPending}
+              className="text-xs text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Unhide
+            </button>
+          ) : (
+            <button
+              onClick={handleHide}
+              disabled={hideReviewMutation.isPending}
+              className="text-xs text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Hide
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// Export edit form component separately
+export function BlogReviewEditForm({
+  review,
+  editData,
+  onEditDataChange,
+  onSave,
+  onCancel,
+  isSaving,
+}: {
+  review: BlogReview;
+  editData: { commentText: string; fullName: string; email: string };
+  onEditDataChange: (data: { commentText: string; fullName: string; email: string }) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  isSaving: boolean;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="bg-gray-100 dark:bg-[#0B1026] rounded-2xl rounded-tl-sm px-4 py-2">
+        <Textarea
+          value={editData.commentText}
+          onChange={(e) =>
+            onEditDataChange({ ...editData, commentText: e.target.value })
+          }
+          placeholder="Edit your comment..."
+          className="bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none min-h-[60px] text-sm text-gray-900 dark:text-gray-200"
+          rows={2}
+          onInput={(e) => {
+            const target = e.target as HTMLTextAreaElement;
+            target.style.height = 'auto';
+            target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+          }}
+        />
+      </div>
+      <div className="flex gap-2 ml-1">
+        <Button
+          onClick={onSave}
+          disabled={isSaving}
+          size="sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 h-7 text-xs font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSaving ? "Saving..." : "Save"}
+        </Button>
+        <Button
+          onClick={onCancel}
+          disabled={isSaving}
+          variant="ghost"
+          size="sm"
+          className="h-7 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Cancel
+        </Button>
+      </div>
     </div>
   );
 }

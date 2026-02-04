@@ -11,7 +11,14 @@ export const LogoComponent = () => (
     className="flex items-center"
   >
     <Link href="/" className="flex items-center space-x-2">
-      <Image src={Logo} alt="TechFynite Logo" className="h-8 w-auto" />
+      <Image 
+        src={Logo} 
+        alt="TechFynite Logo" 
+        width={32} 
+        height={32} 
+        className="h-8 w-auto" 
+        style={{ width: 'auto', height: 'auto' }}
+      />
       <span className="text-xl font-bold dark:text-white">TechFynite</span>
     </Link>
   </motion.div>

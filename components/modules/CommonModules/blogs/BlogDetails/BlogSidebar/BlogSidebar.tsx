@@ -31,7 +31,7 @@ export default function BlogSidebar() {
             <li key={blog.id} className="flex gap-3 items-center">
               <Link
                 href={`/blogs/${blog.id}`}
-                className="flex gap-3 items-center w-full hover:opacity-80 transition-opacity"
+                className="flex gap-3 items-center w-full hover:opacity-80 transition-opacity cursor-pointer"
               >
                 {blog.featuredImageUrl ? (
                   <div className="relative w-16 h-10 flex-shrink-0">
@@ -67,7 +67,7 @@ export default function BlogSidebar() {
         <span className="block w-[150px] bg-gradient-to-r from-[#BDD9FE] to-[#8AACDA] rounded-lg p-[2px]">
           <Link
             href={"/template"}
-            className="bg-gradient-to-r text-white from-[#0F59BC] to-[#0F35A7] w-[146px] h-full py-2 flex justify-center items-center rounded-lg"
+            className="bg-gradient-to-r text-white from-[#0F59BC] to-[#0F35A7] w-[146px] h-full py-2 flex justify-center items-center rounded-lg cursor-pointer"
           >
             Explore Now
           </Link>

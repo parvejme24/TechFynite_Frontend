@@ -480,7 +480,10 @@ export default function Banner() {
               <Image
                 src={FigmaLogo}
                 alt="Figma"
+                width={48}
+                height={48}
                 className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12"
+                style={{ width: 'auto', height: 'auto' }}
                 draggable={false}
               />
             </motion.div>
@@ -514,7 +517,10 @@ export default function Banner() {
               <Image
                 src={StatImage}
                 alt="Stat"
+                width={110}
+                height={110}
                 className="w-16 h-16 sm:w-20 sm:h-20 md:w-[110px] md:h-[110px]"
+                style={{ width: 'auto', height: 'auto' }}
                 draggable={false}
               />
             </motion.div>

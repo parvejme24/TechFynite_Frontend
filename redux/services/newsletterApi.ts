@@ -63,12 +63,20 @@ export interface DeleteResponse {
   message: string;
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tech-fynite-backend.vercel.app/api/v1';
+// Determine base URL - use proxy in development, direct URL in production
+const getBaseURL = () => {
+  // In development, use relative URL to go through Next.js proxy (bypasses CORS)
+  if (process.env.NODE_ENV === 'development') {
+    return '/api/v1';
+  }
+  // In production, use the full backend URL
+  return process.env.NEXT_PUBLIC_API_URL || 'https://tech-fynite-backend.vercel.app/api/v1';
+};
 
 export const newsletterApi = createApi({
   reducerPath: 'newsletterApi',
   baseQuery: fetchBaseQuery({
-    baseUrl,
+    baseUrl: getBaseURL(),
     prepareHeaders: (headers) => {
       if (typeof window !== 'undefined') {
         const token = localStorage.getItem('nextAuthSecret');

@@ -171,7 +171,10 @@ export default function Sidebar() {
                 <Image
                   src={LOGO}
                   alt="Techfynite Logo"
+                  width={28}
+                  height={28}
                   className="w-7 lg:w-9"
+                  style={{ width: 'auto', height: '1.75rem' }}
                 />
                 TechFynite
               </Link>

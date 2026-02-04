@@ -83,7 +83,13 @@ export default function ForgetPasswordForm() {
       >
         <div>
           <h3 className="text-[25px] font-semibold flex items-center gap-2">
-            <Image src={LOGO} alt="TechFynite Logo" />
+            <Image 
+              src={LOGO} 
+              alt="TechFynite Logo" 
+              width={40} 
+              height={40} 
+              style={{ width: 'auto', height: 'auto' }}
+            />
             TechFynite
           </h3>
           <h2 className="text-[32px] md:text-[40px] font-bold">

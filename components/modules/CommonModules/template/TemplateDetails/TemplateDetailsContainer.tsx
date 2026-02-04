@@ -16,6 +16,9 @@ import {
   FiExternalLink,
   FiAlertCircle,
   FiArrowLeft,
+  FiStar,
+  FiZap,
+  FiCheckCircle,
 } from "react-icons/fi";
 
 export default function TemplateDetailsContainer({ id }: { id: string }) {
@@ -186,38 +189,41 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
         <div>
           {/* Category Badge */}
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Category:
-            </span>
             <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded">
               {category?.title || "React.JS"}
             </span>
           </div>
 
           {/* Metadata */}
-          <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
-            <span>Updated: {new Date(updatedAt).toLocaleDateString()}</span>
-            <span>
-              {pages} {pages === 1 ? "page" : "pages"}
-            </span>
-            <span>v{version}</span>
+          <div className="flex items-center flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400 mb-4">
+            <div className="flex items-center gap-1.5">
+              <FiCalendar className="w-4 h-4" />
+              <span>Updated: {new Date(updatedAt).toLocaleDateString()}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <FiFileText className="w-4 h-4" />
+              <span>
+                {pages} {pages === 1 ? "page" : "pages"}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <FiTag className="w-4 h-4" />
+              <span>v{version}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <FiDownload className="w-4 h-4" />
+              <span>{downloads} downloads</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <FiShoppingCart className="w-4 h-4" />
+              <span>{totalPurchase} purchases</span>
+            </div>
           </div>
 
           {/* Title */}
           <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
             {title}
           </h1>
-
-          {/* Pricing */}
-          <div className="mb-6">
-            <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
-              ${price}
-            </div>
-            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-              <span>{downloads} downloads</span>
-              <span>{totalPurchase} purchases</span>
-            </div>
-          </div>
 
           {/* Short Description */}
           <p className="mb-6 text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -302,54 +308,68 @@ export default function TemplateDetailsContainer({ id }: { id: string }) {
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* What's Included */}
         <div>
-          <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+          <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             What&apos;s Included
           </h3>
-          <ul className="space-y-3">
-            {whatsIncluded && whatsIncluded.length > 0 ? (
-              whatsIncluded.map((item: string, idx: number) => (
-                <li
+          {whatsIncluded && whatsIncluded.length > 0 ? (
+            <div className="space-y-3">
+              {whatsIncluded.map((item: string, idx: number) => (
+                <div
                   key={idx}
-                  className="flex items-start gap-3 text-gray-700 dark:text-gray-300"
+                  className="flex items-start gap-4 p-4 bg-white dark:bg-[#1A1D37] border border-gray-200 dark:border-gray-700 rounded-lg hover:border-green-400 dark:hover:border-green-600 hover:shadow-md transition-all duration-200 cursor-pointer group"
                 >
-                  <span className="text-green-500 mt-1">✓</span>
-                  <span>{item}</span>
-                </li>
-              ))
-            ) : (
-              <li className="text-gray-500 dark:text-gray-400">
-                No items included
-              </li>
-            )}
-          </ul>
+                  <div className="flex-shrink-0 w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mt-0.5 group-hover:bg-green-500 dark:group-hover:bg-green-600 transition-colors">
+                    <FiCheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 group-hover:text-white transition-colors" />
+                  </div>
+                  <span className="text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors leading-relaxed">
+                    {item}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              No items included
+            </div>
+          )}
         </div>
 
         {/* Key Features */}
         <div>
-          <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+          <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Key Features
           </h3>
-          <div className="space-y-3">
-            {keyFeatures && keyFeatures.length > 0 ? (
-              keyFeatures.map((feature, idx: number) => (
+          {keyFeatures && keyFeatures.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {keyFeatures.map((feature, idx: number) => (
                 <div
                   key={feature.title + idx}
-                  className="bg-white dark:bg-[#1A1D37] border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                  className="group relative bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-300 cursor-pointer"
                 >
-                  <div className="font-semibold text-gray-900 dark:text-white mb-1">
-                    {feature.title}
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
+                      <FiZap className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {feature.title}
+                      </h4>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-gray-600 dark:text-gray-300 text-sm">
-                    {feature.description}
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <FiCheckCircle className="w-5 h-5 text-blue-500 dark:text-blue-400" />
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-gray-500 dark:text-gray-400">
-                No key features available
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              No key features available
+            </div>
+          )}
         </div>
       </div>
 

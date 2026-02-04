@@ -43,6 +43,7 @@ export default function CreateTemplateContainer() {
     version: 1.0,
     pages: 1,
     checkoutUrl: "",
+    previewLink: "",
     lemonsqueezyProductId: "",
     lemonsqueezyVariantId: "",
     lemonsqueezyPermalink: "",
@@ -181,6 +182,7 @@ export default function CreateTemplateContainer() {
         version: formData.version,
         pages: formData.pages,
         checkoutUrl: formData.checkoutUrl || undefined,
+        previewLink: formData.previewLink || undefined,
         lemonsqueezyProductId: formData.lemonsqueezyProductId || undefined,
         lemonsqueezyVariantId: formData.lemonsqueezyVariantId || undefined,
         lemonsqueezyPermalink: formData.lemonsqueezyPermalink || undefined,
@@ -464,6 +466,23 @@ export default function CreateTemplateContainer() {
                     />
                     <p className="text-xs text-gray-500">
                       Direct checkout link for this template (optional)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="previewLink">Preview Link</Label>
+                    <Input
+                      id="previewLink"
+                      type="url"
+                      value={formData.previewLink || ""}
+                      onChange={(e) =>
+                        handleInputChange("previewLink", e.target.value)
+                      }
+                      placeholder="https://example.com/preview"
+                      disabled={createTemplateMutation.isPending}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Link to preview or demo of the template (optional)
                     </p>
                   </div>
 

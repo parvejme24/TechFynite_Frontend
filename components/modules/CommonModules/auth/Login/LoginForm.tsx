@@ -133,7 +133,13 @@ export default function LoginForm() {
                 stiffness: 200,
               }}
             >
-              <Image src={LOGO} alt="TechFynite Logo" />
+              <Image 
+                src={LOGO} 
+                alt="TechFynite Logo" 
+                width={40} 
+                height={40} 
+                style={{ width: 'auto', height: 'auto' }}
+              />
             </motion.div>
             <motion.span
               initial={{ opacity: 0, x: -20 }}

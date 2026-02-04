@@ -6,16 +6,18 @@ import BlogSidebar from "./BlogSidebar/BlogSidebar";
 import BlogReviewForm from "./BlogReviewForm/BlogReviewForm";
 import BlogSidebarSkeleton from "./BlogSidebar/BlogSidebarSkeleton";
 import BlogDetailsSkeleton from "./BlogDetailsSkeleton";
+import BlogReviewSkeleton from "./BlogReviewSkeleton";
 import { useGetBlogById } from "@/hooks/useBlogApi";
 import { useGetBlogReviews } from "@/hooks/useBlogReviewApi";
 import { IBlog } from "@/types/blog";
 import { BlogReview } from "@/types/blogReview";
 import BlogReactions from "./BlogReactions/BlogReactions";
-import BlogReviewReply from "./BlogReviewReply/BlogReviewReply";
-import BlogReviewActions from "./BlogReviewActions/BlogReviewActions";
+import BlogReviewActions, { BlogReviewEditForm } from "./BlogReviewActions/BlogReviewActions";
 import { LuAlarmClockCheck, LuCalendarDays } from "react-icons/lu";
 import { FaRegEye, FaHeart } from "react-icons/fa6";
 import { AuthContext } from "@/Providers/AuthProvider";
+import { toast } from "sonner";
+import { useUpdateBlogReview } from "@/hooks/useBlogReviewApi";
 
 // Simple date formatter
 export const formatDate = (date: Date | string): string => {
@@ -28,7 +30,10 @@ export default function BlogDetailsContainer({ id }: { id: string }) {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useGetBlogById(id);
   const blog: IBlog | undefined = data?.data;
-  const [openReplyForms, setOpenReplyForms] = useState<Set<string>>(new Set());
+  const [editingReviews, setEditingReviews] = useState<Map<string, { commentText: string; fullName: string; email: string }>>(new Map());
+  const updateReviewMutation = useUpdateBlogReview();
+  
+  // Fetch reviews separately using the blog review API
   
   // Fetch reviews separately using the blog review API
   const { data: reviewsData, isLoading: isLoadingReviews, error: reviewsError } = useGetBlogReviews(id, {
@@ -110,10 +115,38 @@ export default function BlogDetailsContainer({ id }: { id: string }) {
   // Filter out hidden reviews for non-admin users
   const userRole = (user as any)?.role;
   const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
-  const allReviews: BlogReview[] = (reviewsData?.data as BlogReview[]) || (blog?.reviews as BlogReview[]) || (blog?.comments as BlogReview[]) || [];
+  
+  // Get reviews from API or fallback to blog data
+  // Check if we have valid reviews data (not placeholder/loading state)
+  const isPlaceholderData = reviewsData?.success === false && reviewsData?.message === 'Loading reviews...';
+  const hasValidApiResponse = reviewsData && 
+                              reviewsData.success !== false && 
+                              reviewsData.data && 
+                              Array.isArray(reviewsData.data);
+  
+  let allReviews: BlogReview[] = [];
+  
+  if (hasValidApiResponse) {
+    // Use API data if available and valid (even if empty array)
+    allReviews = reviewsData.data as BlogReview[];
+  } else if (!isLoadingReviews && !isPlaceholderData && blog?.reviews && Array.isArray(blog.reviews) && blog.reviews.length > 0) {
+    // Fallback to blog data only if not loading, not placeholder, and blog has reviews
+    allReviews = blog.reviews as BlogReview[];
+  } else if (!isLoadingReviews && !isPlaceholderData && blog?.comments && Array.isArray(blog.comments) && blog.comments.length > 0) {
+    // Fallback to blog comments if available
+    allReviews = blog.comments as BlogReview[];
+  }
+  
   const reviews: BlogReview[] = isAdmin 
     ? allReviews 
     : allReviews.filter((review) => !review.isHidden);
+  
+  // Determine if we should show "No reviews" message
+  // Only show if: not loading, not placeholder data, and we've confirmed there are no reviews from API
+  const shouldShowNoReviews = !isLoadingReviews && 
+                               !isPlaceholderData && 
+                               reviews.length === 0 && 
+                               hasValidApiResponse;
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-14 lg:px-0">
@@ -289,7 +322,11 @@ export default function BlogDetailsContainer({ id }: { id: string }) {
           </div>
 
           {/* Blog Reviews/Comments Section */}
-          {reviews.length > 0 && (
+          {/* Show skeleton while loading */}
+          {isLoadingReviews && <BlogReviewSkeleton count={3} />}
+          
+          {/* Show reviews when loaded */}
+          {!isLoadingReviews && reviews.length > 0 && (
             <div className="bg-white dark:bg-[#1A1D37] rounded-lg p-6 lg:p-8 mt-8">
               <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">
                 Comments ({reviews.length})
@@ -316,80 +353,156 @@ export default function BlogDetailsContainer({ id }: { id: string }) {
                     
                     {/* Comment Content */}
                     <div className="flex-1 min-w-0">
-                      {/* Comment Bubble */}
-                      <div className="bg-gray-100 dark:bg-[#0B1026] rounded-2xl rounded-tl-sm px-4 py-2 inline-block max-w-full">
-                        <div className="mb-1">
-                          <span className="font-semibold text-sm text-gray-900 dark:text-white mr-2">
-                            {review.fullName}
-                          </span>
-                          {review.createdAt && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {formatDate(review.createdAt)}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed break-words">
-                          {review.commentText}
-                        </p>
-                      </div>
-                      
-                      {/* Actions Row */}
-                      <div className="flex items-center justify-between mt-1 ml-1">
-                        {/* Review Actions (Edit/Delete/Hide) */}
-                        <div className="flex items-center gap-4">
-                          {user && (
-                            <BlogReviewActions 
-                              review={review}
-                              onUpdated={() => {
-                                queryClient.invalidateQueries({ queryKey: ['blog-reviews', id] });
-                              }}
-                              onDeleted={() => {
-                                queryClient.invalidateQueries({ queryKey: ['blog-reviews', id] });
-                              }}
-                            />
-                          )}
-                        </div>
-                        
-                        {/* Reply Button - Right side */}
-                        <button
-                          onClick={() => {
-                            setOpenReplyForms((prev) => {
-                              const newSet = new Set(prev);
-                              if (newSet.has(review.id)) {
-                                newSet.delete(review.id);
-                              } else {
-                                newSet.add(review.id);
-                              }
-                              return newSet;
+                      {/* Comment Bubble or Edit Form */}
+                      {editingReviews.has(review.id) ? (
+                        <BlogReviewEditForm
+                          review={review}
+                          editData={editingReviews.get(review.id) || { commentText: review.commentText, fullName: review.fullName, email: review.email }}
+                          onEditDataChange={(data) => {
+                            setEditingReviews((prev) => {
+                              const newMap = new Map(prev);
+                              newMap.set(review.id, {
+                                commentText: data.commentText || review.commentText,
+                                fullName: data.fullName || review.fullName,
+                                email: data.email || review.email,
+                              });
+                              return newMap;
                             });
                           }}
-                          className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium flex items-center gap-1 transition-colors"
-                          title="Reply"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                          </svg>
-                          Reply
-                        </button>
-                      </div>
-                      
-                      {/* Reply Form - Below actions row to prevent layout shift */}
-                      {openReplyForms.has(review.id) && (
-                        <div className="mt-2 ml-1">
-                          <BlogReviewReply 
-                            reviewId={review.id} 
-                            replies={review.replies}
-                            showFormOnly={true}
-                            onFormClose={() => {
-                              setOpenReplyForms((prev) => {
-                                const newSet = new Set(prev);
-                                newSet.delete(review.id);
-                                return newSet;
+                          onSave={async () => {
+                            const editData = editingReviews.get(review.id);
+                            if (!editData?.commentText?.trim()) {
+                              toast.error("Comment cannot be empty");
+                              return;
+                            }
+                            
+                            // Start the mutation immediately to show "Saving..." state
+                            try {
+                              // Optimistically update the cache before API call
+                              queryClient.setQueryData(['blog-reviews', id], (oldData: any) => {
+                                if (!oldData?.data) return oldData;
+                                return {
+                                  ...oldData,
+                                  data: oldData.data.map((r: BlogReview) =>
+                                    r.id === review.id
+                                      ? { ...r, commentText: editData.commentText || r.commentText, fullName: editData.fullName || r.fullName, email: editData.email || r.email }
+                                      : r
+                                  ),
+                                };
                               });
-                            }}
-                          />
+
+                              // Don't close edit form immediately - let isSaving state handle the UI
+                              // The form will show "Saving..." button state
+
+                              await updateReviewMutation.mutateAsync({
+                                reviewId: review.id,
+                                data: {
+                                  commentText: editData.commentText,
+                                  fullName: editData.fullName,
+                                  email: editData.email,
+                                },
+                              });
+                              
+                              // Close edit form after successful save
+                              setEditingReviews((prev) => {
+                                const newMap = new Map(prev);
+                                newMap.delete(review.id);
+                                return newMap;
+                              });
+                              
+                              toast.success("Review updated successfully!");
+                              
+                              // Invalidate to sync with server (but UI already updated optimistically)
+                              queryClient.invalidateQueries({ queryKey: ['blog-reviews', id], exact: false });
+                            } catch (error: any) {
+                              // Revert optimistic update on error
+                              queryClient.invalidateQueries({ queryKey: ['blog-reviews', id], exact: false });
+                              toast.error(error?.response?.data?.message || "Failed to update review");
+                            }
+                          }}
+                          onCancel={() => {
+                            setEditingReviews((prev) => {
+                              const newMap = new Map(prev);
+                              newMap.delete(review.id);
+                              return newMap;
+                            });
+                          }}
+                          isSaving={updateReviewMutation.isPending}
+                        />
+                      ) : (
+                        <div className={`rounded-2xl rounded-tl-sm px-4 py-2 inline-block max-w-full ${
+                          review.isHidden 
+                            ? 'bg-gray-300 dark:bg-gray-700 opacity-60' 
+                            : 'bg-gray-100 dark:bg-[#0B1026]'
+                        }`}>
+                          <div className="mb-1">
+                            <span className={`font-semibold text-sm mr-2 ${
+                              review.isHidden 
+                                ? 'text-gray-500 dark:text-gray-400' 
+                                : 'text-gray-900 dark:text-white'
+                            }`}>
+                              {review.fullName}
+                            </span>
+                            {review.createdAt && (
+                              <span className={`text-xs ${
+                                review.isHidden 
+                                  ? 'text-gray-400 dark:text-gray-500' 
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {formatDate(review.createdAt)}
+                              </span>
+                            )}
+                            {review.isHidden && isAdmin && (
+                              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400 italic">
+                                (Hidden)
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-sm leading-relaxed break-words ${
+                            review.isHidden 
+                              ? 'text-gray-500 dark:text-gray-400' 
+                              : 'text-gray-800 dark:text-gray-200'
+                          }`}>
+                            {review.commentText}
+                          </p>
                         </div>
                       )}
+                      
+                      {/* Actions Row */}
+                      <div className="flex items-center gap-4 mt-1 ml-1">
+                        {/* Review Actions (Edit/Delete/Hide) */}
+                        {user && (
+                          <BlogReviewActions 
+                            review={review}
+                            blogId={id}
+                            isEditing={editingReviews.has(review.id)}
+                            onEditStart={() => {
+                              setEditingReviews((prev) => {
+                                const newMap = new Map(prev);
+                                newMap.set(review.id, {
+                                  commentText: review.commentText,
+                                  fullName: review.fullName,
+                                  email: review.email,
+                                });
+                                return newMap;
+                              });
+                            }}
+                            onEditCancel={() => {
+                              setEditingReviews((prev) => {
+                                const newMap = new Map(prev);
+                                newMap.delete(review.id);
+                                return newMap;
+                              });
+                            }}
+                            onUpdated={() => {
+                              queryClient.invalidateQueries({ queryKey: ['blog-reviews', id], exact: false });
+                            }}
+                            onDeleted={() => {
+                              queryClient.invalidateQueries({ queryKey: ['blog-reviews', id], exact: false });
+                            }}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -397,8 +510,8 @@ export default function BlogDetailsContainer({ id }: { id: string }) {
             </div>
           )}
 
-          {/* Show message if no reviews */}
-          {!isLoadingReviews && reviews.length === 0 && (
+          {/* Show message if no reviews (only when we've confirmed there are truly no reviews) */}
+          {shouldShowNoReviews && (
             <div className="bg-white dark:bg-[#1A1D37] rounded-lg p-6 lg:p-8 mt-8 text-center">
               <p className="text-gray-600 dark:text-gray-400">No reviews yet. Be the first to review!</p>
             </div>
