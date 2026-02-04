@@ -250,14 +250,16 @@ export const useUpdateBlog = () => {
       if (blogData.title) formData.append('title', blogData.title);
       if (blogData.categoryId) formData.append('categoryId', blogData.categoryId);
       if (blogData.description) formData.append('description', blogData.description); // String field
-      if (blogData.readingTime) formData.append('readingTime', blogData.readingTime.toString());
+      if (blogData.readingTime !== undefined) formData.append('readingTime', blogData.readingTime.toString());
       if (blogData.slug) formData.append('slug', blogData.slug);
       if (blogData.isPublished !== undefined) formData.append('isPublished', blogData.isPublished.toString());
       if (blogData.content) formData.append('content', JSON.stringify(blogData.content));
       
-      // Featured image
+      // Featured image - send file if provided, otherwise send URL if provided
       if (blogData.featuredImage) {
         formData.append('image', blogData.featuredImage);
+      } else if (blogData.featuredImageUrl) {
+        formData.append('featuredImageUrl', blogData.featuredImageUrl);
       }
 
       const response = await apiClient.put(`/blogs/${id}`, formData, {

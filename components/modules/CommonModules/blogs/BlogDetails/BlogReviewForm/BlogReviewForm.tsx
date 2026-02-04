@@ -6,6 +6,8 @@ import React, { useState, useEffect } from "react";
 import { AuthContext } from "@/Providers/AuthProvider";
 import { useContext } from "react";
 import { toast } from "sonner";
+import { useCreateBlogReview } from "@/hooks/useBlogReviewApi";
+import Image from "next/image";
 
 interface BlogReviewFormProps {
   blogId: string;
@@ -13,15 +15,12 @@ interface BlogReviewFormProps {
 
 export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
   const { user, loading } = useContext(AuthContext) || {};
+  const createReviewMutation = useCreateBlogReview();
   const [formData, setFormData] = useState({
     fullName: "",
     commentText: "",
     email: "",
   });
-
-  // No hook/API dependency
-
-  console.log("AuthContext state:", { user, loading });
 
   // Auto-populate user data when component mounts or userData changes
   useEffect(() => {
@@ -48,18 +47,6 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("accessToken")
-        : null;
-    console.log("Form data:", formData);
-    console.log("Access token exists:", !!token);
-    console.log(
-      "Token value:",
-      token ? token.substring(0, 20) + "..." : "null"
-    );
-    console.log("Loading state:", loading);
-
     // Validation
     if (!formData.fullName.trim()) {
       toast.error("Please enter your name");
@@ -83,13 +70,36 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
       return;
     }
 
-    // Simulate success (no API hook)
-    setFormData({
-      fullName: user?.fullName || "",
-      commentText: "",
-      email: user?.email || "",
-    });
-    toast.success("Comment posted successfully!");
+    try {
+      const result = await createReviewMutation.mutateAsync({
+        blogId,
+        userId: user?.id, // Optional - allow public reviews
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim(),
+        commentText: formData.commentText.trim(),
+        // Rating is optional, not sending it
+      });
+
+      // Reset form
+      setFormData({
+        fullName: user?.fullName || "",
+        commentText: "",
+        email: user?.email || "",
+      });
+      toast.success("Review posted successfully!");
+    } catch (error: any) {
+      console.error("Review creation error:", error);
+      const errorMessage = error?.response?.data?.message || error?.response?.data?.error || error?.message || "Failed to post review. Please try again.";
+      
+      // Handle duplicate review error
+      if (errorMessage.toLowerCase().includes("already reviewed") || 
+          errorMessage.toLowerCase().includes("duplicate") ||
+          errorMessage.toLowerCase().includes("already exists")) {
+        toast.error("You have already reviewed this blog. You can only submit one review per blog.");
+      } else {
+        toast.error(errorMessage);
+      }
+    }
   };
 
   // Check if all fields are filled
@@ -116,74 +126,98 @@ export default function BlogReviewForm({ blogId }: BlogReviewFormProps) {
     );
   }
 
-  // Show login message if user is not authenticated
-  if (!user && !loading) {
-    // Check if access token exists in localStorage as fallback
-    const hasToken =
-      typeof window !== "undefined" && localStorage.getItem("accessToken");
-    console.log("No user data, but token exists:", hasToken);
-
-    if (!hasToken) {
-      return (
-        <div className="p-4 mt-10">
-          <div className="text-center py-8">
-            <h3 className="text-lg font-bold mb-2">Leave a comment</h3>
-            <p className="text-gray-600 mb-4">
-              You need to be logged in to post a comment.
-            </p>
-            <Button
-              onClick={() => (window.location.href = "/login")}
-              className="bg-blue-900 hover:bg-blue-900/80 text-white"
-            >
-              Log In
-            </Button>
-          </div>
-        </div>
-      );
-    }
-  }
+  // Allow public reviews - no need to require login
 
   return (
-    <div className="p-4 mt-10">
-      <h3 className="text-lg font-bold">Leave a comment</h3>
-      <p>
-        Your email address will not be published. Required fields are marked *
-      </p>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2 mt-4">
-        <Textarea
-          name="commentText"
-          value={formData.commentText}
-          onChange={handleInputChange}
-          placeholder="Write your comment here..."
-          className="bg-white border-none h-[100px]"
-          required
-        />
-        <Input
-          name="fullName"
-          value={formData.fullName}
-          onChange={handleInputChange}
-          placeholder="Full Name *"
-          className="bg-white border-none"
-          required
-          readOnly
-        />
-        <Input
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange}
-          placeholder="Email *"
-          className="bg-white border-none"
-          required
-          readOnly
-        />
-        <Button
-          type="submit"
-          disabled={!isFormValid}
-          className="w-[130px] py-5 cursor-pointer bg-blue-900 hover:bg-blue-900/80 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Post Comment
-        </Button>
+    <div className="mt-8 bg-white dark:bg-[#1A1D37] rounded-lg p-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        {/* Comment Input - Facebook Style */}
+        <div className="flex items-start gap-3">
+          {/* User Avatar */}
+          {(() => {
+            const avatarUrl = (user as any)?.photoUrl || (user as any)?.avatarUrl || (user as any)?.profile?.avatarUrl || (user as any)?.image;
+            if (avatarUrl) {
+              return (
+                <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                  <Image
+                    src={avatarUrl}
+                    alt={user?.fullName || "User"}
+                    fill
+                    sizes="40px"
+                    className="object-cover"
+                  />
+                </div>
+              );
+            }
+            if (user) {
+              return (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold flex-shrink-0 text-sm">
+                  {(user.fullName || "U").charAt(0).toUpperCase()}
+                </div>
+              );
+            }
+            return (
+              <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
+                <span className="text-gray-500 dark:text-gray-400 text-sm">?</span>
+              </div>
+            );
+          })()}
+          
+          {/* Input Container */}
+          <div className="flex-1">
+            <div className="bg-gray-100 dark:bg-[#0B1026] rounded-2xl px-4 py-2">
+              <Textarea
+                name="commentText"
+                value={formData.commentText}
+                onChange={handleInputChange}
+                placeholder="Write a comment..."
+                className="bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none min-h-[40px] max-h-[120px] text-sm text-gray-900 dark:text-gray-200 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                required
+                rows={1}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+                }}
+              />
+            </div>
+            
+            {/* Name and Email Fields (Hidden when logged in) */}
+            {!user && (
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Input
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  placeholder="Your name"
+                  className="bg-gray-50 dark:bg-[#0B1026] border border-gray-200 dark:border-gray-700 text-sm h-9"
+                  required
+                />
+                <Input
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Your email"
+                  className="bg-gray-50 dark:bg-[#0B1026] border border-gray-200 dark:border-gray-700 text-sm h-9"
+                  required
+                />
+              </div>
+            )}
+            
+            {/* Submit Button */}
+            <div className="flex justify-end mt-2">
+              <Button
+                type="submit"
+                disabled={!isFormValid || createReviewMutation.isPending}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 h-8 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {createReviewMutation.isPending ? "Posting..." : "Post"}
+              </Button>
+            </div>
+          </div>
+        </div>
       </form>
     </div>
   );

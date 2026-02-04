@@ -253,3 +253,99 @@ body {
   overflow-y: scroll !important;
   scrollbar-gutter: stable both-edges;
 }
+
+/* Blog Content HTML Styling */
+.blog-content {
+  @apply text-gray-700 dark:text-gray-300 leading-relaxed;
+}
+
+.blog-content h1 {
+  @apply text-3xl font-bold mt-8 mb-4 text-gray-900 dark:text-gray-100;
+}
+
+.blog-content h2 {
+  @apply text-2xl font-bold mt-6 mb-3 text-gray-900 dark:text-gray-100;
+}
+
+.blog-content h3 {
+  @apply text-xl font-semibold mt-5 mb-2 text-gray-900 dark:text-gray-100;
+}
+
+.blog-content h4 {
+  @apply text-lg font-semibold mt-4 mb-2 text-gray-900 dark:text-gray-100;
+}
+
+.blog-content p {
+  @apply mb-4 leading-relaxed text-gray-700 dark:text-gray-300;
+}
+
+.blog-content ul,
+.blog-content ol {
+  @apply mb-4 ml-6 space-y-2;
+}
+
+.blog-content ul {
+  @apply list-disc;
+}
+
+.blog-content ol {
+  @apply list-decimal;
+}
+
+.blog-content li {
+  @apply text-gray-700 dark:text-gray-300 leading-relaxed;
+}
+
+.blog-content li p {
+  @apply mb-2;
+}
+
+.blog-content img {
+  @apply w-full h-auto rounded-lg my-6 max-w-full;
+  max-height: 600px;
+  object-fit: contain;
+}
+
+.blog-content code {
+  @apply bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400 px-2 py-1 rounded text-sm font-mono;
+}
+
+.blog-content pre {
+  @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto mb-4;
+}
+
+.blog-content pre code {
+  @apply bg-transparent p-0 text-gray-800 dark:text-gray-200;
+}
+
+.blog-content a {
+  @apply text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline;
+}
+
+.blog-content hr {
+  @apply my-6 border-gray-300 dark:border-gray-600;
+}
+
+.blog-content strong {
+  @apply font-bold text-gray-900 dark:text-gray-100;
+}
+
+.blog-content em {
+  @apply italic;
+}
+
+.blog-content blockquote {
+  @apply border-l-4 border-blue-500 dark:border-blue-400 pl-4 italic my-4 text-gray-600 dark:text-gray-400;
+}
+
+.blog-content table {
+  @apply w-full border-collapse mb-4;
+}
+
+.blog-content table th {
+  @apply border border-gray-300 dark:border-gray-600 px-4 py-2 bg-gray-100 dark:bg-gray-800 font-semibold text-left;
+}
+
+.blog-content table td {
+  @apply border border-gray-300 dark:border-gray-600 px-4 py-2;
+}

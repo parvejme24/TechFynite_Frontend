@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FiClock, FiMessageCircle } from "react-icons/fi";
 import { IBlog } from "@/types/blog";
@@ -67,12 +68,17 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, onClick }) => {
           </span>
         )}
         
-        <div
-          className="mt-2 text-left text-lg font-semibold line-clamp-2 flex-grow"
+        <Link
+          href={`/blogs/${blog.id}`}
+          className="mt-2 text-left text-lg font-semibold line-clamp-2 flex-grow hover:text-[#0F59BC] dark:hover:text-[#9CC2FF] transition-colors"
           title={blog.title}
+          onClick={(e) => {
+            // Stop propagation to prevent card click
+            e.stopPropagation();
+          }}
         >
           {truncateText(blog.title, 72)}
-        </div>
+        </Link>
 
         <div className="mt-5 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
           <span className="inline-flex items-center gap-1">
