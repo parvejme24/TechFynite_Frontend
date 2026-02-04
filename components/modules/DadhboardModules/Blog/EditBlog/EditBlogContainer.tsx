@@ -88,9 +88,9 @@ export default function EditBlogContainer({
         // Don't set categoryId here - it will be set in the separate useEffect
         description: typeof blog.description === 'string'
           ? blog.description
-          : Array.isArray(blog.description)
-          ? blog.description.join("\n")
-          : "",
+          : Array.isArray(blog.description as any)
+          ? (blog.description as any).join("\n")
+          : String(blog.description || ""),
         readingTime: blog.readingTime || 5,
         slug: blog.slug || "",
         isPublished: blog.isPublished || false,
